@@ -1,0 +1,3 @@
+[submodule "Alohalytics"]
+	path = Alohalytics
+	url = https://github.com/KnowSheet/Alohalytics.git
