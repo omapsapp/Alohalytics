@@ -1,6 +1,6 @@
 .PHONY: all indent clean
 
-ALOHALYTICS_ROOT=../omim/3party/Alohalytics
+ALOHALYTICS_ROOT=../Alohalytics
 CPP=g++
 CPPFLAGS=-std=c++11 -Wall -W -I${ALOHALYTICS_ROOT}/src
 LDFLAGS=-lz -pthread

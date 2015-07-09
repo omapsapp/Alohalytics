@@ -24,9 +24,9 @@
 
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
-#include "../src/event_base.h"
+#include "../Alohalytics/src/event_base.h"
 
-#include "../src/Bricks/rtti/dispatcher.h"
+#include "../Alohalytics/src/Bricks/rtti/dispatcher.h"
 
 #include <iostream>
 #include <iomanip>
@@ -52,7 +52,7 @@ struct Processor {
     }
   }
   void operator()(const AlohalyticsKeyValueEvent & event) {
-    if (event.key == "$onClick" & event.value == "ppOpen" && IsAndroid()) {
+    if (event.key == "$onClick" && event.value == "ppOpen" && IsAndroid()) {
       ++ids[current_id].second;
       ++total_pp_opens;
     }

@@ -24,9 +24,9 @@
 
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
-#include "../src/event_base.h"
-#include "../src/file_manager.h"
-#include "../src/gzip_wrapper.h"
+#include "../Alohalytics/src/event_base.h"
+#include "../Alohalytics/src/file_manager.h"
+#include "../Alohalytics/src/gzip_wrapper.h"
 
 #include <fstream>
 #include <iomanip>
