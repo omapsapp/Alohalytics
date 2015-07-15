@@ -36,11 +36,7 @@
 
 using namespace std;
 
-int main(int argc, char ** argv) {
-  if (argc < 2) {
-    cout << "Usage: cat <data files> | " << argv[0] << endl;
-    return -1;
-  }
+int main(int, char **) {
   string current_user_id;
   cereal::BinaryInputArchive ar(std::cin);
   unique_ptr<AlohalyticsBaseEvent> ptr;
@@ -73,6 +69,7 @@ int main(int argc, char ** argv) {
     }
     cout << endl;
   }
+  cout << "Total unique users: " << events.size() << endl;
 
   cerr << "Total processing time: "
        << std::chrono::duration_cast<std::chrono::seconds>(chrono::system_clock::now() - start_time).count()
