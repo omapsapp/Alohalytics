@@ -25,6 +25,7 @@
 // Calculates search by category statistics.
 
 #include "../Alohalytics/queries/processor.h"
+#include "../3party/utf8proc/utf8proc.h"
 
 #include <fstream>
 #include <map>
@@ -35,6 +36,18 @@ using namespace alohalytics;
 using namespace std;
 
 typedef map<string, set<string>> TCategories;
+
+void CaseFoldingAndNormalize(string & s) {
+  utf8proc_uint8_t * buf = nullptr;
+  const utf8proc_ssize_t ssize = utf8proc_map(reinterpret_cast<const utf8proc_uint8_t *>(s.data()), s.size(), &buf,
+                                              static_cast<utf8proc_option_t>(UTF8PROC_COMPAT | UTF8PROC_DECOMPOSE | UTF8PROC_CASEFOLD));
+  if (ssize > 0) {
+    s.assign(reinterpret_cast<const string::value_type *>(buf), ssize);
+  }
+  if (buf) {
+    free(buf);
+  }
+}
 
 TCategories LoadCategoriesFromFile(const char * path) {
   enum class State { EParseTypes, EParseLanguages } state = State::EParseTypes;
@@ -62,6 +75,7 @@ TCategories LoadCategoriesFromFile(const char * path) {
           if (name[0] >= '0' && name[0] <= '9') {
             name = name.substr(1);
           }
+          CaseFoldingAndNormalize(name);
           categories[current_types].insert(name);
         }
       } break;
@@ -70,6 +84,44 @@ TCategories LoadCategoriesFromFile(const char * path) {
   return categories;
 }
 
+// <user, query>
+typedef std::function<void(const std::string &, const std::string &)> TOnSearchQueryLambda;
+
+class SearchFilter {
+  TOnSearchQueryLambda lambda_;
+  std::string prev_query_;
+  std::string prev_user_;
+
+public:
+  SearchFilter(TOnSearchQueryLambda lambda) : lambda_(lambda) {}
+
+  void ProcessQuery(const std::string & user, std::string query) {
+    CaseFoldingAndNormalize(query);
+    if (prev_query_.empty()) {
+      prev_user_ = user;
+      prev_query_ = query;
+      return;
+    }
+    if (prev_user_ != user) {
+      lambda_(prev_user_, prev_query_);
+      prev_user_ = user;
+      prev_query_ = query;
+      return;
+    }
+    if (query.find(prev_query_) == 0) {
+      prev_user_ = user;
+      prev_query_ = query;
+      return;
+    }
+    if (prev_query_.find(query) == string::npos) {
+      lambda_(prev_user_, prev_query_);
+      prev_user_ = user;
+      prev_query_ = query;
+      return;
+    }
+  }
+};
+
 int main(int argc, char ** argv) {
   if (argc < 2) {
     cout << "Usage: " << argv[0] << " <categories.txt file to analyze>" << endl;
@@ -77,18 +129,21 @@ int main(int argc, char ** argv) {
     return -1;
   }
   const TCategories categories = LoadCategoriesFromFile(argv[1]);
-  map<string, set<string>> users;
+  map<string, set<string>> users_queries_;
+  SearchFilter filter([&users_queries_](const string & user, const string & query) {
+    users_queries_[user].insert(query);
+  });
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "searchEmitResults") {
-      users[se->id].emplace(move(kpe->pairs.begin()->first));
+      filter.ProcessQuery(se->id, kpe->pairs.begin()->first);
     }
   }).PrintStatistics();
 
   set<string> users_who_searched_by_category;
   // <category, users count>
   map<string, size_t> counters;
-  for (const auto & user : users) {
+  for (const auto & user : users_queries_) {
     for (const auto & query : user.second) {
       for (const auto & category : categories) {
         for (const auto & synonym : category.second) {
@@ -101,7 +156,7 @@ int main(int argc, char ** argv) {
       }
     }
   }
-  const size_t uc = users.size();
+  const size_t uc = users_queries_.size();
   cout << "Users with at least one searchEmitResults event: " << uc << endl;
   cout << "Users with at least one category search: " << users_who_searched_by_category.size() << endl;
 
