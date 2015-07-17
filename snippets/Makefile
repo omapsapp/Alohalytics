@@ -20,7 +20,7 @@ OS := $(shell uname)
 all: build ${BIN}
 
 indent:
-	(find . -name "*.cc") | xargs clang-format -i
+	(find . -name "*.cc" -o -name "*.h") | xargs clang-format -i
 
 clean:
 	rm -rf build

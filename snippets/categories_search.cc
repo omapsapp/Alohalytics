@@ -25,102 +25,15 @@
 // Calculates search by category statistics.
 
 #include "../Alohalytics/queries/processor.h"
-#include "../3party/utf8proc/utf8proc.h"
 
-#include <fstream>
+#include "search.h"
+
 #include <map>
 #include <set>
 #include <string>
 
 using namespace alohalytics;
 using namespace std;
-
-typedef map<string, set<string>> TCategories;
-
-void CaseFoldingAndNormalize(string & s) {
-  utf8proc_uint8_t * buf = nullptr;
-  const utf8proc_ssize_t ssize = utf8proc_map(reinterpret_cast<const utf8proc_uint8_t *>(s.data()), s.size(), &buf,
-                                              static_cast<utf8proc_option_t>(UTF8PROC_COMPAT | UTF8PROC_DECOMPOSE | UTF8PROC_CASEFOLD));
-  if (ssize > 0) {
-    s.assign(reinterpret_cast<const string::value_type *>(buf), ssize);
-  }
-  if (buf) {
-    free(buf);
-  }
-}
-
-TCategories LoadCategoriesFromFile(const char * path) {
-  enum class State { EParseTypes, EParseLanguages } state = State::EParseTypes;
-  TCategories categories;
-  string line, current_types;
-  ifstream file(path);
-  while (file) {
-    getline(file, line);
-    switch (state) {
-      case State::EParseTypes: {
-        current_types = line;
-        if (!current_types.empty()) state = State::EParseLanguages;
-      } break;
-      case State::EParseLanguages: {
-        size_t pos = line.find(':');
-        if (pos == string::npos) {
-          state = State::EParseTypes;
-          continue;
-        }
-        while (pos != string::npos) {
-          size_t end_pos = line.find('|', pos + 1);
-          string name = line.substr(pos + 1, end_pos == string::npos ? end_pos : end_pos - pos - 1);
-          pos = end_pos;
-          // Fix hint char count number.
-          if (name[0] >= '0' && name[0] <= '9') {
-            name = name.substr(1);
-          }
-          CaseFoldingAndNormalize(name);
-          categories[current_types].insert(name);
-        }
-      } break;
-    }
-  }
-  return categories;
-}
-
-// <user, query>
-typedef std::function<void(const std::string &, const std::string &)> TOnSearchQueryLambda;
-
-class SearchFilter {
-  TOnSearchQueryLambda lambda_;
-  std::string prev_query_;
-  std::string prev_user_;
-
-public:
-  SearchFilter(TOnSearchQueryLambda lambda) : lambda_(lambda) {}
-
-  void ProcessQuery(const std::string & user, std::string query) {
-    CaseFoldingAndNormalize(query);
-    if (prev_query_.empty()) {
-      prev_user_ = user;
-      prev_query_ = query;
-      return;
-    }
-    if (prev_user_ != user) {
-      lambda_(prev_user_, prev_query_);
-      prev_user_ = user;
-      prev_query_ = query;
-      return;
-    }
-    if (query.find(prev_query_) == 0) {
-      prev_user_ = user;
-      prev_query_ = query;
-      return;
-    }
-    if (prev_query_.find(query) == string::npos) {
-      lambda_(prev_user_, prev_query_);
-      prev_user_ = user;
-      prev_query_ = query;
-      return;
-    }
-  }
-};
 
 int main(int argc, char ** argv) {
   if (argc < 2) {
@@ -130,9 +43,8 @@ int main(int argc, char ** argv) {
   }
   const TCategories categories = LoadCategoriesFromFile(argv[1]);
   map<string, set<string>> users_queries_;
-  SearchFilter filter([&users_queries_](const string & user, const string & query) {
-    users_queries_[user].insert(query);
-  });
+  SearchFilter filter(
+      [&users_queries_](const string & user, const string & query) { users_queries_[user].insert(query); });
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "searchEmitResults") {
