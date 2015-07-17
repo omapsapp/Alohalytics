@@ -5,7 +5,7 @@ UTF8PROC_ROOT=../3party/utf8proc
 
 C=gcc
 CPP=g++
-CFLAGS=-Wall -W
+CFLAGS=-Wall -W -O3
 CPPFLAGS=-std=c++11 ${CFLAGS} -I${ALOHALYTICS_ROOT}/src
 LDFLAGS=-lz -pthread
 MORE_SOURCES=${ALOHALYTICS_ROOT}/src/posix/file_manager_posix_impl.cc
