@@ -27,6 +27,7 @@
 
 #include "../3party/utf8proc/utf8proc.h"
 
+#include <algorithm>
 #include <fstream>
 #include <map>
 #include <set>
