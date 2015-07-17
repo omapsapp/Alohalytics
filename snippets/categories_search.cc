@@ -44,11 +44,11 @@ int main(int argc, char ** argv) {
   const TCategories categories = LoadCategoriesFromFile(argv[1]);
   map<string, set<string>> users_queries_;
   SearchFilter filter(
-      [&users_queries_](const string & user, const string & query) { users_queries_[user].insert(query); });
+      [&users_queries_](const string & user, const string & query, size_t) { users_queries_[user].insert(query); });
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "searchEmitResults") {
-      filter.ProcessQuery(se->id, kpe->pairs.begin()->first);
+      filter.ProcessQuery(se->id, kpe->pairs.begin()->first, 0 /* ignore results count */);
     }
   }).PrintStatistics();
 

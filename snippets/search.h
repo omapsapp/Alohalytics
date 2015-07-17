@@ -104,32 +104,37 @@ class SearchFilter {
   TOnSearchQueryLambda lambda_;
   std::string prev_query_;
   std::string prev_user_;
+  size_t prev_results_;
 
  public:
   SearchFilter(TOnSearchQueryLambda lambda) : lambda_(lambda) {}
 
-  void ProcessQuery(const std::string & user, std::string query) {
+  void ProcessQuery(const std::string & user, std::string query, size_t results) {
     CaseFoldingAndNormalize(query);
     if (prev_query_.empty()) {
       prev_user_ = user;
       prev_query_ = query;
+      prev_results_ = results;
       return;
     }
     if (prev_user_ != user) {
-      lambda_(prev_user_, prev_query_);
+      lambda_(prev_user_, prev_query_, prev_results_);
       prev_user_ = user;
       prev_query_ = query;
+      prev_results_ = results;
       return;
     }
     if (query.find(prev_query_) == 0) {
       prev_user_ = user;
       prev_query_ = query;
+      prev_results_ = results;
       return;
     }
     if (prev_query_.find(query) == std::string::npos) {
-      lambda_(prev_user_, prev_query_);
+      lambda_(prev_user_, prev_query_, prev_results_);
       prev_user_ = user;
       prev_query_ = query;
+      prev_results_ = results;
       return;
     }
   }
