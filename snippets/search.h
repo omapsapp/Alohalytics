@@ -23,6 +23,7 @@
  *******************************************************************************/
 
 // Helpers to work with search queries.
+// TODO(AlexZ): Should use original code from MAPS.ME for consistency.
 
 #include "../3party/utf8proc/utf8proc.h"
 
@@ -30,7 +31,9 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
+// <category name, set of translations>
 typedef std::map<std::string, std::set<std::string>> TCategories;
 
 void CaseFoldingAndNormalize(std::string & s) {
@@ -43,6 +46,20 @@ void CaseFoldingAndNormalize(std::string & s) {
   }
   if (buf) {
     free(buf);
+  }
+}
+
+// TODO(AlexZ): Real trimming (tokens delimeters) are much more complex in MAPS.ME. Should use them.
+void Trim(std::string & s, const std::string & whitespaces = " \n\t\r") {
+  const auto lambda = [&whitespaces](std::string::value_type c) -> bool {
+    return whitespaces.find_first_of(c) != std::string::npos;
+  };
+  const auto left = std::find_if_not(s.begin(), s.end(), lambda);
+  const auto right = std::find_if_not(s.rbegin(), s.rend(), lambda).base();
+  if (right <= left) {
+    s.clear();
+  } else {
+    s = std::move(std::string(left, right));
   }
 }
 
@@ -75,6 +92,7 @@ inline TCategories LoadCategoriesFromFile(const char * path) {
             name = name.substr(1);
           }
           CaseFoldingAndNormalize(name);
+          Trim(name);
           categories[current_types].insert(name);
         }
       } break;
@@ -83,8 +101,29 @@ inline TCategories LoadCategoriesFromFile(const char * path) {
   return categories;
 }
 
-// <user, query>
-typedef std::function<void(const std::string &, const std::string &)> TOnSearchQueryLambda;
+// Returns the name of matched category or empty string if query does not match any category.
+std::string GetQueryCategory(const std::string & query, const TCategories & categories,
+                             bool include_synonyms = false) {
+  std::string merged;
+  for (const auto & category : categories) {
+    for (const auto & translation : category.second) {
+      if (translation == query) {
+        if (include_synonyms) {
+          if (!merged.empty()) {
+            merged += " ";
+          }
+          merged += category.first;
+        } else {
+          return category.first;
+        }
+      }
+    }
+  }
+  return std::string();
+}
+
+// <user, query, results count>
+typedef std::function<void(const std::string &, const std::string &, size_t)> TOnSearchQueryLambda;
 
 // This filter helps to get real user queries from detailed typing logs.
 // For example, for this log for the same user:
@@ -111,6 +150,7 @@ class SearchFilter {
 
   void ProcessQuery(const std::string & user, std::string query, size_t results) {
     CaseFoldingAndNormalize(query);
+    Trim(query);
     if (prev_query_.empty()) {
       prev_user_ = user;
       prev_query_ = query;
