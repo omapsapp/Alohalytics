@@ -103,8 +103,7 @@ inline TCategories LoadCategoriesFromFile(const char * path) {
 }
 
 // Returns the name of matched category or empty string if query does not match any category.
-std::string GetQueryCategory(const std::string & query, const TCategories & categories,
-                             bool include_synonyms = false) {
+std::string GetQueryCategory(const std::string & query, const TCategories & categories, bool include_synonyms = false) {
   std::string merged;
   for (const auto & category : categories) {
     for (const auto & translation : category.second) {
