@@ -40,10 +40,6 @@ int main(int argc, char * argv[]) {
     return -1;
   }
   const vector<string> keys_and_values_to_filter(argv + 1, argv + argc);
-  for (const auto & k : keys_and_values_to_filter) {
-    cerr << k << endl;
-  }
-  cerr << "Finished" << endl;
   cereal::BinaryInputArchive ar(std::cin);
   unique_ptr<AlohalyticsBaseEvent> ptr;
   while (true) {
