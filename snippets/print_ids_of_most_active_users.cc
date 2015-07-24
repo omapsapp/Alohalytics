@@ -39,7 +39,7 @@
 
 using namespace std;
 
-template<typename ContainerT, typename PredicateT>
+template <typename ContainerT, typename PredicateT>
 void Erase_If(ContainerT & container, const PredicateT & predicate) {
   for (auto it = container.begin(), ite = container.end(); it != ite;) {
     if (predicate(*it)) {
@@ -55,9 +55,9 @@ uint64_t StatisticsWasReleasedTimestampMSFromEpoch() {
   time_t timet = time(nullptr);
   struct tm * stm;
   stm = gmtime(&timet);
-  stm->tm_year = 2015 - 1900; // 2015 year
-  stm->tm_mon = 2 - 1;   // February
-  stm->tm_mday = 27;     // 27th
+  stm->tm_year = 2015 - 1900;  // 2015 year
+  stm->tm_mon = 2 - 1;         // February
+  stm->tm_mday = 27;           // 27th
   timet = mktime(stm);
   return timet * 1000;
 }
@@ -71,15 +71,17 @@ uint64_t ReasonableFutureBoundForTimestampMSFromEpoch() {
 
 struct Counters {
   bool has_obligatory_key = false;
-//  size_t events_count = 0;
+  //  size_t events_count = 0;
   uint64_t first_event_timestamp = uint64_t(-1);
   uint64_t last_event_timestamp = 0;
 };
 
 int main(int argc, char ** argv) {
   if (argc < 2) {
-    cout << "Usage: " << argv[0] << " <number of top users to print> [event key which should exist in top users sessions]" << endl;
-    cout << "       E.g. you can optionally specify $install as a key to include only users with full sessions." << endl;
+    cout << "Usage: " << argv[0]
+         << " <number of top users to print> [event key which should exist in top users sessions]" << endl;
+    cout << "       E.g. you can optionally specify $install as a key to include only users with full sessions."
+         << endl;
     return -1;
   }
   int maximum_users = std::stoi(argv[1]);
@@ -112,7 +114,7 @@ int main(int argc, char ** argv) {
         const AlohalyticsKeyEvent * key_event = dynamic_cast<const AlohalyticsKeyEvent *>(ptr.get());
         c.has_obligatory_key = (key_event && key_event->key == argv[2]);
       }
-//      ++c.events_count;
+      //      ++c.events_count;
       const uint64_t ts = ptr->timestamp;
       if (c.first_event_timestamp > ts) {
         c.first_event_timestamp = ts;
@@ -127,16 +129,18 @@ int main(int argc, char ** argv) {
 
   if (!obligatory_key.empty()) {
     // Remove users without obligatory events.
-    Erase_If(users, [](const TUsersContainer::value_type & user){ return user.second.has_obligatory_key == false; });
+    Erase_If(users, [](const TUsersContainer::value_type & user) { return user.second.has_obligatory_key == false; });
     cerr << "Users with " << obligatory_key << " event: " << users.size() << endl;
   }
 
   // Filter out invalid timestamps.
   const uint64_t start_bound = StatisticsWasReleasedTimestampMSFromEpoch();
-  Erase_If(users, [start_bound](const TUsersContainer::value_type & user){ return user.second.first_event_timestamp < start_bound; });
+  Erase_If(users, [start_bound](const TUsersContainer::value_type & user) {
+    return user.second.first_event_timestamp < start_bound;
+  });
   cerr << "Users left after filtering out wrong first event dates: " << users.size() << endl;
   const uint64_t end_bound = ReasonableFutureBoundForTimestampMSFromEpoch();
-  Erase_If(users, [end_bound](const TUsersContainer::value_type & user){
+  Erase_If(users, [end_bound](const TUsersContainer::value_type & user) {
     return user.second.last_event_timestamp == 0 || user.second.last_event_timestamp > end_bound;
   });
   cerr << "Users left after filtering out wrong last event dates: " << users.size() << endl;
@@ -147,9 +151,9 @@ int main(int argc, char ** argv) {
   for (auto & user : users) {
     sorted.emplace_back(move(user));
   }
-  const auto sort_lambda = [](const TElement & e1, const TElement & e2){
+  const auto sort_lambda = [](const TElement & e1, const TElement & e2) {
     return e1.second.last_event_timestamp - e1.second.first_event_timestamp >
-        e2.second.last_event_timestamp - e2.second.first_event_timestamp;
+           e2.second.last_event_timestamp - e2.second.first_event_timestamp;
   };
   sort(sorted.begin(), sorted.end(), sort_lambda);
 

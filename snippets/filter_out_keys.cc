@@ -59,8 +59,8 @@ int main(int argc, char * argv[]) {
         }
       }
     }
-    { cereal::BinaryOutputArchive(std::cout) << ptr;}
-    LSkip: ;
+    { cereal::BinaryOutputArchive(std::cout) << ptr; }
+  LSkip:;
   }
   return 0;
 }
