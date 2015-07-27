@@ -103,7 +103,9 @@ int main(int argc, char ** argv) {
   }
 
   // Sort all collected events by their timestamp.
-  const auto sorter = [](const unique_ptr<AlohalyticsBaseEvent> & e1, const unique_ptr<AlohalyticsBaseEvent> & e2) { return e1->timestamp < e2->timestamp; };
+  const auto sorter = [](const unique_ptr<AlohalyticsBaseEvent> & e1, const unique_ptr<AlohalyticsBaseEvent> & e2) {
+    return e1->timestamp < e2->timestamp;
+  };
   for (auto it = users.begin(), ite = users.end(); it != ite; ++it) {
     stable_sort(it->second.begin(), it->second.end(), sorter);
   }
