@@ -30,12 +30,18 @@
 #include "../Alohalytics/queries/processor.h"
 
 #include <iostream>
+#include <string>
 
-int main(int, char **) {
+int main(int argc, char ** argv) {
+  bool print_id_events = true;
+  if (argc >= 2 && std::string(argv[1]) == "--ignore-id-events") {
+    print_id_events = false;
+  }
   cereal::BinaryInputArchive ar(std::cin);
   const AlohalyticsIdServerEvent * previous = nullptr;
-  alohalytics::Processor([&previous](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
-    if (previous != se) {
+  alohalytics::Processor([&previous, print_id_events](const AlohalyticsIdServerEvent * se,
+                                                      const AlohalyticsBaseEvent * e) {
+    if (print_id_events && previous != se) {
       std::cout << se->ToString() << std::endl;
       previous = se;
     }
