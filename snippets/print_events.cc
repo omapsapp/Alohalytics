@@ -37,7 +37,6 @@ int main(int argc, char ** argv) {
   if (argc >= 2 && std::string(argv[1]) == "--ignore-id-events") {
     print_id_events = false;
   }
-  cereal::BinaryInputArchive ar(std::cin);
   const AlohalyticsIdServerEvent * previous = nullptr;
   alohalytics::Processor([&previous, print_id_events](const AlohalyticsIdServerEvent * se,
                                                       const AlohalyticsBaseEvent * e) {
