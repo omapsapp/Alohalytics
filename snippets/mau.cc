@@ -22,65 +22,25 @@
  SOFTWARE.
  *******************************************************************************/
 
+// Calculates total number of unique active users.
+// NOTE: Pass events to this snippet after filter_by_date.cc to correctly calculate MAU for given time period.
+// Example: $ cat alohalytics_messages | ./filter_by_date --start=2015-06-01 --end=2015-06-30 | ./mau
+
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
+#include "../Alohalytics/queries/processor.h"
 
-#include "../Alohalytics/src/Bricks/rtti/dispatcher.h"
-
-#include <iomanip>
 #include <iostream>
-#include <typeinfo>
 
 using namespace std;
 
-std::string TimestampToString(uint64_t timestamp_ms, bool day_only = false) {
-  const time_t timestamp = static_cast<const time_t>(timestamp_ms / 1000);
-  char buf[100];
-  const char * format = "%e-%b-%Y %H:%M:%S";
-  if (day_only) {
-    format = "%Y-%m-%d";
-  }
-  if (::strftime(buf, 100, format, ::gmtime(&timestamp))) {
-    return buf;
-  } else {
-    return "INVALID_TIME";
-  }
-}
-
-struct Processor {
-  map<string, uint64_t> ids;
-  map<string, uint64_t> dates;
-  uint64_t timestamp_min = std::numeric_limits<uint64_t>::max();
-  uint64_t timestamp_max = std::numeric_limits<uint64_t>::min();
-  void operator()(const AlohalyticsBaseEvent & event) { ++dates[TimestampToString(event.timestamp, true)]; }
-  void operator()(const AlohalyticsIdEvent & event) {
-    operator()(static_cast<const AlohalyticsBaseEvent &>(event));
-    ++ids[event.id];
-  }
-};
-
 int main(int, char **) {
-  cereal::BinaryInputArchive ar(std::cin);
-  Processor processor;
-  std::unique_ptr<AlohalyticsBaseEvent> ptr;
-  while (true) {
-    try {
-      ar(ptr);
-    } catch (const cereal::Exception & ex) {
-      cout << ex.what() << endl;
-      break;
-    }
-    bricks::rtti::RuntimeDispatcher<AlohalyticsBaseEvent, AlohalyticsIdEvent>::DispatchCall(*ptr, processor);
-  }
+  set<string> users;
+  alohalytics::Processor([&users](const AlohalyticsIdServerEvent * ie, const AlohalyticsBaseEvent *){
+    users.insert(ie->id);
+  }).PrintStatistics();
 
-  for (const auto & i : processor.dates) {
-    cout << i.first << ' ' << i.second << endl;
-  }
-  cout << "Total unique users: " << processor.ids.size() << endl;
-  multimap<uint64_t, string> m;
-  for (const auto & i : processor.ids) {
-    m.insert(make_pair(i.second, i.first));
-  }
+  cout << "Total unique active users count: " << users.size() << endl;
   return 0;
 }
