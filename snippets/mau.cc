@@ -23,6 +23,8 @@
  *******************************************************************************/
 
 // Calculates total number of unique active users.
+// Dumps one user id per line if launched with --print_ids argument.
+//
 // NOTE: Pass events to this snippet after filter_by_date.cc to correctly calculate MAU for given time period.
 // Example: $ cat alohalytics_messages | ./filter_by_date --start=2015-06-01 --end=2015-06-30 | ./mau
 
@@ -35,12 +37,17 @@
 
 using namespace std;
 
-int main(int, char **) {
-  set<string> users;
-  alohalytics::Processor([&users](const AlohalyticsIdServerEvent * ie, const AlohalyticsBaseEvent *){
-    users.insert(ie->id);
-  }).PrintStatistics();
+int main(int argc, char ** argv) {
+  alohalytics::Processor processor([](const AlohalyticsIdServerEvent *, const AlohalyticsBaseEvent *){
+    // Empty lambda body, because Processor allready calculates active users.
+  });
 
-  cout << "Total unique active users count: " << users.size() << endl;
+  if (argc > 1 && string(argv[1]) == "--print_ids") {
+    for (const auto & id : processor.unique_user_ids) {
+      cout << id << endl;
+    }
+  } else {
+    cout << "Total unique active users count: " << processor.unique_user_ids.size() << endl;
+  }
   return 0;
 }
