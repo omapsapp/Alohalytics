@@ -31,6 +31,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string>
 
 using namespace std;
@@ -45,6 +46,7 @@ int main(int argc, char ** argv) {
   cereal::BinaryInputArchive ar(std::cin);
   unique_ptr<AlohalyticsBaseEvent> ptr;
   uint64_t total_events_processed = 0, events_matched = 0;
+  set<string> matched_user_ids;
   auto const start_time = chrono::system_clock::now();
   while (true) {
     try {
@@ -64,6 +66,7 @@ int main(int argc, char ** argv) {
       if (key_event && key_event->key == key_to_find) {
         cout << user_id << " " << key_event->ToString() << endl;
         ++events_matched;
+        matched_user_ids.insert(user_id);
       }
     }
     ++total_events_processed;
@@ -72,6 +75,6 @@ int main(int argc, char ** argv) {
        << std::chrono::duration_cast<std::chrono::seconds>(chrono::system_clock::now() - start_time).count()
        << " seconds." << endl;
   cerr << "Total events processed: " << total_events_processed << endl;
-  cerr << "Found " << events_matched << " events with a key " << key_to_find << endl;
+  cerr << "Found " << events_matched << " events from " << matched_user_ids.size() << " unique users with a key " << key_to_find << endl;
   return 0;
 }
