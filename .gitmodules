@@ -1,6 +1,6 @@
 [submodule "Alohalytics"]
 	path = Alohalytics
-	url = https://github.com/KnowSheet/Alohalytics.git
+	url = https://github.com/deathbaba/Alohalytics.git
 [submodule "3party/utf8proc"]
 	path = 3party/utf8proc
 	url = https://github.com/JuliaLang/utf8proc
