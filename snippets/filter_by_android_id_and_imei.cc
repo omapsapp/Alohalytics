@@ -30,7 +30,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -46,12 +45,13 @@ void SerializeEvents(TEventsContainer & events) {
 
 int main(int argc, char * argv[]) {
   if (argc < 2) {
-    cerr << "Usage: " << argv[0] << " <android id + IMEI file>" << endl;
+    cerr << "Usage: " << argv[0] << " <IMEI + optional android_id file>" << endl;
     cerr << "  Please use commas or spaces to separate id from IMEI" << endl;
     return -1;
   }
-  // Load list of "AndroidID IMEI\n" from file.
-  set<string> android_ids, imeis;
+  // Load list of "IMEI[ android_id]\n" from file.
+  // Maps are mirrored, and used for faster match by imei and by android_id.
+  map<string, string> imeis, android_ids;
   {
     ifstream file(argv[1]);
     string line;
@@ -64,11 +64,14 @@ int main(int argc, char * argv[]) {
       if (separator == string::npos) {
         separator = line.find(' ');
         if (separator == string::npos) {
+          imeis[line] = string();
           continue;
         }
       }
-      android_ids.insert(line.substr(0, separator));
-      imeis.insert(line.substr(separator + 1, string::npos));
+      const string imei(line.substr(0, separator));
+      const string aid(line.substr(separator + 1, string::npos));
+      imeis[imei] = aid;
+      android_ids[aid] = imei;
     }
   }
   // Debug output.
