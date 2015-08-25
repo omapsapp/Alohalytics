@@ -75,6 +75,7 @@ int main(int argc, char ** argv) {
        << std::chrono::duration_cast<std::chrono::seconds>(chrono::system_clock::now() - start_time).count()
        << " seconds." << endl;
   cerr << "Total events processed: " << total_events_processed << endl;
-  cerr << "Found " << events_matched << " events from " << matched_user_ids.size() << " unique users with a key " << key_to_find << endl;
+  cerr << "Found " << events_matched << " events from " << matched_user_ids.size() << " unique users with a key "
+       << key_to_find << endl;
   return 0;
 }

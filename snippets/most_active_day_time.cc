@@ -52,7 +52,7 @@ int main(int, char **) {
 
   // Print results.
   typedef pair<uint64_t, size_t> TElem;
-  const auto comparator = [](const TElem & e1, const TElem & e2){ return e1.second > e2.second; };
+  const auto comparator = [](const TElem & e1, const TElem & e2) { return e1.second > e2.second; };
   set<TElem, decltype(comparator)> sorted(comparator);
   for (const auto & counter : counters) {
     cout << counter.first << " " << counter.second << endl;

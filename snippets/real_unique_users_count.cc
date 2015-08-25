@@ -52,7 +52,7 @@ int main(int, char **) {
     if (kpe->key == "$iosDeviceIds" || kpe->key == "$androidIds") {
       for (const auto & pair : kpe->pairs) {
         if (pair.first == "isAdvertisingTrackingEnabled") {
-          continue; // Skip this value for iOS.
+          continue;  // Skip this value for iOS.
         }
         containers[pair.first][pair.second].insert(se->id);
       }
@@ -67,14 +67,17 @@ int main(int, char **) {
       sum += user.second.size();
       sorted_by_reinstalls.push_back(user);
     }
-    cout << sum << " (" << 100. - counter.second.size() / static_cast<double>(sum) * 100. << "% of users has reinstalled the app)" << endl;
-    sort(sorted_by_reinstalls.begin(), sorted_by_reinstalls.end(), [](const TVector::value_type & v1, const TVector::value_type & v2){
-      return v1.second.size() > v2.second.size();
-    });
+    cout << sum << " (" << 100. - counter.second.size() / static_cast<double>(sum) * 100.
+         << "% of users has reinstalled the app)" << endl;
+    sort(sorted_by_reinstalls.begin(), sorted_by_reinstalls.end(),
+         [](const TVector::value_type & v1, const TVector::value_type & v2) {
+           return v1.second.size() > v2.second.size();
+         });
     const size_t kTopReinstallsToPrint = 10;
     cout << "Top " << kTopReinstallsToPrint << " reinstalls:" << endl;
     for (size_t i = 0; i < kTopReinstallsToPrint; ++i) {
-      cout << sorted_by_reinstalls[i].first << " has reinstalled " << sorted_by_reinstalls[i].second.size() << " times." << endl;
+      cout << sorted_by_reinstalls[i].first << " has reinstalled " << sorted_by_reinstalls[i].second.size() << " times."
+           << endl;
     }
   }
   return 0;
