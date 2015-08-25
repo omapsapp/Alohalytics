@@ -24,7 +24,7 @@
 
 // Calculates search by category statistics.
 
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include "search.h"
 
@@ -45,7 +45,7 @@ int main(int argc, char ** argv) {
   map<string, set<string>> users_queries_;
   SearchFilter filter(
       [&users_queries_](const string & user, const string & query, size_t) { users_queries_[user].insert(query); });
-  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
+  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "searchEmitResults") {
       filter.ProcessQuery(se->id, kpe->pairs.begin()->first, 0 /* ignore results count */);

@@ -22,7 +22,7 @@
  SOFTWARE.
  *******************************************************************************/
 
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include <map>
 #include <string>
@@ -32,7 +32,7 @@ using namespace std;
 
 int main(int, char **) {
   map<string, set<string>> users;
-  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
+  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyValueEvent * kv = dynamic_cast<const AlohalyticsKeyValueEvent *>(e);
     if (kv && kv->key == "$onResume" && kv->value.find("MapFragment") == 0) {
       users[se->id].insert(kv->value.substr(kv->value.find(':') + 1));

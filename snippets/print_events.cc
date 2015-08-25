@@ -27,7 +27,7 @@
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include <iostream>
 #include <string>
@@ -39,7 +39,7 @@ int main(int argc, char ** argv) {
   }
   const AlohalyticsIdServerEvent * previous = nullptr;
   alohalytics::Processor([&previous, print_id_events](const AlohalyticsIdServerEvent * se,
-                                                      const AlohalyticsBaseEvent * e) {
+                                                      const AlohalyticsKeyEvent * e) {
     if (print_id_events && previous != se) {
       std::cout << se->ToString() << std::endl;
       previous = se;

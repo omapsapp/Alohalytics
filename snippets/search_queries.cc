@@ -24,7 +24,7 @@
 
 // Calculates statistics for all search queries.
 
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include "search.h"
 
@@ -53,7 +53,7 @@ int main(int argc, char ** argv) {
     TQuery q = {query, results};
     users_queries_[user].emplace(q);
   });
-  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
+  Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "searchEmitResults") {
       const auto it = kpe->pairs.begin();

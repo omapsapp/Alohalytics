@@ -30,7 +30,7 @@
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include <algorithm>
 #include <iostream>
@@ -44,7 +44,7 @@ using namespace std;
 int main(int, char **) {
   // <"identifierForVendor", <"it's value", set<"alohalytics unique id">>>
   map<string, map<string, set<string>>> containers;
-  alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsBaseEvent * e) {
+  alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (!kpe) {
       return;

@@ -27,7 +27,7 @@
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include <chrono>
 #include <ctime>
@@ -46,8 +46,7 @@ uint64_t TimestampToHourAndMinute(uint64_t timestamp) {
 
 int main(int, char **) {
   map<uint64_t, size_t> counters;
-  alohalytics::Processor([&counters](const AlohalyticsIdServerEvent *,
-                                                      const AlohalyticsBaseEvent * e) {
+  alohalytics::Processor([&counters](const AlohalyticsIdServerEvent *, const AlohalyticsKeyEvent * e) {
     ++counters[TimestampToHourAndMinute(e->timestamp)];
   }).PrintStatistics();
 

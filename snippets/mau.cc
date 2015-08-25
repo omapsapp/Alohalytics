@@ -31,14 +31,14 @@
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
-#include "../Alohalytics/queries/processor.h"
+#include "../include/processor.h"
 
 #include <iostream>
 
 using namespace std;
 
 int main(int argc, char ** argv) {
-  alohalytics::Processor processor([](const AlohalyticsIdServerEvent *, const AlohalyticsBaseEvent *){
+  alohalytics::Processor processor([](const AlohalyticsIdServerEvent *, const AlohalyticsKeyEvent *) {
     // Empty lambda body, because Processor allready calculates active users.
   });
 
