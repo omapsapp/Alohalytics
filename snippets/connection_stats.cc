@@ -32,7 +32,7 @@
 using namespace alohalytics;
 using namespace std;
 
-int main(int argc, char ** argv) {
+int main(int, char **) {
   map<string, set<string>> users;
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     if (se->id[0] != 'A') {
