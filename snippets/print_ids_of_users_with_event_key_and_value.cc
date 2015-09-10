@@ -24,6 +24,7 @@
 
 // Prints to stdout ids of users who have specified events with key and value in them.
 // Value is matched as a substring.
+// User ids are not unique and can repeat itself!
 
 #include "../include/processor.h"
 
