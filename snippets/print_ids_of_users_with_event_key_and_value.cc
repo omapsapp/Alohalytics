@@ -39,7 +39,7 @@ int main(int argc, char ** argv) {
   const string key = argv[2];
   const string value = argv[3];
 
-  alohalytics::Processor([&](const AlohalyticsIdServerEvent * ie, const AlohalyticsKeyEvent * e){
+  alohalytics::Processor([&](const AlohalyticsIdServerEvent * ie, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == name) {
       const auto found = kpe->pairs.find(key);

@@ -36,7 +36,7 @@ int main(int, char **) {
   map<string, set<string>> users;
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     if (se->id[0] != 'A') {
-      return; // ignore iOS events.
+      return;  // ignore iOS events.
     }
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
     if (kpe && kpe->key == "$launch") {
