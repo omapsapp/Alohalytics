@@ -45,8 +45,8 @@ struct Processor {
   std::set<std::string> unique_user_ids;
   std::chrono::seconds::rep processing_time_sec;
 
-  Processor(TLambda lambda) {
-    cereal::BinaryInputArchive ar(std::cin);
+  Processor(TLambda lambda, std::istream & input = std::cin) {
+    cereal::BinaryInputArchive ar(input);
     std::unique_ptr<AlohalyticsBaseEvent> ptr, server_id_ptr;
     const auto start_time = std::chrono::system_clock::now();
     while (true) {
