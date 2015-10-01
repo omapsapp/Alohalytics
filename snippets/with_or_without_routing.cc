@@ -40,8 +40,14 @@ struct Stats {
 int main(int, char **) {
   map<string, Stats> versions;
   alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * ke) {
-    if (ke->key == "$OnMapDownloadFinished") {
-      const string opt = static_cast<const AlohalyticsKeyPairsEvent *>(ke)->pairs.find("option")->second;
+    const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(ke);
+    if (kpe && kpe->key == "$OnMapDownloadFinished") {
+      const auto found = kpe->pairs.find("option");
+      if (found == kpe->pairs.end()) {
+        cerr << "Err: no options in event?" << endl;
+        return;
+      }
+      const string opt = found->second;
       if (opt == "MapOnly") {
         ++versions[se->uri].MapOnly;
       } else if (opt == "MapWithCarRouting") {
