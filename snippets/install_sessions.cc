@@ -23,63 +23,79 @@
  *******************************************************************************/
 
 // Calculates statistics for very first sessions (immediately after app install).
-// Throws out all events before install and all events after given seconds interval.
+// Session is a continuous events flow with no more than <X> seconds interval between events,
+// specified from command line.
 
-#define ALOHALYTICS_SERVER
-#include "../Alohalytics/src/event_base.h"
+#include"../include/processor.h"
 
-#include <map>
-#include <set>
-#include <string>
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 using namespace alohalytics;
 using namespace std;
 
+struct Stats {
+  string version;
+  uint64_t install_ms;
+  uint64_t last_event_ms;
+  uint32_t Seconds() const { return static_cast<uint32_t>((last_event_ms - install_ms) / 1000); }
+};
+
+uint32_t Average(const vector<uint32_t> & v) {
+  uint64_t average = 0;
+  for (auto s : v) {
+    average += s;
+  }
+  return average / v.size();
+}
+
 int main(int argc, char ** argv) {
   if (argc < 2) {
-    cout << "Usage: " << argv[0] << " <seconds after install to filter out>" << endl;
+    cout << "Usage: " << argv[0] << " <seconds interval between events in the flow>" << endl;
     return -1;
   }
-  const uint64_t ms_after_install = stol(argv[1]) * 1000;
-  map<string, vector<unique_ptr<AlohalyticsBaseEvent>>> events;
-  cereal::BinaryInputArchive ar(std::cin);
-  std::unique_ptr<AlohalyticsBaseEvent> ptr, id_ptr;
-  string current_id;
-  while (true) {
-    try {
-      ar(ptr);
-    } catch (const cereal::Exception & ex) {
-      if (string("Failed to read 4 bytes from input stream! Read 0") != ex.what()) {
-        // The exception above is a normal one, Cereal lacks to detect the end of the stream.
-        cout << ex.what() << endl;
-      }
-      break;
+  const uint64_t milliseconds = stoull(argv[1]) * 1000;
+  unordered_map<string, Stats> users;
+
+  Processor([&](const AlohalyticsIdServerEvent * ie, const AlohalyticsKeyEvent * e){
+    if (e->key[0] != '$') {
+      return;
     }
-    AlohalyticsIdServerEvent const * se = dynamic_cast<AlohalyticsIdServerEvent const *>(ptr.get());
-    if (se) {
-      current_id = se->id;
-      id_ptr = move(ptr);
-      continue;
+    if (e->key == "$install") {
+      Stats & s = users[ie->id];
+      s.install_ms = s.last_event_ms = e->timestamp;
+      s.version = ie->uri;
+      return;
     }
-    AlohalyticsKeyPairsEvent const * kpe = dynamic_cast<AlohalyticsKeyPairsEvent const *>(ptr.get());
-    if (kpe && kpe->key == "$install") {
-      events[current_id].emplace_back(move(ptr));
-      continue;
+    auto found = users.find(ie->id);
+    if (found == users.end()) {
+      return;
     }
-    auto found = events.find(current_id);
-    if (found != events.end()) {
-      const uint64_t install_timestamp = found->second[0]->timestamp;
-      if (ptr->timestamp < install_timestamp + ms_after_install) {
-        found->second.emplace_back(move(ptr));
-      }
+    if ((e->timestamp - found->second.last_event_ms) < milliseconds) {
+      found->second.last_event_ms = e->timestamp;
+      return;
     }
+  }).PrintStatistics();
+
+  cout << "Found " << users.size() << " users with install sessions." << endl;
+
+  unordered_map<string, vector<uint32_t>> versions;
+  for (const auto & user : users) {
+    versions[user.second.version].emplace_back(user.second.Seconds());
   }
 
-  cout << "Found " << events.size() << " users with install sessions." << endl;
-  for (const auto & user : events) {
-    for (const auto & event : user.second) {
-      cout << event->ToString() << endl;
-    }
+  for (auto & v : versions) {
+    cout << "Version: " << v.first << endl;
+    cout << "Users with install events: " << v.second.size() << endl;
+    // Need to sort vectors for medians.
+    sort(v.second.begin(), v.second.end());
+    cout << "Average install session length: " << Average(v.second) << " seconds."<< endl;
+    cout << "Median session length: " << v.second[v.second.size()/2] << " seconds." << endl;
+    // There are a lot of zero session lenghts, filter them out.
+    v.second.erase(remove(v.second.begin(), v.second.end(), 0), v.second.end());
+    cout << "Average install session length (no zero sessions): " << Average(v.second) << " seconds."<< endl;
+    cout << "Median session length (no zero sessions): " << v.second[v.second.size()/2] << " seconds." << endl;
     cout << endl;
   }
   return 0;
