@@ -35,25 +35,44 @@ struct Stats {
   size_t MapOnly = 0;
   size_t CarRouting = 0;
   size_t MapWithCarRouting = 0;
+  size_t Nothing = 0;
 };
 
-int main(int, char **) {
+int main(int argc, char **) {
+  bool success_only = true;
+  if (argc > 1) {
+    success_only = false;
+  }
   map<string, Stats> versions;
   alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * ke) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(ke);
     if (kpe && kpe->key == "$OnMapDownloadFinished") {
+      if (success_only) {
+        const auto found = kpe->pairs.find("status");
+        if (found == kpe->pairs.end()) {
+          cerr << "Err: status not found." << endl;
+          return;
+        }
+        if (found->second != "ok") {
+          return;
+        }
+      }
       const auto found = kpe->pairs.find("option");
       if (found == kpe->pairs.end()) {
         cerr << "Err: no options in event?" << endl;
         return;
       }
       const string opt = found->second;
-      if (opt == "MapOnly") {
+      if (opt == "Map" || opt == "MapOnly") {
         ++versions[se->uri].MapOnly;
       } else if (opt == "MapWithCarRouting") {
         ++versions[se->uri].MapWithCarRouting;
       } else if (opt == "CarRouting") {
         ++versions[se->uri].CarRouting;
+      } else if (opt == "Nothing") {
+        ++versions[se->uri].Nothing;
+      } else {
+        cerr << "Err: unknown option " << opt << endl;
       }
     }
   }).PrintStatistics();
@@ -61,10 +80,11 @@ int main(int, char **) {
   for (const auto & version : versions) {
     cout << "Version: " << version.first << endl;
     const size_t total = version.second.MapOnly + version.second.CarRouting +
-        version.second.MapWithCarRouting;
-    cout << "Map only    : " << std::fixed << std::setprecision(1) << version.second.MapOnly * 100. / total << "%" << endl;
-    cout << "Map+Routing : " << std::fixed << std::setprecision(1) << version.second.MapWithCarRouting * 100. / total << "%" << endl;
-    cout << "Routing only: " << std::fixed << std::setprecision(1) << version.second.CarRouting * 100. / total << "%" << endl;
+        version.second.MapWithCarRouting + version.second.Nothing;
+    cout << "Map only    : " << std::fixed << std::setprecision(1) << version.second.MapOnly * 100. / total << "% (" << version.second.MapOnly << ")" << endl;
+    cout << "Map+Routing : " << version.second.MapWithCarRouting * 100. / total << "% (" << version.second.MapWithCarRouting << ")" << endl;
+    cout << "Routing only: " << version.second.CarRouting * 100. / total << "% (" << version.second.CarRouting << ")" << endl;
+    cout << "Nothing     : " << version.second.Nothing * 100. / total << "% (" << version.second.Nothing << ")" << endl;
     cout << endl;
   }
   return 0;
