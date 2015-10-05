@@ -26,7 +26,9 @@
 // Session is a continuous events flow with no more than <X> seconds interval between events,
 // specified from command line.
 
-#include"../include/processor.h"
+// This define is needed to preserve client's timestamps in events.
+#define ALOHALYTICS_SERVER
+#include "../Alohalytics/src/event_base.h"
 
 #include <algorithm>
 #include <unordered_map>
@@ -43,6 +45,9 @@ struct Stats {
 };
 
 uint32_t Average(const vector<uint32_t> & v) {
+  if (v.size() == 0) {
+    return 0;
+  }
   uint64_t average = 0;
   for (auto s : v) {
     average += s;
@@ -58,25 +63,48 @@ int main(int argc, char ** argv) {
   const uint64_t milliseconds = stoull(argv[1]) * 1000;
   unordered_map<string, Stats> users;
 
-  Processor([&](const AlohalyticsIdServerEvent * ie, const AlohalyticsKeyEvent * e){
-    if (e->key[0] != '$') {
-      return;
+  cereal::BinaryInputArchive ar(std::cin);
+  unique_ptr<AlohalyticsBaseEvent> ptr, server_id;
+  while (true) {
+    try {
+      ar(ptr);
+    } catch (const cereal::Exception & ex) {
+      if (string("Failed to read 4 bytes from input stream! Read 0") != ex.what()) {
+        // The exception above is a normal one, Cereal lacks to detect the end of the stream.
+        cerr << ex.what() << endl;
+      }
+      break;
     }
+
+    {
+      const AlohalyticsIdServerEvent * se = dynamic_cast<const AlohalyticsIdServerEvent *>(ptr.get());
+      if (se) {
+        server_id = move(ptr);
+        continue;
+      }
+    }
+
+    const AlohalyticsKeyEvent * e = dynamic_cast<const AlohalyticsKeyEvent *>(ptr.get());
+    if (!e) {
+      cerr << "Error: not a key event!" << endl;
+      continue;
+    }
+    // Processing code.
     if (e->key == "$install") {
-      Stats & s = users[ie->id];
+      Stats & s = users[static_cast<const AlohalyticsIdServerEvent *>(server_id.get())->id];
       s.install_ms = s.last_event_ms = e->timestamp;
-      s.version = ie->uri;
-      return;
+      s.version = static_cast<const AlohalyticsIdServerEvent *>(server_id.get())->uri;
+      continue;
     }
-    auto found = users.find(ie->id);
+    auto found = users.find(static_cast<const AlohalyticsIdServerEvent *>(server_id.get())->id);
     if (found == users.end()) {
-      return;
+      continue;
     }
     if ((e->timestamp - found->second.last_event_ms) < milliseconds) {
       found->second.last_event_ms = e->timestamp;
-      return;
+      continue;
     }
-  }).PrintStatistics();
+  }
 
   cout << "Found " << users.size() << " users with install sessions." << endl;
 
@@ -85,17 +113,18 @@ int main(int argc, char ** argv) {
     versions[user.second.version].emplace_back(user.second.Seconds());
   }
 
+  cout << "Version,Users,Avg,Median,Avg(no 0),Median(no 0)" << endl;
   for (auto & v : versions) {
-    cout << "Version: " << v.first << endl;
-    cout << "Users with install events: " << v.second.size() << endl;
+    cout << v.first << ',';
+    cout << v.second.size() << ',';
     // Need to sort vectors for medians.
     sort(v.second.begin(), v.second.end());
-    cout << "Average install session length: " << Average(v.second) << " seconds."<< endl;
-    cout << "Median session length: " << v.second[v.second.size()/2] << " seconds." << endl;
-    // There are a lot of zero session lenghts, filter them out.
+    cout << Average(v.second) << ',';
+    cout << v.second[v.second.size()/2] << ',';
+    // There are a lot of zero session lengths, filter them out.
     v.second.erase(remove(v.second.begin(), v.second.end(), 0), v.second.end());
-    cout << "Average install session length (no zero sessions): " << Average(v.second) << " seconds."<< endl;
-    cout << "Median session length (no zero sessions): " << v.second[v.second.size()/2] << " seconds." << endl;
+    cout << Average(v.second) << ',';
+    cout << v.second[v.second.size()/2];
     cout << endl;
   }
   return 0;
