@@ -64,11 +64,15 @@ struct Processor {
         unique_user_ids.insert(id_event->id);
         server_id_ptr = std::move(ptr);
       } else {
-        lambda(static_cast<const AlohalyticsIdServerEvent *>(server_id_ptr.get()),
-               // With current arch, we definitely know that here is Key event.
-               static_cast<const AlohalyticsKeyEvent *>(ptr.get()));
-        // Do not count id events as they are created automatically.
-        ++total_events_processed;
+        const AlohalyticsKeyEvent * ke = dynamic_cast<const AlohalyticsKeyEvent *>(ptr.get());
+        if (ke) {
+          lambda(static_cast<const AlohalyticsIdServerEvent *>(server_id_ptr.get()), ke);
+          // Do not count id events as they are created automatically.
+          ++total_events_processed;
+        } else {
+          // @TODO(AlexZ): Investigate why we have such events in the stream.
+          //std::cerr << "Error: not a key event type in the stream!" << endl;
+        }
       }
     }
     processing_time_sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - start_time).count();
