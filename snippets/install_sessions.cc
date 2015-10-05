@@ -76,17 +76,14 @@ int main(int argc, char ** argv) {
       break;
     }
 
-    {
+    const AlohalyticsKeyEvent * e = dynamic_cast<const AlohalyticsKeyEvent *>(ptr.get());
+    if (!e) {
       const AlohalyticsIdServerEvent * se = dynamic_cast<const AlohalyticsIdServerEvent *>(ptr.get());
       if (se) {
         server_id = move(ptr);
         continue;
       }
-    }
-
-    const AlohalyticsKeyEvent * e = dynamic_cast<const AlohalyticsKeyEvent *>(ptr.get());
-    if (!e) {
-      cerr << "Error: not a key event!" << endl;
+      cerr << "Critical Error: not a key event in the stream!" << endl;
       continue;
     }
     // Processing code.
