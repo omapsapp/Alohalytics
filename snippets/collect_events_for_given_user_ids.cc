@@ -77,6 +77,7 @@ int main(int argc, char ** argv) {
   unique_ptr<AlohalyticsBaseEvent> ptr;
   size_t total_events_processed = 0;
   map<string, vector<unique_ptr<AlohalyticsBaseEvent>>> users;
+  map<string, unique_ptr<AlohalyticsBaseEvent>> ids;
   bool collect_events_for_this_user = false;
   auto const start_time = chrono::system_clock::now();
   while (true) {
@@ -94,6 +95,9 @@ int main(int argc, char ** argv) {
     if (id_event) {
       current_user_id = id_event->id;
       collect_events_for_this_user = ids_to_match.find(current_user_id) != ids_to_match.end();
+      if (collect_events_for_this_user) {
+        ids[current_user_id] = move(ptr);
+      }
     } else {
       ++total_events_processed;
       if (collect_events_for_this_user) {
@@ -103,6 +107,7 @@ int main(int argc, char ** argv) {
   }
 
   // Sort all collected events by their timestamp.
+  // TODO(AlexZ): do we really need this sorting? Timestamps should be already guaranteed to always grow up.
   const auto sorter = [](const unique_ptr<AlohalyticsBaseEvent> & e1, const unique_ptr<AlohalyticsBaseEvent> & e2) {
     return e1->timestamp < e2->timestamp;
   };
@@ -112,6 +117,7 @@ int main(int argc, char ** argv) {
 
   for (const auto & user : users) {
     ofstream ofile(out_directory + user.first, ofstream::out | ofstream::binary | ofstream::trunc);
+    { cereal::BinaryOutputArchive(ofile) << ids[user.first]; }
     for (const auto & e : user.second) {
       // Serialize event back into a binary form.
       { cereal::BinaryOutputArchive(ofile) << e; }
