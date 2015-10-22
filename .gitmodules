@@ -6,4 +6,4 @@
 	url = https://github.com/JuliaLang/utf8proc
 [submodule "omim"]
 	path = omim
-	url = git@gitmm.corp.mail.ru:maps/omim.git
+	url = git@github.com:mapsme/omim.git
