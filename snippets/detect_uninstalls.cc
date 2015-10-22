@@ -22,7 +22,7 @@
  SOFTWARE.
  *******************************************************************************/
 
-// Prints <date of installation>,<user ID>,<seconds between install and latest app usage>
+// Prints <installation date>,<user ID>,<number of downloaded maps>,<number of failed maps>,<seconds between install and latest app usage>
 // Lines are sorted ascending by seconds, so it would be easy to cut off all
 // users who probably uninstalled the app after using it no more than X seconds.
 
@@ -39,6 +39,8 @@ using namespace std;
 struct Counters {
   uint64_t install_time = 0;
   uint64_t last_usage_time = 0;
+  uint64_t downloaded_maps = 0;
+  uint64_t failed_maps = 0;
   string InstallDate() const {
     char buff[20] = {0};
     const time_t timet = install_time / 1000;
@@ -54,9 +56,21 @@ int main(int, char **) {
     if (e->key == "$install") {
       users[se->id].install_time = e->timestamp;
     } else {
-      auto const found = users.find(se->id);
+      const auto found = users.find(se->id);
       if (found != users.end()) {
         found->second.last_usage_time = e->timestamp;
+        // Also calculate donwloaded countries.
+        if (e->key == "$OnMapDownloadFinished") {
+          const auto kpe = static_cast<const AlohalyticsKeyPairsEvent *>(e);
+          const auto status = kpe->pairs.find("status");
+          if (status != kpe->pairs.end()) {
+            if (status->second == "ok") {
+              ++found->second.downloaded_maps;
+            } else {
+              ++found->second.failed_maps;
+            }
+          }
+        }
       }
     }
   });
@@ -74,6 +88,7 @@ int main(int, char **) {
   // Print results to stdout.
   for (const auto & user : sorted) {
     cout << user.second.InstallDate() << ',' << user.first << ','
+         << user.second.downloaded_maps << ',' << user.second.failed_maps << ','
          << user.second.UsageSeconds() << endl;
   }
   return 0;
