@@ -26,7 +26,7 @@
 // Lines are sorted ascending by seconds, so it would be easy to cut off all
 // users who probably uninstalled the app after using it no more than X seconds.
 
-#include "../include/processor.h"
+#include "../include/processor_light.h"
 
 #include <algorithm>
 #include <ctime>
@@ -50,7 +50,7 @@ struct Counters {
 
 int main(int, char **) {
   unordered_map<string, Counters> users;
-  alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
+  alohalytics::ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     if (e->key == "$install") {
       users[se->id].install_time = e->timestamp;
     } else {
@@ -59,7 +59,7 @@ int main(int, char **) {
         found->second.last_usage_time = e->timestamp;
       }
     }
-  }).PrintStatistics();
+  });
 
   // Sort results.
   typedef vector<pair<string, Counters>> TContainer;
