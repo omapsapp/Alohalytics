@@ -56,7 +56,15 @@ int main(int argc, char ** argv) {
     while (ifile) {
       getline(ifile, line);
       if (!line.empty()) {
-        ids_to_match.insert(line);
+        // Validate IDs.
+        auto found = line.find("I:");
+        if (found == string::npos) {
+          found = line.find("A:");
+          if (found == string::npos) {
+            continue;
+          }
+        }
+        ids_to_match.insert(line.substr(found, 38));
       }
     }
   }
