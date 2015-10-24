@@ -52,14 +52,18 @@ struct Counters {
 
 int main(int, char **) {
   unordered_map<string, Counters> users;
+  // TODO(AlexZ): Faster impl if parse raw stream and seek only new server events in a map.
   alohalytics::ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     if (e->key == "$install") {
       users[se->id].install_time = e->timestamp;
     } else {
       const auto found = users.find(se->id);
       if (found != users.end()) {
-        found->second.last_usage_time = e->timestamp;
-        // Also calculate donwloaded countries.
+        auto & lut = found->second.last_usage_time;
+        if (lut < e->timestamp) {
+          lut = e->timestamp;
+        }
+        // Also calculate downloaded countries.
         if (e->key == "$OnMapDownloadFinished") {
           const auto kpe = static_cast<const AlohalyticsKeyPairsEvent *>(e);
           const auto status = kpe->pairs.find("status");
