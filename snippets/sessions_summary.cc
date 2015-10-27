@@ -38,6 +38,17 @@ struct Counters {
   uint64_t number_of_sessions = 0;
 };
 
+uint64_t invalid_seconds_count = 0;
+
+int ToSeconds(const string & str) {
+  const int seconds = stoi(str);
+  if (seconds > 86400) {
+    ++invalid_seconds_count;
+    return 1;
+  }
+  return seconds;
+}
+
 int main(int, char **) {
   Counters framework, ios, android;
   vector<int> median_framework, median_ios, median_android;
@@ -46,7 +57,7 @@ int main(int, char **) {
       const AlohalyticsKeyPairsEvent * kpe = static_cast<const AlohalyticsKeyPairsEvent *>(ke);
       auto found = kpe->pairs.find("foregroundSeconds");
       if (found != kpe->pairs.end()) {
-        const int seconds = stoi(found->second);
+        const int seconds = ToSeconds(found->second);
         framework.total_seconds += seconds;
         ++framework.number_of_sessions;
         median_framework.push_back(seconds);
@@ -54,7 +65,7 @@ int main(int, char **) {
     } else if (ke->key == "$applicationWillResignActive") {
       const AlohalyticsKeyValueEvent * kve = dynamic_cast<const AlohalyticsKeyValueEvent *>(ke);
       if (kve) {
-        const int seconds = stoi(kve->value);
+        const int seconds = ToSeconds(kve->value);
         ios.total_seconds += seconds;
         ++ios.number_of_sessions;
         median_ios.push_back(seconds);
@@ -62,7 +73,7 @@ int main(int, char **) {
     } else if (ke->key == "$endSession") {
       const AlohalyticsKeyValueEvent * kve = dynamic_cast<const AlohalyticsKeyValueEvent *>(ke);
       if (kve) {
-        const int seconds = stoi(kve->value);
+        const int seconds = ToSeconds(kve->value);
         android.total_seconds += seconds;
         ++android.number_of_sessions;
         median_android.push_back(seconds);
@@ -71,6 +82,7 @@ int main(int, char **) {
   }).PrintStatistics();
 
   // Calculate & print results.
+  cout << "Invalid seconds count: " << invalid_seconds_count << endl;
   sort(median_android.begin(), median_android.end());
   sort(median_ios.begin(), median_ios.end());
   sort(median_framework.begin(), median_framework.end());
