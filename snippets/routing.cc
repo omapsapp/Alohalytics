@@ -103,7 +103,7 @@ int main(int, char **) {
     passed_pedestrian_total += user.second.passed_pedestrian;
   }
   cout << "Car routing was calculated by " << calculate_vehicle_users << " users " << vehicle_calc_sum << " times." << endl;
-  cout << "Pedestrian routing was calculated by " << calculate_pedestrian_users << " users " << vehicle_calc_sum << " times." << endl;
+  cout << "Pedestrian routing was calculated by " << calculate_pedestrian_users << " users " << pedestrian_calc_sum << " times." << endl;
   cout << reached_destinations_vehicle_users << " users reached car destination " << vehicle_reached_sum << " times." << endl;
   cout << reached_destinations_pedestrian_users << " users reached pedestrian destination " << pedestrian_reached_sum << " times." << endl;
   cout << "Total passed car distance: " << passed_vehicle_total << endl;
