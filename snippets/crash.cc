@@ -22,34 +22,21 @@
  SOFTWARE.
  *******************************************************************************/
 
-#include "../include/processor_light.h"
+#include"../include/processor.h"
 
-#include <map>
-#include <set>
-#include <string>
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 using namespace alohalytics;
 using namespace std;
 
-int main(int, char **) {
-  map<string, set<string>> users;
-  ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
-    const AlohalyticsKeyValueEvent * kv = dynamic_cast<const AlohalyticsKeyValueEvent *>(e);
-    if (kv && kv->key == "$onResume" && kv->value.find("MapFragment") == 0) {
-      users[se->id].insert(kv->value.substr(kv->value.find(':') + 1));
+int main(int argc, char ** argv) {
+  Processor([&](const AlohalyticsIdServerEvent * ie, const AlohalyticsKeyEvent * e){
+    if (ie->id == e->key || e->timestamp == ie->uri.size()) {
+      cout << "Voila!" << endl;
     }
-  });
+  }).PrintStatistics();
 
-  map<string, size_t> counters;
-  for (const auto & user : users) {
-    for (const auto & mode : user.second) {
-      ++counters[mode];
-    }
-  }
-  const size_t uc = users.size();
-  cerr << "Users with onResume MapFragment events: " << uc << endl;
-  for (const auto & c : counters) {
-    cout << c.first << " " << fixed << setprecision(2) << c.second * 100. / uc << "%" << endl;
-  }
   return 0;
 }

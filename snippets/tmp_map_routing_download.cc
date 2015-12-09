@@ -22,34 +22,26 @@
  SOFTWARE.
  *******************************************************************************/
 
-#include "../include/processor_light.h"
+// Prints number of users with specified event values.
 
+#include "../include/processor.h"
+
+#include <iostream>
 #include <map>
-#include <set>
-#include <string>
 
-using namespace alohalytics;
 using namespace std;
 
-int main(int, char **) {
-  map<string, set<string>> users;
-  ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
-    const AlohalyticsKeyValueEvent * kv = dynamic_cast<const AlohalyticsKeyValueEvent *>(e);
-    if (kv && kv->key == "$onResume" && kv->value.find("MapFragment") == 0) {
-      users[se->id].insert(kv->value.substr(kv->value.find(':') + 1));
-    }
-  });
+int main(int argc, char ** argv) {
+  set<string> map, map_and_routing;
+  alohalytics::Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
+    auto kve = static_cast<const AlohalyticsKeyValueEvent *>(e);
+    if (kve->value == "MapOnly") {
+      map.insert(se->id);
+    } else map_and_routing.insert(se->id);
+  }).PrintStatistics();
 
-  map<string, size_t> counters;
-  for (const auto & user : users) {
-    for (const auto & mode : user.second) {
-      ++counters[mode];
-    }
-  }
-  const size_t uc = users.size();
-  cerr << "Users with onResume MapFragment events: " << uc << endl;
-  for (const auto & c : counters) {
-    cout << c.first << " " << fixed << setprecision(2) << c.second * 100. / uc << "%" << endl;
-  }
+  cout << "Map only: " << map.size() << endl;
+  cout << "Map+Routing: " << map_and_routing.size() << endl;
   return 0;
 }
+
