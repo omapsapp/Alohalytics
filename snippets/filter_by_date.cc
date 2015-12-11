@@ -29,33 +29,22 @@
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
 
+#include "../include/time_helpers.h"
+
 #include <iostream>
-#include <stdexcept>
 #include <vector>
 
 #include <string.h>
-#include <time.h>  // strptime is POSIX-only.
+
 
 using namespace std;
+using namespace time_helpers;
 
 class InvalidDateException : std::exception {};
 
 const string kStartPrefix = "--start=";
 const string kEndPrefix = "--end=";
 const uint64_t kMSInOneDay = 24 * 60 * 60 * 1000;
-
-uint64_t TimestampFromDate(const string & date) {
-  struct tm tms;
-  memset(&tms, 0, sizeof(tms));
-  if (nullptr == strptime(date.c_str(), "%Y-%m-%d", &tms)) {
-    throw invalid_argument(date);
-  }
-  const time_t timet = mktime(&tms);
-  // mktime uses local time, not GMT one. Fix it.
-  struct tm local = *localtime(&timet);
-  // TODO(AlexZ): tm_gmtoff is not too portable.
-  return (timet + local.tm_gmtoff) * 1000;
-}
 
 int main(int argc, char * argv[]) {
   if (argc < 2) {
