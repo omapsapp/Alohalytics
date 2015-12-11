@@ -122,6 +122,11 @@ std::string GetQueryCategory(const std::string & query, const TCategories & cate
   return std::string();
 }
 
+// Returns true if and only if |a| starts with |b|.
+bool StartsWith(const std::string & a, const std::string & b) {
+  return a.size() >= b.size() && a.substr(0, b.size()) == b;
+}
+
 // <user, query, results count>
 typedef std::function<void(const std::string &, const std::string &, size_t)> TOnSearchQueryLambda;
 
@@ -164,7 +169,7 @@ class SearchFilter {
       prev_results_ = results;
       return;
     }
-    if (query.find(prev_query_) == 0) {
+    if (StartsWith(query, prev_query_)) {
       prev_user_ = user;
       prev_query_ = query;
       prev_results_ = results;
