@@ -66,16 +66,10 @@ int main(int argc, char ** argv) {
   unordered_map<AlohaID, UserInfo> users;
   alohalytics::ProcessorLight([&users](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e){
 
-    // Hack to avoid unnecessary timestamp lookups.
-    static const AlohalyticsIdServerEvent * last_se = nullptr;
-    if (last_se != se)
-    {
-      last_se = se;
-      // Update to the newest timestamp.
-      auto & ts = users[se->id].timestamp;
-      if (ts < e->timestamp)
-        ts = e->timestamp;
-    }
+    // Update to the newest timestamp.
+    auto & ts = users[se->id].timestamp;
+    if (ts < e->timestamp)
+      ts = e->timestamp;
 
     // Find ids.
     if (e->key == "$androidIds") {
