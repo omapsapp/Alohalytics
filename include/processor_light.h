@@ -38,7 +38,7 @@ typedef std::function<void(const AlohalyticsIdServerEvent * ie, const Alohalytic
 
 // Reads and processes all cereal events from stdin.
 struct ProcessorLight {
-  ProcessorLight(TLambda lambda, std::istream & input = std::cin) {
+  ProcessorLight(TLambda && lambda, std::istream & input = std::cin) {
     cereal::BinaryInputArchive ar(input);
     std::unique_ptr<AlohalyticsBaseEvent> ptr, server_id_ptr;
     while (true) {
