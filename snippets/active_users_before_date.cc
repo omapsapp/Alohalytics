@@ -37,7 +37,7 @@ typedef std::string AlohaID;
 
 struct UserInfo {
   // Last time when user was seen as active.
-  uint64_t timestamp;
+  uint64_t timestamp = 0;
   // Google id or IDFA.
   string id;
 };
