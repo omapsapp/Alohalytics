@@ -95,19 +95,33 @@ int main(int argc, char ** argv) {
     }
   });
 
+  cout << "Total users count: " << users.size() << endl;
+
   // Check all collected data and leave only users who did not use the app after given date.
   // Also filter out users without any IDFA or Google ID.
+  size_t users_after_date = 0, empty_ids = 0, empty_and_after = 0;
   set<string> ios, android;
   for (const auto & user : users) {
-    if (user.second.timestamp > last_usage_date)
+    if (user.second.id.empty()) {
+      ++empty_ids;
+      if (user.second.timestamp > last_usage_date) {
+        ++empty_and_after;
+      }
       continue;
-    if (user.second.id.empty())
+    }
+    if (user.second.timestamp > last_usage_date) {
+      ++users_after_date;
       continue;
+    }
     if (user.first[0] == 'A')
       android.insert(user.second.id);
     else
       ios.insert(user.second.id);
   }
+
+  cout << "Users with empty ids: " << empty_ids << endl;
+  cout << "Users with non-empty ids who used app after " << argv[1] << ": " << users_after_date << endl;
+  cout << "Total users who used app after " << argv[1] << ": " << users_after_date + empty_and_after << endl;
 
   // Output results.
   cout << "Storing " << ios.size() << " iOS ids to " << ios_out_file << endl;
