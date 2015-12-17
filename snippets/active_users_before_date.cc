@@ -64,12 +64,20 @@ int main(int argc, char ** argv) {
     android_out_file = string("ActiveBeforeDateAndroidIds-") + argv[1] + string(".txt");
 
   unordered_map<AlohaID, UserInfo> users;
-  alohalytics::ProcessorLight([&users](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e){
+  alohalytics::ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e){
+
+    uint64_t valid_timestamp;
+    // Replace invalid client timestamps with valid ones from the server.
+    if (time_helpers::IsEventTimestampValid(e->timestamp)) {
+      valid_timestamp = e->timestamp;
+    } else {
+      valid_timestamp = se->timestamp;
+    }
 
     // Update to the newest timestamp.
     auto & ts = users[se->id].timestamp;
-    if (ts < e->timestamp)
-      ts = e->timestamp;
+    if (ts < valid_timestamp)
+      ts = valid_timestamp;
 
     // Find ids.
     if (e->key == "$androidIds") {

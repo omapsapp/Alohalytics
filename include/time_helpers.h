@@ -41,4 +41,15 @@ inline uint64_t TimestampFromDate(const std::string & date) {
   // TODO(AlexZ): tm_gmtoff is not too portable.
   return (timet + local.tm_gmtoff) * 1000;
 }
+
+// Primitive timestamp validator for events.
+bool IsEventTimestampValid(uint64_t timestamp)
+{
+  // Assumption that timestamps can't be greater that a week in a future.
+  // TODO(AlexZ): Implement better solution than static variable.
+  static uint64_t const kNow = (time(nullptr) + 7 * 24 * 60 * 60 ) * 1000;
+  // January 31st, 2015.
+  static uint64_t const kAlohalyticsReleaseDate = 1422662400000;
+  return timestamp < kNow && timestamp > kAlohalyticsReleaseDate;
+}
 } // namespace time_helpers
