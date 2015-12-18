@@ -22,6 +22,7 @@
  SOFTWARE.
  *******************************************************************************/
 
+#include "../include/mapsme_helpers.h"
 #include "../include/processor_light.h"
 #include "../include/time_helpers.h"
 
@@ -40,6 +41,7 @@ struct UserInfo {
   uint64_t timestamp = 0;
   // Google id or IDFA.
   string id;
+  string package_id;
 };
 
 int main(int argc, char ** argv) {
@@ -92,6 +94,15 @@ int main(int argc, char ** argv) {
       if (found != pairs.end()) {
         users[se->id].id = found->second;
       }
+    } else if (e->key == "$install") {
+      // Store package ids too.
+      const auto & pairs = static_cast<const AlohalyticsKeyPairsEvent *>(e)->pairs;
+      auto found = pairs.find("package");
+      if (found == pairs.end())
+        found = pairs.find("bundleIdentifier");
+      if (found != pairs.end()) {
+        users[se->id].package_id = found->second;
+      }
     }
   });
 
@@ -113,6 +124,10 @@ int main(int argc, char ** argv) {
       ++users_after_date;
       continue;
     }
+    // Filter out all non-production app versions to help our Marketing with testing on their own devices.
+    if (!mapsme_helpers::IsProductionPackageId(user.second.package_id))
+      continue;
+    // Store ids.
     if (user.first[0] == 'A')
       android.insert(user.second.id);
     else
