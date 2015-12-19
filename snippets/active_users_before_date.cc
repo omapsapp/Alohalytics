@@ -41,6 +41,7 @@ struct UserInfo {
   uint64_t timestamp = 0;
   // Google id or IDFA.
   string id;
+  // iOS app bundle id or Android package id.
   string package_id;
 };
 
@@ -95,11 +96,14 @@ int main(int argc, char ** argv) {
         users[se->id].id = found->second;
       }
     } else if (e->key == "$install") {
-      // Store package ids too.
       const auto & pairs = static_cast<const AlohalyticsKeyPairsEvent *>(e)->pairs;
       auto found = pairs.find("package");
-      if (found == pairs.end())
-        found = pairs.find("bundleIdentifier");
+      if (found != pairs.end()) {
+        users[se->id].package_id = found->second;
+      }
+    } else if (e->key == "$iosDeviceInfo") {
+      const auto & pairs = static_cast<const AlohalyticsKeyPairsEvent *>(e)->pairs;
+      auto found = pairs.find("bundleIdentifier");
       if (found != pairs.end()) {
         users[se->id].package_id = found->second;
       }
