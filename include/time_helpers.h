@@ -22,6 +22,7 @@
  SOFTWARE.
  *******************************************************************************/
 
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <time.h>  // strptime is POSIX-only.
@@ -42,8 +43,16 @@ inline uint64_t TimestampFromDate(const std::string & date) {
   return (timet + local.tm_gmtoff) * 1000;
 }
 
+inline std::string TimestampToDate(uint64_t time) {
+  time_t const tt = static_cast<time_t>(time / 1000);
+  struct std::tm * tms = gmtime(&tt);
+  std::ostringstream stream;
+  stream << tms->tm_year + 1900 << '-' << tms->tm_mon + 1 << '-' << tms->tm_mday;
+  return stream.str();
+}
+
 // Primitive timestamp validator for events.
-bool IsEventTimestampValid(uint64_t timestamp)
+inline bool IsEventTimestampValid(uint64_t timestamp)
 {
   // Assumption that timestamps can't be greater that a week in a future.
   // TODO(AlexZ): Implement better solution than static variable.
@@ -51,5 +60,13 @@ bool IsEventTimestampValid(uint64_t timestamp)
   // January 31st, 2015.
   static uint64_t const kAlohalyticsReleaseDate = 1422662400000;
   return timestamp < kNow && timestamp > kAlohalyticsReleaseDate;
+}
+
+inline uint64_t FixInvalidClientTimestampIfNeeded(uint64_t client, uint64_t server)
+{
+  if (IsEventTimestampValid(client)) {
+    return client;
+  }
+  return server;
 }
 } // namespace time_helpers
