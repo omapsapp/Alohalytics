@@ -26,9 +26,9 @@
 // Example usage:
 // cat /mnt/disk1/alohalytics/by_date/alohalytics_messages-20151201.gz | gzip -d | ./build/search_samples --random --top
 
+#include "../include/mapsme_events.h"
 #include "../include/processor.h"
-
-#include "search.h"
+#include "../include/search.h"
 
 #include <algorithm>
 #include <cassert>
@@ -43,15 +43,15 @@
 using namespace alohalytics;
 using namespace std;
 
+const string kSearchEmitResults(SEARCH_EMIT_RESULTS);
+
 // We do not reuse SearchFilter in order not to break current behaviour
 // of the scripts relying on it.
 struct QueryProcessor {
   const int kTopCount = 100;
 
-  QueryProcessor() = default;
-
   void AddQuery(const string & user, string query, int numResults) {
-    CaseFoldingAndNormalize(query);
+    FoldCaseAndNormalize(query);
     Trim(query);
     if (query.empty()) {
       return;
@@ -79,8 +79,8 @@ struct QueryProcessor {
   void Flush() {
     if (prev_results_ >= 0) {
       Process(prev_user_, prev_query_, prev_results_);
-      prev_user_ = string();
-      prev_query_ = string();
+      prev_user_.clear();
+      prev_query_.clear();
       prev_results_ = -1;
     }
   }
@@ -98,31 +98,26 @@ struct QueryProcessor {
     }
   }
 
-  // Prints at most n random queries.
+  // Prints at most n random distinct queries.
   void PrintRandomSample(int n) {
     if (m_.empty()) {
-      printf("No data.\n");
       return;
     }
-    auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
-    mt19937 rng(seed);
-    uniform_int_distribution<int> randomDistribution(0, m_.size() - 1);
     vector<string> allQueries;
     allQueries.reserve(m_.size());
     for (auto const & entry : m_) {
       allQueries.emplace_back(entry.first);
     }
-    vector<string> res(n);
-    for (int i = 0; i < n; i++) {
-      res[i] = allQueries[randomDistribution(rng)];
+    sort(allQueries.begin(), allQueries.end());
+    allQueries.resize(unique(allQueries.begin(), allQueries.end()) - allQueries.begin());
+
+    mt19937 rng(seed_);
+    shuffle(allQueries.begin(), allQueries.end(), rng);
+
+    n = min(n, static_cast<int>(allQueries.size()));
+    for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
+      printf("%s\n", allQueries[i].data());
     }
-    sort(res.begin(), res.end());
-    allQueries.resize(unique(res.begin(), res.end()) - res.begin());
-    printf("%d random queries:\n", static_cast<int>(res.size()));
-    for (size_t i = 0; i < res.size(); ++i) {
-      printf("%s\n", res[i].data());
-    }
-    printf("\n");
   }
 
   // Prints top n (by user count) unique queries. Every query is counted at most once for each user.
@@ -140,13 +135,15 @@ struct QueryProcessor {
       allUsers.insert(uniqueUsers.begin(), uniqueUsers.end());
       v.emplace_back(uniqueUsers.size(), entry.first);
     }
+    n = min(n, static_cast<int>(v.size()));
+    if (n == 0) {
+      return;
+    }
     sort(v.begin(), v.end(), greater<pair<int, string>>());
-    printf("Top %d queries by unique user count:\n", n);
-    for (size_t i = 0; i < static_cast<size_t>(n) && i < v.size(); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
       double percentage = 100.0 * static_cast<double>(v[i].first) / static_cast<double>(allUsers.size());
       printf("%s\t%d (%lf%%)\n", v[i].second.data(), v[i].first, percentage);
     }
-    printf("\n");
   }
 
   map<string, vector<pair<string, int>>> m_;  // query -> [{user, results}]
@@ -154,6 +151,7 @@ struct QueryProcessor {
   string prev_user_;
   string prev_query_;
   int prev_results_ = -1;
+  int seed_ = chrono::high_resolution_clock::now().time_since_epoch().count();
 
   bool printRandom_ = false;
   bool printTop_ = false;
@@ -161,20 +159,19 @@ struct QueryProcessor {
   TCategories categories_;  // todo(@m) Use it.
 };
 
-void Usage(char * prog) {
-  printf("usage: %s [--random] [--top] [--categories <file>] [--locale <locale>]\n", prog);
+void PrintUsageAndExit(char * prog) {
+  printf("usage: %s [--help] [--random] [--top] [--categories <file>] [--locale <locale>] [--seed <n>]\n", prog);
   exit(0);
 }
 
 void ParseFlags(int argc, char ** argv, QueryProcessor & proc) {
   if (argc < 2) {
-    Usage(argv[0]);
+    PrintUsageAndExit(argv[0]);
   }
-  string cmd = argv[0];
   for (int i = 1; i < argc; ++i) {
-    string flag(argv[i]);
+    const string flag(argv[i]);
     if (flag == "-h" || flag == "--help") {
-      Usage(argv[0]);
+      PrintUsageAndExit(argv[0]);
     }
     if (flag == "--random") {
       proc.printRandom_ = true;
@@ -193,6 +190,10 @@ void ParseFlags(int argc, char ** argv, QueryProcessor & proc) {
       proc.printLocale_ = argv[i + 1];
       ++i;
     }
+    if (flag == "--seed") {
+      sscanf(argv[i + 1], "%d", &proc.seed_);
+      ++i;
+    }
   }
 }
 
@@ -202,7 +203,7 @@ int main(int argc, char ** argv) {
 
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
-    if (kpe && kpe->key == "searchEmitResults") {
+    if (kpe && kpe->key == kSearchEmitResults) {
       const auto it = kpe->pairs.begin();
       proc.AddQuery(se->id /* user */, it->first /* query */, static_cast<size_t>(stoi(it->second)) /* numResults */);
     }

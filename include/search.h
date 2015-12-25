@@ -37,7 +37,7 @@
 // <category name, set of translations>
 typedef std::map<std::string, std::set<std::string>> TCategories;
 
-void CaseFoldingAndNormalize(std::string & s) {
+void FoldCaseAndNormalize(std::string & s) {
   utf8proc_uint8_t * buf = nullptr;
   const utf8proc_ssize_t ssize =
       utf8proc_map(reinterpret_cast<const utf8proc_uint8_t *>(s.data()), s.size(), &buf,
@@ -52,11 +52,10 @@ void CaseFoldingAndNormalize(std::string & s) {
 
 // TODO(AlexZ): Real trimming (tokens delimeters) are much more complex in MAPS.ME. Should use them.
 void Trim(std::string & s, const std::string & whitespaces = " \n\t\r") {
-  const auto lambda = [&whitespaces](std::string::value_type c) -> bool {
-    return whitespaces.find_first_of(c) != std::string::npos;
-  };
-  const auto left = std::find_if_not(s.begin(), s.end(), lambda);
-  const auto right = std::find_if_not(s.rbegin(), s.rend(), lambda).base();
+  const auto isSeparator =
+      [&whitespaces](std::string::value_type c) -> bool { return whitespaces.find_first_of(c) != std::string::npos; };
+  const auto left = std::find_if_not(s.begin(), s.end(), isSeparator);
+  const auto right = std::find_if_not(s.rbegin(), s.rend(), isSeparator).base();
   if (right <= left) {
     s.clear();
   } else {
@@ -92,7 +91,7 @@ inline TCategories LoadCategoriesFromFile(const char * path) {
           if (name[0] >= '0' && name[0] <= '9') {
             name = name.substr(1);
           }
-          CaseFoldingAndNormalize(name);
+          FoldCaseAndNormalize(name);
           Trim(name);
           categories[current_types].insert(name);
         }
@@ -123,8 +122,8 @@ std::string GetQueryCategory(const std::string & query, const TCategories & cate
 }
 
 // Returns true if and only if |a| starts with |b|.
-bool StartsWith(const std::string & a, const std::string & b) {
-  return a.size() >= b.size() && a.substr(0, b.size()) == b;
+inline bool StartsWith(const std::string & a, const std::string & b) {
+  return a.size() >= b.size() && a.compare(0, b.size(), b) == 0;
 }
 
 // <user, query, results count>
@@ -154,7 +153,7 @@ class SearchFilter {
   SearchFilter(TOnSearchQueryLambda lambda) : lambda_(lambda) {}
 
   void ProcessQuery(const std::string & user, std::string query, size_t results) {
-    CaseFoldingAndNormalize(query);
+    FoldCaseAndNormalize(query);
     Trim(query);
     if (prev_query_.empty()) {
       prev_user_ = user;
