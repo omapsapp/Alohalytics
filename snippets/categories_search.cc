@@ -25,8 +25,7 @@
 // Calculates search by category statistics.
 
 #include "../include/processor.h"
-
-#include "search.h"
+#include "../include/search.h"
 
 #include <map>
 #include <set>

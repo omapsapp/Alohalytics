@@ -24,9 +24,9 @@
 
 // Calculates statistics for all search queries.
 
+#include "../include/mapsme_events.h"
 #include "../include/processor.h"
-
-#include "search.h"
+#include "../include/search.h"
 
 #include <map>
 #include <set>
@@ -34,6 +34,8 @@
 
 using namespace alohalytics;
 using namespace std;
+
+const string kSearchEmitResults(SEARCH_EMIT_RESULTS);
 
 struct TQuery {
   string query_;
@@ -55,7 +57,7 @@ int main(int argc, char ** argv) {
   });
   Processor([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e) {
     const AlohalyticsKeyPairsEvent * kpe = dynamic_cast<const AlohalyticsKeyPairsEvent *>(e);
-    if (kpe && kpe->key == "searchEmitResults") {
+    if (kpe && kpe->key == kSearchEmitResults) {
       const auto it = kpe->pairs.begin();
       filter.ProcessQuery(se->id, it->first, static_cast<size_t>(stoi(it->second)));
     }
