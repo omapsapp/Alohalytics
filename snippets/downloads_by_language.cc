@@ -84,6 +84,7 @@ int main(int, char **) {
       cout << m.first << '[' << time_helpers::TimestampToDate(m.second) << ']';
       ++total_maps_downloaded;
     }
+    cout << endl;
   }
 
   cout << "Total users count: " << users.size() << endl;
