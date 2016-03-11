@@ -208,3 +208,84 @@
   *moscow-viewport*
   (list (relevant "Cuba" '("place-country")
                   (position-lat-lon 23.013134 -80.832884))))
+
+(defsample "540 queen street brisbane" "en"
+  (position-lat-lon -27.469546 153.024131)
+  (viewport :maxx 153.027 :maxy -28.5833 :minx 153.02 :miny -28.5888)
+  (list (vital "Willahra Tower" '("building")
+               (position-lat-lon -27.463288 153.030955)
+               :house-number "540")))
+
+(defsample "casino" "en"
+  (position-lat-lon 33.749495 -117.873221)
+  (viewport :maxx 117.308 :maxy 36.5515 :minx -118.718 :miny 35.279)
+  (list (relevant "Crystal Casino & Hotel" '("building")
+                  (position-lat-lon 33.87517 -118.220612))
+        (relevant "The Bicycle Casino" '("landuse-commercial" "amenity-casino")
+                  (position-lat-lon 33.966085 -118.166707)
+                  :house-number "7301")
+        (relevant "The Commerce Casino" '("amenity-casino")
+                  (position-lat-lon 33.998295 -118.144928)
+                  :house-number "6131")
+        (relevant "Commerce Casino" '("amenity-casino")
+                  (position-lat-lon 34.000141 -118.143703))
+        (relevant "Hollywood Park Casino" '("building" "amenity-casino")
+                  (position-lat-lon 33.947588 -118.33938))
+        (relevant "San Manuel Indian Bingo and Casino" '("tourism-attraction" "amenity-casino")
+                  (position-lat-lon 34.150149 -117.227594))))
+
+(scoped-samples ("en"
+                 (position-lat-lon 55.688087 37.590087)
+                 (viewport :maxx 37.592 :maxy 67.3444 :minx 37.5883 :miny 67.3416))
+
+                (def "bank "
+                    (list (relevant "" '("building" "amenity-bank")
+                                    (position-lat-lon 55.688664 37.59321)
+                                    :house-number "20А")))
+                (def "химки "
+                    (list (vital "Химки" '("place-city")
+                                 (position-lat-lon 55.889289 37.444994))))
+                (def "Коломенское "
+                    (list (vital "Музей-заповедник \"Коломенское\"" '("leisure-park")
+                                 (position-lat-lon 55.660829 37.669019))))
+                (def "новаторов 14 "
+                    (list (relevant "" '("building")
+                                   (position-lat-lon 55.667576 37.523191)
+                                   :house-number "14 к1")
+                          (relevant "" '("building")
+                                    (position-lat-lon 55.667156 37.523081)
+                                    :house-number "14 к2")))
+                (def "пушкин "
+                    (list (vital "Пушкин" '("place-city")
+                                 (position-lat-lon 59.722262 30.415717))
+                          (relevant "Пушкин" '("historic-memorial")
+                                    (position-lat-lon 55.749956 37.587827))
+                          (relevant "A. C. Пушкин" '("historic-memorial")
+                                    (position-lat-lon 55.755464 37.612809))))
+
+                ;;; A strange museum in Smolensk (near shop centre
+                ;;; "Пушкинский") is reported here.
+                (def "пушкинский музей "
+                    (list (irrelevant "Музей-заповедник, отдел истории" '("tourism-museum")
+                                      (position-lat-lon 54.782396 32.049999))))
+                (def "калуга "
+                    (list (vital "Калуга" '("place-city-capital-4")
+                                 (position-lat-lon 54.510112 36.259801))))
+                (def "ленинский "
+                    (list (relevant "Ленинский проспект" '("hwtag-nofoot" "hwtag-oneway" "highway-primary")
+                                    (position-lat-lon 55.700622 37.567642))
+                          (relevant "Ленинский проспект" '("hwtag-lit" "hwtag-nofoot" "hwtag-oneway" "highway-secondary")
+                                    (position-lat-lon 55.697408 37.562625)))))
+
+
+(scoped-samples ("en" (position-lat-lon 55.643109 37.58908)
+                      (viewport :maxx 32.0534 :maxy 65.757 :minx 32.0466 :miny 65.7518))
+                (def "рио "
+                    (list (vital "ТЦ РИО" '("building" "shop-mall")
+                                 (position-lat-lon 55.689754 37.602154)
+                                 :house-number "1")
+                          (vital "Рио" '("building" "shop-mall")
+                                 (position-lat-lon 55.663783 37.51131)
+                                 :house-number "109")
+                          (relevant "Рио де Пиво" '("amenity-cafe")
+                                    (position-lat-lon 55.68316 37.625142)))))
