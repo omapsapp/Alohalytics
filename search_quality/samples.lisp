@@ -289,3 +289,34 @@
                                  :house-number "109")
                           (relevant "Рио де Пиво" '("amenity-cafe")
                                     (position-lat-lon 55.68316 37.625142)))))
+
+(scoped-samples ("ru" *moscow-position* *moscow-viewport*)
+                (def "Россия "
+                    (list (vital "Россия" '("place-country")
+                                 (position-lat-lon 64.6863141 97.7453086))))
+                (def "Lesotho"
+                    (list (vital "Lesotho" '("place-country")
+                                 (position-lat-lon -29.6039311 28.3350096))))
+                (def "San Marino"
+                    (list (vital "San Marino" '("place-country")
+                                 (position-lat-lon 43.9458555 12.4583045))
+                          (vital "Città di San Marino" '("place-town")
+                                 (position-lat-lon 43.9363997 12.4467173))))
+                (def "Republic of Cyprus"
+                    (list (vital "Κύπρος" '("place-country")
+                                 (position-lat-lon 34.9823169 33.1451336))))
+                (def "Korea, North"
+                    (list (vital "조선민주주의인민공화국" '("place-country")
+                                 (position-lat-lon 40.3124091 127.3999867))))
+                (def "Винзавод "
+                    (list (vital "Винзавод" '("amenity" "landuse-commercial")
+                                 (position-lat-lon 55.7560979 37.6661864))))
+                (def "Камышин спортивная 6"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 50.0895369 45.3833644)
+                                 :house-number "6")
+                          (relevant "МОУ СОШ No 6" '("amenity-school")
+                                    (position-lat-lon 50.0884958 45.3850127))))
+                (def "Санкт-Петербург"
+                    (list (vital "Санкт-Петербург" '("place-city-capital-3")
+                                 (position-lat-lon 59.9393579 30.3153813)))))
