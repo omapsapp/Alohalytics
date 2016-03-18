@@ -3,6 +3,16 @@
 (defparameter *moscow-position*
   (position-lat-lon 55.751633 37.618705))
 
+(defparameter *skylight-viewport*
+  (viewport :maxx 37.5409 :maxy 67.538 :minx 37.533 :miny 67.533))
+(defparameter *skylight-position*
+  (position-lat-lon 55.7967341 37.5373559))
+
+(defparameter *moscow-airport-station-viewport*
+  (viewport :maxx 37.5367 :maxy 67.5442 :minx 37.5316 :miny 67.539))
+(defparameter *moscow-airport-station-position*
+  (position-lat-lon 55.799996 37.5343679))
+
 (dolist (query '("жуковский" "жуковский "))
   (defsample query "ru"
     (position-lat-lon 55.82483 37.566872)
@@ -320,3 +330,23 @@
                 (def "Санкт-Петербург"
                     (list (vital "Санкт-Петербург" '("place-city-capital-3")
                                  (position-lat-lon 59.9393579 30.3153813)))))
+
+(scoped-samples ("en" *skylight-position* *skylight-viewport*)
+                (dolist (query (list "restaurant пушкинъ " "restaurant пушкин"))
+                  (def query
+                      (list (vital "Пушкинъ" '("building" "amenity-restaurant")
+                                   (position-lat-lon 55.7637177 37.6050293)
+                                   :house-number "26А")))))
+
+(scoped-samples ("en" *moscow-airport-station-position* *moscow-airport-station-viewport*)
+                (def "restaurant"
+                    (list (vital "Кофе Хауз" '("internet_access-wlan" "amenity-cafe")
+                                 (position-lat-lon 55.8004875 37.5333406))
+                          (vital "IL Патио" '("amenity-restaurant")
+                                 (position-lat-lon 55.7994352 37.5327398))
+                          (vital "Амиго Мигель" '("amenity-restaurant")
+                                 (position-lat-lon 55.7994925 37.5326057))
+                          (vital "Марукамэ" '("amenity-restaurant")
+                                 (position-lat-lon 55.799595 37.5323589))
+                          (vital "Пироговая Штолле" '("internet_access-wlan" "amenity-cafe")
+                                 (position-lat-lon 55.8007996 37.5326942)))))
