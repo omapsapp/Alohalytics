@@ -331,22 +331,53 @@
                     (list (vital "Санкт-Петербург" '("place-city-capital-3")
                                  (position-lat-lon 59.9393579 30.3153813)))))
 
-(scoped-samples ("en" *skylight-position* *skylight-viewport*)
-                (dolist (query (list "restaurant пушкинъ " "restaurant пушкин"))
-                  (def query
-                      (list (vital "Пушкинъ" '("building" "amenity-restaurant")
-                                   (position-lat-lon 55.7637177 37.6050293)
-                                   :house-number "26А")))))
+(dolist (query (list "restaurant пушкинъ " "restaurant пушкин"))
+  (defsample query "en"
+    *skylight-position*
+    *skylight-viewport*
+    (list (vital "Пушкинъ" '("building" "amenity-restaurant")
+                 (position-lat-lon 55.7637177 37.6050293)
+                 :house-number "26А"))))
+
+(defsample "restaurant" "en"
+  *moscow-airport-station-position*
+  *moscow-airport-station-viewport*
+  (list (vital "Кофе Хауз" '("internet_access-wlan" "amenity-cafe")
+               (position-lat-lon 55.8004875 37.5333406))
+        (vital "IL Патио" '("amenity-restaurant")
+               (position-lat-lon 55.7994352 37.5327398))
+        (vital "Амиго Мигель" '("amenity-restaurant")
+               (position-lat-lon 55.7994925 37.5326057))
+        (vital "Марукамэ" '("amenity-restaurant")
+               (position-lat-lon 55.799595 37.5323589))
+        (vital "Пироговая Штолле" '("internet_access-wlan" "amenity-cafe")
+               (position-lat-lon 55.8007996 37.5326942))))
 
 (scoped-samples ("en" *moscow-airport-station-position* *moscow-airport-station-viewport*)
-                (def "restaurant"
-                    (list (vital "Кофе Хауз" '("internet_access-wlan" "amenity-cafe")
-                                 (position-lat-lon 55.8004875 37.5333406))
-                          (vital "IL Патио" '("amenity-restaurant")
-                                 (position-lat-lon 55.7994352 37.5327398))
-                          (vital "Амиго Мигель" '("amenity-restaurant")
-                                 (position-lat-lon 55.7994925 37.5326057))
-                          (vital "Марукамэ" '("amenity-restaurant")
-                                 (position-lat-lon 55.799595 37.5323589))
-                          (vital "Пироговая Штолле" '("internet_access-wlan" "amenity-cafe")
-                                 (position-lat-lon 55.8007996 37.5326942)))))
+                (def "Ореховый бульвар 10к2"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.6080474 37.7078451)
+                                 :house-number "10 к2 с2")
+                          (vital "" '("building")
+                                 (position-lat-lon 55.6075383 37.707082)
+                                 :house-number "10 к2")))
+                (def "Ореховый бульвар 10к2 с2"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.6080474 37.7078451)
+                                 :house-number "10 к2 с2")))
+                (def "садовая-кудринская 26/40 с2"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.7633065 37.5886129)
+                                 :house-number "26/40 с2")))
+                (def "садовая-кудринская 26/40 с3"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.7635306 37.5889817)
+                                 :house-number "26/40 с3")))
+                (def "волков переулок 7/9 с2"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.7626048 37.5735013)
+                                 :house-number "7/9 с2")))
+                (def "1-й Новокузнецкий переулок, 26/8 с5"
+                    (list (vital "" '("building")
+                                 (position-lat-lon 55.7352221 37.6321491)
+                                 :house-number "26/8 с5"))))
