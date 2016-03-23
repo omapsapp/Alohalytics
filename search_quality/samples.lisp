@@ -354,6 +354,7 @@
                (position-lat-lon 55.8007996 37.5326942))))
 
 (scoped-samples ("en" *moscow-airport-station-position* *moscow-airport-station-viewport*)
+                ; A group of buildings with complex numbers.
                 (def "Ореховый бульвар 10к2"
                     (list (vital "" '("building")
                                  (position-lat-lon 55.6080474 37.7078451)
@@ -380,4 +381,50 @@
                 (def "1-й Новокузнецкий переулок, 26/8 с5"
                     (list (vital "" '("building")
                                  (position-lat-lon 55.7352221 37.6321491)
-                                 :house-number "26/8 с5"))))
+                                 :house-number "26/8 с5")))
+
+                ; A group of villages in Tula oblast.
+                (def "Крапивна"
+                    (list (vital "Крапивна" '("place-village")
+                                    (position-lat-lon 53.9403093 37.1663125))))
+                (def "Пришня"
+                    (list (vital "Пришня" '("place-village")
+                                 (position-lat-lon 53.9272875 37.3128496))))
+                (def "Щёкино"
+                    (list (vital "Щёкино" '("place-town")
+                                 (position-lat-lon 54.0044567 37.5179073)))))
+
+(scoped-samples ("en" *moscow-position* *moscow-viewport*)
+                (def "Эрмитаж"
+                    (list (vital "Сад Эрмитаж" '("leisure-park")
+                                 (position-lat-lon 55.7707567 37.6091465))
+                          (vital "Павильон \"Эрмитаж\"" '("building" "tourism-attraction")
+                                 (position-lat-lon 55.7373619 37.8078016))))
+                (dolist (query '("Эрмитаж Пете" "Эрмитаж Петербург"))
+                  (def query
+                      (list (vital "Государственный Эрмитаж (Главный штаб Восточное крыло)"
+                                   '("building" "tourism-museum")
+                                   (position-lat-lon 59.938567 30.3183096)
+                                   :house-number "6-8")
+                            (vital "Государственный Эрмитаж" '("tourism-museum")
+                                   (position-lat-lon 59.9409881 30.3129948))
+                            (relevant "Новый Эрмитаж" '("building")
+                                      (position-lat-lon 59.9413851 30.3172474)
+                                      :house-number "35")
+                            (relevant "Малый Эрмитаж" '("building")
+                                      (position-lat-lon 59.9411941 30.3155697 )
+                                      :house-number "36")
+                            (relevant "Большой Эрмитаж" '("building")
+                                      (position-lat-lon 59.9418994 30.315939)
+                                      :house-number "34")
+                            (relevant "павильон \"Эрмитаж\"" '("building")
+                                      (position-lat-lon 59.7135334 30.4033383))
+                            (relevant "Эрмитаж" '("amenity-cafe")
+                                      (position-lat-lon 59.7195307 30.4087738))
+                            (relevant "Гостиница «Эрмитаж»" '("building" "tourism-hotel")
+                                      (position-lat-lon 59.9233988 30.343724)
+                                      :house-number "10")
+                            (relevant "дворец \"Эрмитаж\"" '("building" "tourism-museum")
+                                      (position-lat-lon 59.88895 29.9033424))
+                            (relevant "Эрмитаж" '("shop-gift")
+                                      (position-lat-lon 59.7974888 30.2682368))))))
