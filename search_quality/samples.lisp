@@ -94,18 +94,6 @@
   (list (vital "Подольск" '("railway-station")
                (position-lat-lon 55.431798 37.565417))))
 
-(defsample "Щёкино " "en"
-  (position-lat-lon 54.193827 37.615872)
-  (viewport :maxx 37.6466 :maxy 64.7717 :minx 37.5875 :miny 64.7172)
-  (list (vital "Щёкино" '("place-town")
-               (position-lat-lon 54.004457 37.517907))))
-
-(defsample "Крапивна " "en"
-  (position-lat-lon 54.193827 37.615872)
-  (viewport :maxx 37.6466 :maxy 64.7717 :minx 37.5875 :miny 64.7172)
-  (list (vital "Крапивна" '("place-village")
-               (position-lat-lon 53.940309 37.166312))))
-
 (defsample "Байкал" "en"
   (position-lat-lon 55.751624 37.618715)
   (viewport :maxx 37.6215 :maxy 67.4589 :minx 37.616 :miny 67.4525)
@@ -273,8 +261,8 @@
                           (relevant "A. C. Пушкин" '("historic-memorial")
                                     (position-lat-lon 55.755464 37.612809))))
 
-                ;;; A strange museum in Smolensk (near shop centre
-                ;;; "Пушкинский") is reported here.
+                ; A strange museum in Smolensk (near shop centre
+                ; "Пушкинский") is reported here.
                 (def "пушкинский музей "
                     (list (irrelevant "Музей-заповедник, отдел истории" '("tourism-museum")
                                       (position-lat-lon 54.782396 32.049999))))
@@ -331,7 +319,7 @@
                     (list (vital "Санкт-Петербург" '("place-city-capital-3")
                                  (position-lat-lon 59.9393579 30.3153813)))))
 
-(dolist (query (list "restaurant пушкинъ " "restaurant пушкин"))
+(dolist (query (list "restaurant пушкинъ " "restaurant пушкин" "cafe пушкинъ"))
   (defsample query "en"
     *skylight-position*
     *skylight-viewport*
@@ -384,16 +372,18 @@
                                  :house-number "26/8 с5")))
 
                 ; A group of villages in Tula oblast.
-                (def "Крапивна"
-                    (list (vital "Крапивна" '("place-village")
-                                    (position-lat-lon 53.9403093 37.1663125))))
-                (def "Пришня"
-                    (list (vital "Пришня" '("place-village")
-                                 (position-lat-lon 53.9272875 37.3128496))))
-                (def "Щёкино"
-                    (list (vital "Щёкино" '("place-town")
-                                 (position-lat-lon 54.0044567 37.5179073)))))
+                (dolist (region (power-set '("россия" "тульская область")))
+                  (def (join-strings (cons "Крапивна" region))
+                      (list (vital "Крапивна" '("place-village")
+                                   (position-lat-lon 53.9403093 37.1663125))))
+                  (def (join-strings (cons "Пришня" region))
+                      (list (vital "Пришня" '("place-village")
+                                   (position-lat-lon 53.9272875 37.3128496))))
+                  (def (join-strings (cons "Щёкино" region))
+                      (list (vital "Щёкино" '("place-town")
+                                   (position-lat-lon 54.0044567 37.5179073))))))
 
+;;; Different Hermitage-related queries.
 (scoped-samples ("en" *moscow-position* *moscow-viewport*)
                 (def "Эрмитаж"
                     (list (vital "Сад Эрмитаж" '("leisure-park")
