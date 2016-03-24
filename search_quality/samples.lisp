@@ -82,12 +82,11 @@
                   '("waterway-river" "boundary-administrative-6" "boundary-administrative-8")
                   (position-lat-lon 50.098178 45.485677))))
 
-(dolist (query '("москва балчуг 7" "московская область москва балчуг 7"))
-  (defsample query "ru"
-    (position-lat-lon 55.74489 37.627992)
-    (viewport :maxx 37.6316 :maxy 67.4464 :minx 37.6244 :miny 67.4409)
-    (list (vital "" '("building") (position-lat-lon 55.746825 37.626597)
-                 :house-number "7"))))
+(defsample "москва балчуг 7" "ru"
+  (position-lat-lon 55.74489 37.627992)
+  (viewport :maxx 37.6316 :maxy 67.4464 :minx 37.6244 :miny 67.4409)
+  (list (vital "" '("building") (position-lat-lon 55.746825 37.626597)
+               :house-number "7")))
 
 (defsample "train station podolsk" "en"
   (position-lat-lon 54.192024 37.615781)
