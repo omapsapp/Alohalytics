@@ -27,7 +27,7 @@
 (defsample "варшава " "ru"
   (position-lat-lon 55.82483 37.566872)
   (viewport :maxx 37.5704 :maxy 67.5886 :minx 37.5633 :miny 67.5831)
-  (list (vital "Варшава" '("place-city-capital-2") (position-lat-lon 52.231918 21.006742))))
+  (list (vital "Warszawa" '("place-city-capital-2") (position-lat-lon 52.231918 21.006742))))
 
 (defsample "первомайск " "ru"
   (position-lat-lon 55.82483 37.566872)
@@ -204,7 +204,8 @@
                   (position-lat-lon 55.658219 37.555958)
                   :house-number "16 к5")
         (relevant "Газпром-отель" '("building" "tourism-hotel")
-                  (position-lat-lon 55.658549 37.555085))))
+                  (position-lat-lon 55.658549 37.555085)
+                  :house-number "16 к6")))
 
 (defsample "cuba" "en"
   *moscow-position*
