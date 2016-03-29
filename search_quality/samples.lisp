@@ -445,8 +445,8 @@
                (position-lat-lon 62.6193993 33.4920184))))
 
 (defsample "igema" "en"
-  *minsk-position*
-  (viewport :maxx 7.58315 :maxy 60.9077 :minx 7.57765 :miny 60.9015)
+  (position-lat-lon 51.8878412 7.5803997)
+  (viewport :maxx 11.2101 :maxy 53.6923 :minx 11.1978 :miny 53.6827)
   (list (vital "Igema" '("building")
                (position-lat-lon 51.8878412 7.5803997)
                :house-number "1")))
