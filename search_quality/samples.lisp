@@ -3,6 +3,11 @@
 (defparameter *moscow-position*
   (position-lat-lon 55.751633 37.618705))
 
+(defparameter *minsk-viewport*
+  (viewport :maxx 27.5653 :maxy 64.2473 :minx 27.5585 :miny 64.242))
+(defparameter *minsk-position*
+  (position-lat-lon 53.9023339 27.5618798))
+
 (defparameter *skylight-viewport*
   (viewport :maxx 37.5409 :maxy 67.538 :minx 37.533 :miny 67.533))
 (defparameter *skylight-position*
@@ -418,3 +423,36 @@
                                       (position-lat-lon 59.88895 29.9033424))
                             (relevant "Эрмитаж" '("shop-gift")
                                       (position-lat-lon 59.7974888 30.2682368))))))
+
+(defsample "метро рев" "ru"
+  *minsk-position*
+  *minsk-viewport*
+  (list (vital "Площадь Революции" '("railway-subway_entrance-moscow")
+               (position-lat-lon 55.7564118 37.6233609))
+        (relevant "Площадь Революции; Театральная" '("entrance" "railway-subway_entrance-moscow")
+                  (position-lat-lon 55.7567031 37.6195548))))
+
+(defsample "Idaho" "en"
+  *minsk-position*
+  *minsk-viewport*
+  (list (vital "Idaho" '("place-state-USA")
+               (position-lat-lon 43.6447598 -114.0154188))))
+
+(defsample "Карелия" "en"
+  *minsk-position*
+  *minsk-viewport*
+  (list (vital "Карелия" '("place-state")
+               (position-lat-lon 62.6193993 33.4920184))))
+
+(defsample "igema" "en"
+  (position-lat-lon 51.8878412 7.5803997)
+  (viewport :maxx 11.2101 :maxy 53.6923 :minx 11.1978 :miny 53.6827)
+  (list (vital "Igema" '("building")
+               (position-lat-lon 51.8878412 7.5803997)
+               :house-number "1")))
+
+(defsample "burg metternich " "en"
+  (position-lat-lon 50.1058386 7.2378164)
+  (viewport :maxx 7.2447 :maxy 58.0872 :minx 7.22865 :miny 58.0669)
+  (list (vital "Burg Metternich" '("historic-castle")
+               (position-lat-lon 50.1088593 7.2392299))))
