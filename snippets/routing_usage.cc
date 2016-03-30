@@ -146,7 +146,7 @@ class RoutingClient {
   }
 
  private:
-  vector<Event> m_storage;  // Sort потом копировать недостающие поля значениями выше.
+  vector<Event> m_storage;
 };
 
 double GetPercentage(AlohalyticsKeyPairsEvent const * event) {
@@ -217,31 +217,36 @@ int main() {
     if (id_event) {
       current_user_id = id_event->id;
     } else {
-      RoutingClient & client = clients[current_user_id];
       const AlohalyticsKeyPairsEvent * key_event = dynamic_cast<const AlohalyticsKeyPairsEvent *>(ptr.get());
       if (!key_event) continue;
-      if (key_event->key == kRoutingClosedEvent)
+      if (key_event->key == kRoutingClosedEvent) {
+        RoutingClient & client = clients[current_user_id];
         client.AddEvent(
             Event(EventType::CLOSE_ROUTE, key_event->timestamp, RouterType::NOT_SET, GetPercentage(key_event)));
-      else if (key_event->key == kRoutingRebuildEvent) {
+      } else if (key_event->key == kRoutingRebuildEvent) {
         int rebuildCount = GetRebuildCount(key_event);
-        // Fix of the wrong rebuilding count.
+        // Fix of the wrong rebuilding count. Because in omim rebuild event called before counter increment.
         if (rebuildCount != -1) rebuildCount++;
+        RoutingClient & client = clients[current_user_id];
         client.AddEvent(Event(
             EventType::REBUILD_ROUTE, key_event->timestamp, GetRouterType(key_event), kNotSet, kNotSet, rebuildCount));
-      } else if (key_event->key == kRoutingFinishedEvent)
+      } else if (key_event->key == kRoutingFinishedEvent) {
+        RoutingClient & client = clients[current_user_id];
         client.AddEvent(Event(EventType::ROUTE_FINISHED,
                               key_event->timestamp,
                               GetRouterType(key_event),
                               100.,
                               GetPassedDistance(key_event),
                               GetRebuildCount(key_event)));
-      else if (key_event->key == kRoutingCalculatingEvent)
-        client.AddEvent(Event(EventType::CALCULATE_ROUTE,
-                              key_event->timestamp,
-                              GetRouterTypeByName(key_event),
-                              kNotSet,
-                              GetDistance(key_event)));  // Do not use rebuildCount at 0 because it called on rebuild.
+      } else if (key_event->key == kRoutingCalculatingEvent) {
+        RoutingClient & client = clients[current_user_id];
+        client.AddEvent(Event(
+            EventType::CALCULATE_ROUTE,
+            key_event->timestamp,
+            GetRouterTypeByName(key_event),
+            kNotSet,
+            GetDistance(key_event)));  // Do not use rebuildCount at 0 because this event is called on rebuild too.
+      }
     }
   }
 
