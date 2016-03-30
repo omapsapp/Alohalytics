@@ -59,7 +59,7 @@ void Trim(std::string & s, const std::string & whitespaces = " \n\t\r") {
   if (right <= left) {
     s.clear();
   } else {
-    s = std::move(std::string(left, right));
+    s = std::string(left, right);
   }
 }
 
