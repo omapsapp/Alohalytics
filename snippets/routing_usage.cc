@@ -41,7 +41,7 @@ using namespace std;
 
 enum HistType { HPEDESTRIAN = 0, SHORT = 1, MID = 2, LONG = 3 };
 
-enum EventType { CALCULATE_ROUTE = 0, CLOSE_ROUTE = 2, ROUTE_FINISHED = 3, REBUILD_ROUTE = 1 };
+enum EventType { CALCULATE_ROUTE = 0, REBUILD_ROUTE = 1, CLOSE_ROUTE = 2, ROUTE_FINISHED = 3 };
 
 enum RouterType { VEHICLE, PEDESTRIAN, NOT_SET };
 
@@ -52,14 +52,14 @@ struct RoutingData {
 
   void PrintData() {
     size_t agg = 0;
+    const auto weighted_sum = accumulate(weightedRebuild.begin(), weightedRebuild.end(), 0.0);
     cerr << "Rebuilds per meter:"
-         << accumulate(weightedRebuild.begin(), weightedRebuild.end(), 0.0) / weightedRebuild.size() << endl;
+         << weighted_sum / weightedRebuild.size() << endl;
     cerr << "Km per rebuild:"
-         << weightedRebuild.size() / (1000. * accumulate(weightedRebuild.begin(), weightedRebuild.end(), 0.0)) << endl;
+         << weightedRebuild.size() / (1000. * weighted_sum) << endl;
     for (auto i = 0; i < 10; ++i) {
       agg += hist[i];
-      cerr << i * 10 << "%"
-           << " - " << (i + 1) * 10 << "% = " << hist[i] << "  " << agg << endl;
+      cerr << i * 10 << " - " << (i + 1) * 10 << "% = " << hist[i] << "  " << agg << endl;
     }
   }
 
@@ -74,7 +74,7 @@ struct Event {
   RouterType router;
   double percentage;
   double length;
-  int rebuildCount;
+  int rebuild_count;
   uint64_t timestamp;
 
   Event(EventType eType,
@@ -82,19 +82,19 @@ struct Event {
         RouterType rType = RouterType::NOT_SET,
         double percentage = kNotSet,
         double length = kNotSet,
-        int rebuildCount = kNotSet)
+        int rebuild_count = kNotSet)
       : type(eType),
         router(rType),
         percentage(percentage),
         length(length),
-        rebuildCount(rebuildCount),
+        rebuild_count(rebuild_count),
         timestamp(tmstp) {}
 
   void UpdateFromLast(Event const & rhs) {
     if (router == RouterType::NOT_SET) router = rhs.router;
     if (percentage == kNotSet) percentage = rhs.percentage;
     if (length == kNotSet) length = rhs.length;
-    if (rebuildCount == kNotSet) rebuildCount = rhs.rebuildCount;
+    if (rebuild_count == kNotSet) rebuild_count = rhs.rebuild_count;
   }
 
   bool operator<(Event const & rhs) const { return timestamp < rhs.timestamp; }
@@ -102,24 +102,24 @@ struct Event {
 
 class RoutingClient {
  public:
-  void AddEvent(Event && event) { m_storage.emplace_back(event); }
+  void AddEvent(Event && event) { m_events.emplace_back(move(event)); }
 
   void Process(DataStorage & data, size_t & errors) {
-    if (m_storage.size() < 2) return;
-    sort(m_storage.begin(), m_storage.end());
+    if (m_events.size() < 2) return;
+    sort(m_events.begin(), m_events.end());
 
-    for (size_t i = 1; i < m_storage.size(); ++i) {
-      m_storage[i].UpdateFromLast(m_storage[i - 1]);
+    for (size_t i = 1; i < m_events.size(); ++i) {
+      m_events[i].UpdateFromLast(m_events[i - 1]);
     }
 
-    for (auto const & event : m_storage) {
+    for (const auto & event : m_events) {
       // ROUTE_FINISHED duplicates by ROUTE_CLOSING (closing after) so we do not collect this event.
       if (event.type == EventType::CLOSE_ROUTE) {
         size_t percentage = 0;
         HistType hist_type;
 
-        for (int i = 10; i >= 0; --i) {
-          if (event.percentage > i * 10) {
+        for (int i = 9; i >= 0; --i) {
+          if (event.percentage >= i * 10) {
             percentage = i;
             break;
           }
@@ -135,53 +135,53 @@ class RoutingClient {
           else
             hist_type = HistType::LONG;
         }
-        if (event.length <= 25 || event.rebuildCount == kNotSet) {
+        if (event.length <= 25 || event.rebuild_count == kNotSet) {
           errors++;
           continue;
         }
         data[hist_type].hist[percentage]++;
-        data[hist_type].weightedRebuild.emplace_back(event.rebuildCount / event.length);
+        data[hist_type].weightedRebuild.emplace_back(event.rebuild_count / event.length);
       }
     }
   }
 
  private:
-  vector<Event> m_storage;
+  vector<Event> m_events;
 };
 
 double GetPercentage(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("percent");
+  const auto found = event->pairs.find("percent");
   if (found != event->pairs.end()) return std::stod(found->second);
   return kNotSet;
 }
 
 int GetRebuildCount(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("rebuildCount");
+  const auto found = event->pairs.find("rebuildCount");
   if (found != event->pairs.end()) return std::stoi(found->second);
   return kNotSet;
 }
 
 double GetPassedDistance(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("passedDistance");
+  const auto found = event->pairs.find("passedDistance");
   if (found != event->pairs.end()) return std::stod(found->second);
   return kNotSet;
 }
 
 double GetDistance(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("distance");
+  const auto found = event->pairs.find("distance");
   if (found != event->pairs.end()) return std::stod(found->second);
   return kNotSet;
 }
 
 RouterType GetRouterType(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("router");
+  const auto found = event->pairs.find("router");
   if (found == event->pairs.end()) return RouterType::NOT_SET;
   if ("vehicle" == found->second) return RouterType::VEHICLE;
   return RouterType::PEDESTRIAN;
 }
 
 RouterType GetRouterTypeByName(AlohalyticsKeyPairsEvent const * event) {
-  auto const found = event->pairs.find("name");
+  const auto found = event->pairs.find("name");
   if (found == event->pairs.end()) return RouterType::NOT_SET;
   if ("vehicle" == found->second) return RouterType::VEHICLE;
   return RouterType::PEDESTRIAN;
@@ -201,7 +201,7 @@ int main() {
   string current_user_id;
   cereal::BinaryInputArchive ar(std::cin);
   unique_ptr<AlohalyticsBaseEvent> ptr;
-  auto const start_time = chrono::system_clock::now();
+  const auto start_time = chrono::system_clock::now();
   while (true) {
     try {
       ar(ptr);
@@ -224,12 +224,12 @@ int main() {
         client.AddEvent(
             Event(EventType::CLOSE_ROUTE, key_event->timestamp, RouterType::NOT_SET, GetPercentage(key_event)));
       } else if (key_event->key == kRoutingRebuildEvent) {
-        int rebuildCount = GetRebuildCount(key_event);
+        int rebuild_count = GetRebuildCount(key_event);
         // Fix of the wrong rebuilding count. Because in omim rebuild event called before counter increment.
-        if (rebuildCount != -1) rebuildCount++;
+        if (rebuild_count != -1) rebuild_count++;
         RoutingClient & client = clients[current_user_id];
         client.AddEvent(Event(
-            EventType::REBUILD_ROUTE, key_event->timestamp, GetRouterType(key_event), kNotSet, kNotSet, rebuildCount));
+            EventType::REBUILD_ROUTE, key_event->timestamp, GetRouterType(key_event), kNotSet, kNotSet, rebuild_count));
       } else if (key_event->key == kRoutingFinishedEvent) {
         RoutingClient & client = clients[current_user_id];
         client.AddEvent(Event(EventType::ROUTE_FINISHED,
@@ -245,7 +245,7 @@ int main() {
             key_event->timestamp,
             GetRouterTypeByName(key_event),
             kNotSet,
-            GetDistance(key_event)));  // Do not use rebuildCount at 0 because this event is called on rebuild too.
+            GetDistance(key_event)));  // Do not set rebuild_count to 0 because this event is called on rebuild too.
       }
     }
   }
