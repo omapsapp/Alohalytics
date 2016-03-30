@@ -50,11 +50,15 @@ using namespace std;
 const string kSearchEmitResultsAndCoords(SEARCH_EMIT_RESULTS_AND_COORDS);
 
 struct PointD {
-  double x_, y_;
+  double x_ = 0;
+  double y_ = 0;
 };
 
 struct RectD {
-  double minX_, minY_, maxX_, maxY_;
+  double minX_ = 0;
+  double minY_ = 0;
+  double maxX_ = 0;
+  double maxY_ = 0;
 };
 
 double ReadDouble(string const & s) {
@@ -67,7 +71,9 @@ double ReadDouble(string const & s) {
 void Split(string const & s, char delim, vector<string> & parts) {
   istringstream iss(s);
   string part;
-  while (getline(iss, part, delim)) parts.push_back(part);
+  while (getline(iss, part, delim)) {
+    parts.push_back(part);
+  }
 }
 
 // We do not reuse SearchFilter in order not to break current behaviour
@@ -90,7 +96,9 @@ struct QueryProcessor {
           << "maxY=" << viewport_.maxY_ << ")";
       oss << " results=(";
       for (size_t i = 0; i < results_.size(); ++i) {
-        if (i > 0) oss << ",";
+        if (i > 0) {
+          oss << ",";
+        }
         oss << results_[i];
       }
       oss << ")";
@@ -127,6 +135,7 @@ struct QueryProcessor {
     needs_flushing_ = true;
   }
 
+  // kpe_pairs is the value type of AlohalyticsKeyPairsEvent.
   void AddEmitResultsAndCoordsQuery(const string & user, map<string, string> kpe_pairs) {
     string query;
     Info info;
@@ -145,12 +154,13 @@ struct QueryProcessor {
   }
 
   void Flush() {
-    if (needs_flushing_) {
-      Process(prev_user_, prev_query_, prev_info_);
-      prev_user_.clear();
-      prev_query_.clear();
-      needs_flushing_ = false;
+    if (!needs_flushing_) {
+      return;
     }
+    Process(prev_user_, prev_query_, prev_info_);
+    prev_user_.clear();
+    prev_query_.clear();
+    needs_flushing_ = false;
   }
 
   void Process(string user, const string & query, const Info & info) { m_[query].emplace_back(user, info); }
