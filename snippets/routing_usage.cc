@@ -135,12 +135,13 @@ class RoutingClient {
           else
             hist_type = HistType::LONG;
         }
-        if (event.length <= 25 || event.rebuild_count == kNotSet) {
+        if (event.length <= 25) {
           errors++;
           continue;
         }
         data[hist_type].hist[percentage]++;
-        data[hist_type].weightedRebuild.emplace_back(event.rebuild_count / event.length);
+        if (event.rebuild_count != kNotSet)
+          data[hist_type].weightedRebuild.emplace_back(event.rebuild_count / event.length);
       }
     }
   }
