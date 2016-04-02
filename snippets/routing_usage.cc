@@ -30,10 +30,12 @@
 #include "../Alohalytics/src/event_base.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <string>
 #include <vector>
 
