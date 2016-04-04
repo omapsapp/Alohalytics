@@ -24,6 +24,7 @@
 
 // Prints statistics about successfully downloaded mwm files.
 
+#include "../include/mapsme_events.h"
 #include "../include/mapsme_helpers.h"
 #include "../include/processor_light.h"
 #include "../include/time_helpers.h"
@@ -41,12 +42,12 @@ int main(int, char **) {
   map<string, set<AlohaID>> maps;
   alohalytics::ProcessorLight([&](const AlohalyticsIdServerEvent * se, const AlohalyticsKeyEvent * e){
 
-    if (e->key == "$OnMapDownloadFinished") {
+    if (e->key == COUNTRY_DOWNLOAD_FINISHED) {
       const auto & pairs = static_cast<const AlohalyticsKeyPairsEvent *>(e)->pairs;
       const auto mwm = pairs.find("name");
       const auto status = pairs.find("status");
       if (mwm != pairs.end() && status != pairs.end() && status->second == "ok") {
-        maps[mwm->second].insert(se->id);
+        maps[mapsme_helpers::NormalizeDownloadedCountry(mwm->second)].insert(se->id);
       }
     }
   });

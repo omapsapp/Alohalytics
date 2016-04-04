@@ -10,3 +10,5 @@
 // AlohalyticsKeyPairsEvent has as its value (query, its results, user's viewport and position)
 // packed into a map.
 #define SEARCH_EMIT_RESULTS_AND_COORDS "searchEmitResultsAndCoords"
+
+#define COUNTRY_DOWNLOAD_FINISHED "$OnMapDownloadFinished"

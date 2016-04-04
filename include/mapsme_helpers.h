@@ -29,4 +29,18 @@ namespace mapsme_helpers {
 inline bool IsProductionPackageId(const std::string & package_or_bundle_id) {
   return package_or_bundle_id == "com.mapswithme.maps.pro" || package_or_bundle_id == "com.mapswithme.full";
 }
+
+// Removes .mwm suffix from downloaded countries values. It was added by mistake in the code
+// after refactoring downloader.
+inline std::string NormalizeDownloadedCountry(const std::string & name) {
+  const auto s = name.size();
+  if (s < 4) {
+    return name;
+  }
+  std::string n(name);
+  if (n[s - 4] == '.' && n[s - 3] == 'm' && n[s - 2] == 'w' && n[s - 1] == 'm') {
+    n.resize(s - 4);
+  }
+  return n;
+}
 } // namespace mapsme_helpers
