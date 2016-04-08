@@ -18,6 +18,11 @@
 (defparameter *moscow-airport-station-position*
   (position-lat-lon 55.799996 37.5343679))
 
+(defparameter *zelenograd-viewport*
+  (viewport :maxx 37.2032 :maxy 67.8953 :minx 37.1945 :miny 67.8886))
+(defparameter *zelenograd-position*
+  (position-lat-lon 55.9964055 37.1984455))
+
 (dolist (query '("жуковский" "жуковский "))
   (defsample query "ru"
     (position-lat-lon 55.82483 37.566872)
@@ -61,8 +66,9 @@
 (defsample "героев панфиловцев 22" "ru"
   (position-lat-lon 55.662164 37.63057)
   (viewport :maxx 37.6341 :maxy 67.2996 :minx 37.627 :miny 67.2941)
-  (list (vital "22" '("building")
-              (position-lat-lon 55.856544 37.410764))))
+  (list (vital "" '("building")
+               (position-lat-lon 55.856544 37.410764)
+               :house-number "22")))
 
 (defsample "АЗС" "ru"
   (position-lat-lon 55.658 37.6403)
@@ -222,7 +228,7 @@
 
 (defsample "casino" "en"
   (position-lat-lon 33.749495 -117.873221)
-  (viewport :maxx 117.308 :maxy 36.5515 :minx -118.718 :miny 35.279)
+  (viewport :maxx -117.308 :maxy 36.5515 :minx -118.718 :miny 35.279)
   (list (relevant "Crystal Casino & Hotel" '("building")
                   (position-lat-lon 33.87517 -118.220612))
         (relevant "The Bicycle Casino" '("landuse-commercial" "amenity-casino")
@@ -331,7 +337,10 @@
     *skylight-viewport*
     (list (vital "Пушкинъ" '("building" "amenity-restaurant")
                  (position-lat-lon 55.7637177 37.6050293)
-                 :house-number "26А"))))
+                 :house-number "26А")
+          (vital "Пушкинъ" '("amenity-cafe")
+                 (position-lat-lon 55.7634114 37.6046713)
+                 :house-number "26/5"))))
 
 (defsample "restaurant" "en"
   *moscow-airport-station-position*
@@ -457,3 +466,11 @@
   (viewport :maxx 7.2447 :maxy 58.0872 :minx 7.22865 :miny 58.0669)
   (list (vital "Burg Metternich" '("historic-castle")
                (position-lat-lon 50.1088593 7.2392299))))
+
+(defsample "мороженое" "en"
+  *zelenograd-position*
+  *zelenograd-viewport*
+  (list (relevant "Мороженое" '("shop")
+                  (position-lat-lon 55.9819392 37.1530784))
+        (relevant "Мороженое" '("amenity" "shop-kiosk")
+                  (position-lat-lon 55.9736582 37.1624689))))
