@@ -474,3 +474,9 @@
                   (position-lat-lon 55.9819392 37.1530784))
         (relevant "Мороженое" '("amenity" "shop-kiosk")
                   (position-lat-lon 55.9736582 37.1624689))))
+
+(defsample "кафе юность" "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Юность" '("amenity-restaurant")
+               (position-lat-lon 55.7697202 37.6254771))))
