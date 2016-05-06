@@ -27,6 +27,7 @@
 #include "../Alohalytics/src/event_base.h"
 #include "../include/processor.h"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <set>
@@ -38,6 +39,7 @@ struct UserInfo {
     float latitude;
     float longitude;
     bool has_geo;
+    char os_type;
     const char* uid;
 };
 
@@ -66,6 +68,20 @@ void set_geo(const alohalytics::Location location, UserInfo& user_info) {
 }
 
 
+std::string compress_uid(std::string uid) {
+    uid.erase(0, 2);
+    // TODO: think about just using fixed positions instead of more general attempt with searching
+    uid.erase(
+        std::remove(uid.begin(), uid.end(), '-'),
+        uid.end()
+    );
+    return uid;
+}
+
+// We need a C interface, so prepare yourself for C-style structures in the params of
+// this function (called from a Python code with a ctypes wrapper) and
+// callback function (actual Python function - also a ctypes wrapper)
+
 DLLEXPORT void iterate(
     void (*callback)(const char*, const EventTime&, const UserInfo&, const char**, int),
     const char** events, int events_num) {
@@ -93,7 +109,8 @@ DLLEXPORT void iterate(
             .latitude = 0,
             .longitude = 0,
             .has_geo = false,
-            .uid = se->id.c_str()
+            .os_type = se->id[0],
+            .uid = compress_uid(se->id).c_str()
         };
       	const char* key = e->key.c_str();
 
