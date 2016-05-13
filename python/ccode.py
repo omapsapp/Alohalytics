@@ -38,23 +38,75 @@ class CEVENTTIME(ctypes.Structure):
         return self.dtime, self.accuracy
 
 
-class CUSERINFO(ctypes.Structure):
+class IDInfo(ctypes.Structure):
     _fields_ = [
-        ('latitude', ctypes.c_float),
-        ('longitude', ctypes.c_float),
-        ('has_geo', ctypes.c_bool),
-        ('os_type', ctypes.c_char),
-        ('uid', ctypes.c_char_p)
+        ('os_t', ctypes.c_byte),
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(CUSERINFO, self).__init__(*args, **kwargs)
-        self.uid = int(self.uid, 16)
+    uid = None
+
+    def __dumpdict__(self):
+        dct = {
+            '__loaddict__': '__import__("ccode").IDInfo.__loaddict__',
+            '__fields__': {
+                'os_t': self.os_t
+            }
+        }
+        return dct
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        instance = cls()
+        for fn, fv in dct['__fields__'].iteritems():
+            if fn == 'uid':
+                fv = int(fv)
+            setattr(instance, fn, fv)
+        return instance
+
+
+class GeoIDInfo(IDInfo):
+    _fields_ = [
+        ('lat', ctypes.c_float),
+        ('lon', ctypes.c_float)
+    ]
+
+    def has_geo(self):
+        return (
+            round(self.lat, 2) != 0.0 or
+            round(self.lon, 2) != 0.0
+        )
 
     def get_location(self):
-        if self.has_geo:
-            return (self.latitude, self.longitude)
+        if self.has_geo():
+            return (self.lat, self.lon)
         return None
+
+    def __dumpdict__(self):
+        dct = super(GeoIDInfo, self).__dumpdict__()
+        dct['__loaddict__'] = '__import__("ccode").GeoIDInfo.__loaddict__'
+        if self.has_geo():
+            dct['__fields__']['lat'] = round(self.lat, 6)
+            dct['__fields__']['lon'] = round(self.lon, 6)
+        return dct
+
+
+class CUSERINFO(GeoIDInfo):
+    _fields_ = [
+        ('raw_uid', (ctypes.c_char * 32)),
+    ]
+
+    def setup(self):
+        setattr(self, 'uid', int(self.raw_uid, 16))
+
+    def stripped_info(self):
+        if self.has_geo():
+            return GeoIDInfo(
+                uid=self.uid, os_t=self.os_t,
+                lat=self.lat, lon=self.lon
+            )
+        return IDInfo(
+            uid=self.uid, os_t=self.os_t
+        )
 
 
 CCALLBACK = ctypes.CFUNCTYPE(

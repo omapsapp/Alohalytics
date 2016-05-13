@@ -36,11 +36,10 @@
 
 
 struct UserInfo {
-    float latitude;
-    float longitude;
-    bool has_geo;
-    char os_type;
-    const char* uid;
+    char os_t;
+    float lat;
+    float lon;
+    char raw_uid[32];
 };
 
 
@@ -61,10 +60,9 @@ void set_pairs(const AlohalyticsKeyPairsEvent* event, std::vector<const char*>& 
 
 void set_geo(const alohalytics::Location location, UserInfo& user_info) {
     if (location.HasLatLon()) {
-        user_info.latitude = (float)location.latitude_deg_;
-        user_info.longitude = (float)location.longitude_deg_;
+        user_info.lat = (float)location.latitude_deg_;
+        user_info.lon = (float)location.longitude_deg_;
     }
-    user_info.has_geo = location.HasLatLon();
 }
 
 
@@ -106,12 +104,23 @@ DLLEXPORT void iterate(
             .server_upload = se->server_timestamp
         };
       	UserInfo user_info = {
-            .latitude = 0,
-            .longitude = 0,
-            .has_geo = false,
-            .os_type = se->id[0],
-            .uid = compress_uid(se->id).c_str()
+            .os_t = 0,
+            .lat = 0.0,
+            .lon = 0.0
         };
+        switch (se->id[0]) {
+            case 'A': {
+                user_info.os_t = 1;
+                break;
+            }
+            case 'I': {
+                user_info.os_t = 2;
+                break;
+            }
+        };
+
+        std::memcpy(user_info.raw_uid, compress_uid(se->id).c_str(), 32);
+
       	const char* key = e->key.c_str();
 
         const AlohalyticsKeyValueEvent * kve = dynamic_cast<const AlohalyticsKeyValueEvent *>(e);
@@ -132,9 +141,7 @@ DLLEXPORT void iterate(
         const AlohalyticsKeyLocationEvent * kle = dynamic_cast<const AlohalyticsKeyLocationEvent *>(e);
         if (kle) {
             set_geo(kle->location, user_info);
-            if (user_info.has_geo) {
-                callback(key, event_time, user_info, NULL, 0);
-            }
+            callback(key, event_time, user_info, NULL, 0);
             return;
         }
 

@@ -1,10 +1,12 @@
 from .base import _PairsEvent
 
+
 # Event of the app launch with props:
 # connection: None, wifi, mobile
 # in_roaming: True, False
 # user_info.get_location(): None, (lat, lon)
-
+# user_info.uid
+# user_info.os_t: 0 (Unknown), 1 (Android), 2 (iOS)
 
 class Launch(_PairsEvent):
     keys = (

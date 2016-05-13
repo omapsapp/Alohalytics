@@ -5,6 +5,7 @@ import inspect
 import json
 import multiprocessing
 import os
+import shutil
 import sys
 import traceback
 
@@ -14,28 +15,49 @@ from worker import invoke_cmd_worker, load_plugin, setup_logs
 
 
 DAY_FORMAT = '%Y%m%d'
+UNIQ_DAY_FORMAT = 'dt' + DAY_FORMAT
 
 
 def day_serialize(dtime):
-    return dtime.strftime(DAY_FORMAT)
+    return dtime.strftime(UNIQ_DAY_FORMAT)
 
 
 def day_deserialize(s):
-    return datetime.datetime.strptime(s, DAY_FORMAT)
+    return datetime.datetime.strptime(s, UNIQ_DAY_FORMAT)
 
 
 def str2date(s):
-    return day_deserialize(s).date()
+    return datetime.datetime.strptime(s, DAY_FORMAT).date()
 
 
 def custom_loads(dct):
+    if '__loaddict__' in dct:
+        try:
+            eval(dct['__preload__'])
+        except KeyError:
+            pass
+        return eval(dct['__loaddict__'])(dct)
+
     if '__stype__' in dct and dct['__stype__'] == 'repr':
         return eval(dct['__svalue__'])
+
+    for str_key in dct.keys():
+        try:
+            int_key = int(str_key)
+        except ValueError:
+            break
+        else:
+            dct[int_key] = dct[str_key]
+            del dct[str_key]
+
     return dct
 
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
+        if hasattr(obj, '__dumpdict__'):
+            return obj.__dumpdict__()
+
         if isinstance(obj, (datetime.datetime, datetime.date, set, frozenset)):
             return {'__stype__': 'repr', '__svalue__': repr(obj)}
         # Let the base class default method raise the TypeError

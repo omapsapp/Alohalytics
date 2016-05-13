@@ -1,4 +1,5 @@
 import collections
+import operator
 
 from alohalytics import ResultCollector as BaseResultCollector
 from alohalytics import StreamProcessor as BaseProcessor
@@ -11,7 +12,7 @@ class StreamProcessor(BaseProcessor):
     __events__ = (events.onstart.Launch,)
 
     def __init__(self):
-        self.visit_days = collections.defaultdict(set)
+        self.visit_days = collections.defaultdict(dict)
         self.lost_users = set()
         self.count_events = 0
 
@@ -19,7 +20,9 @@ class StreamProcessor(BaseProcessor):
         self.count_events += 1
         dtime = event.event_time.dtime
         if event.event_time.is_accurate:
-            self.visit_days[day_serialize(dtime)].add(event.user_info.uid)
+            dt = day_serialize(dtime)
+            # TODO: agg
+            self.visit_days[dt][event.user_info.uid] = event.user_info.stripped_info()
         else:
             self.lost_users.add(event.user_info.uid)
 
@@ -33,20 +36,23 @@ class ResultCollector(BaseResultCollector):
 
         self.total_count = 0
         self.lost_users = set()
-        self.agg_visit_days = collections.defaultdict(set)
+        self.agg_visit_days = collections.defaultdict(dict)
 
-        self.subscribers = (DAUStats, NumOfDaysStats, ThreeMonthCoreStats)
+        self.subscribers = (
+            DAUStats, OSDAUStats, NumOfDaysStats,
+            ThreeMonthCoreStats, ThreeWeekCoreStats
+        )
 
     def add(self, processor_results):
         self.total_count += processor_results.count_events
 
         self.lost_users.update(processor_results.lost_users)
-        for dte, uids in processor_results.visit_days.iteritems():
-            self.agg_visit_days[day_deserialize(dte)].update(uids)
+        for dte, users in processor_results.visit_days.iteritems():
+            self.agg_visit_days[day_deserialize(dte)].update(users)
 
     def gen_stats(self):
-        print 'Lost users', len(self.lost_users)
-        self.lost_users.clear()
+        yield 'Lost users %s' % len(self.lost_users), []
+        del self.lost_users
 
         procs = tuple(s() for s in self.subscribers)
 
@@ -73,11 +79,34 @@ class DAUStats(StatsProcessor):
         self.DAU = []
 
     def collect(self, item):
-        dte, uids = item
-        self.DAU.append((day_serialize(dte), len(uids)))
+        dte, users = item
+        self.DAU.append((day_serialize(dte), len(users)))
 
     def gen_stats(self):
         return 'DAU\nDate\tUsers', self.DAU
+
+
+class OSDAUStats(StatsProcessor):
+    def __init__(self):
+        self.DAU = []
+
+    def collect(self, item):
+        dte, users = item
+        os_types = map(
+            operator.itemgetter(1),
+            sorted(
+                collections.Counter(
+                    map(
+                        lambda (k, u): u.os_t,
+                        users.iteritems()
+                    )
+                ).iteritems()
+            )
+        )
+        self.DAU.append([day_serialize(dte)] + os_types)
+
+    def gen_stats(self):
+        return 'DAU by os type\ndate\tAndroid\tiOS', self.DAU
 
 
 class NumOfDaysStats(StatsProcessor):
@@ -85,16 +114,43 @@ class NumOfDaysStats(StatsProcessor):
         self.days_per_user = collections.Counter()
 
     def collect(self, item):
-        dte, uids = item
-        for u in uids:
-            self.days_per_user[u] += 1
+        dte, users = item
+        self.days_per_user.update(
+            users.iterkeys()
+        )
 
     def gen_stats(self):
         users_per_day = collections.Counter()
         for u, cnt in self.days_per_user.iteritems():
-            for i in range(1, cnt + 1):
-                users_per_day[i] += 1
-        return 'Days\tUsers', sorted(users_per_day.items())
+            users_per_day.update(range(1, cnt + 1))
+        return 'Days\tUsers', sorted(users_per_day.iteritems())
+
+
+class ThreeWeekCoreStats(StatsProcessor):
+    def __init__(self):
+        self.users_per_week = collections.defaultdict(set)
+
+    def collect(self, item):
+        dte, users = item
+        self.users_per_week[dte.date().isocalendar()[:2]].update(
+            users.iterkeys()
+        )
+
+    def gen_stats(self):
+        self.users_per_week = sorted(self.users_per_week.iteritems())
+
+        return '3W Core\nWeek\tUsers', (
+            (self.users_per_week[m_count][0], len(
+                self.users_per_week[m_count][1]
+                .intersection(
+                    self.users_per_week[m_count - 1][1]
+                )
+                .intersection(
+                    self.users_per_week[m_count - 2][1]
+                )
+            ))
+            for m_count in range(3, len(self.users_per_week), +1)
+        )
 
 
 class ThreeMonthCoreStats(StatsProcessor):
@@ -102,8 +158,10 @@ class ThreeMonthCoreStats(StatsProcessor):
         self.users_per_month = collections.defaultdict(set)
 
     def collect(self, item):
-        dte, uids = item
-        self.users_per_month[(dte.year, dte.month)].update(uids)
+        dte, users = item
+        self.users_per_month[(dte.year, dte.month)].update(
+            users.iterkeys()
+        )
 
     def gen_stats(self):
         self.users_per_month = sorted(self.users_per_month.iteritems())

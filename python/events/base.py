@@ -18,6 +18,7 @@ class Event(object):
         event_time._setup_time()
         self.event_time = event_time
         self.user_info = user_info
+        self.user_info.setup()
         self.key = key
 
     def process_me(self, processor):
@@ -28,8 +29,7 @@ class _PairsEvent(Event):
     def __init__(self,
                  key, event_time, user_info,
                  data_list, data_list_len):
-        Event.__init__(
-            self,
+        super(_PairsEvent, self).__init__(
             key, event_time, user_info,
             data_list, data_list_len
         )
