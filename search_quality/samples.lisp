@@ -55,14 +55,14 @@
     (viewport :maxx 37.6341 :maxy 67.2996 :minx 37.627 :miny 67.2941)
     (list (relevant "Старокаширское шоссе"
                     '("hwtag-lit" "hwtag-oneway" "highway-residential")
-                    (position-lat-lon 55.661483 37.626438)))))
+                    (position-lat-lon 55.661427 37.6305476)))))
 
 (defsample "ленинск" "ru"
   (position-lat-lon 55.662164 37.63057)
   (viewport :maxx 37.6341 :maxy 67.2996 :minx 37.627 :miny 67.2941)
   (list (relevant "Ленинский проспект"
                   '("hwtag-nofoot" "hwtag-oneway" "highway-primary")
-                  (position-lat-lon 55.69702 37.561276))))
+                  (position-lat-lon 55.6974076 37.5626246))))
 (defsample "героев панфиловцев 22" "ru"
   (position-lat-lon 55.662164 37.63057)
   (viewport :maxx 37.6341 :maxy 67.2996 :minx 37.627 :miny 67.2941)
@@ -99,7 +99,7 @@
   (list (vital "" '("building") (position-lat-lon 55.746825 37.626597)
                :house-number "7")))
 
-(defsample "train station podolsk" "en"
+(defsample "train station подольск" "en"
   (position-lat-lon 54.192024 37.615781)
   (viewport :maxx 37.6184 :maxy 64.745 :minx 37.607 :miny 64.7345)
   (list (vital "Подольск" '("railway-station")
@@ -117,8 +117,8 @@
                                 (position-lat-lon lat lon)))))
 
 (defsample "памятник высоцкому" "ru"
-  (position-lat-lon 40.730596 -73.986599)
-  (viewport :maxx -73.221 :maxy 45.3735 :minx -74.7522 :miny 43.9673)
+  *moscow-position*
+  *moscow-viewport*
   (list (vital "Памятник В.С. Высоцкому" '("historic-memorial")
                (position-lat-lon 55.768153 37.613128))))
 
@@ -177,7 +177,7 @@
      collecting (relevant "" '("building") (position-lat-lon lat lon)
                           :house-number house-number)))
 
-(defsample "минск немига 3" "en"
+(defsample "минск немига 3" "ru"
   (position-lat-lon 53.893297 27.567588)
   (viewport :maxx 27.5728 :maxy 64.2351 :minx 27.561 :miny 64.2241)
   (list (vital "Немига" '("building" "shop-mall")
@@ -320,12 +320,12 @@
                                  (position-lat-lon 40.3124091 127.3999867))))
                 (def "Винзавод "
                     (list (vital "Винзавод" '("amenity" "landuse-commercial")
-                                 (position-lat-lon 55.7560979 37.6661864))))
+                                 (position-lat-lon 55.7559047 37.6656405))))
                 (def "Камышин спортивная 6"
                     (list (vital "" '("building")
                                  (position-lat-lon 50.0895369 45.3833644)
                                  :house-number "6")
-                          (relevant "МОУ СОШ No 6" '("amenity-school")
+                          (relevant "МОУ СОШ № 6" '("amenity-school")
                                     (position-lat-lon 50.0884958 45.3850127))))
                 (def "Санкт-Петербург"
                     (list (vital "Санкт-Петербург" '("place-city-capital-3")
@@ -390,10 +390,10 @@
                 (dolist (region (power-set '("россия" "тульская область")))
                   (def (join-strings (cons "Крапивна" region))
                       (list (vital "Крапивна" '("place-village")
-                                   (position-lat-lon 53.9403093 37.1663125))))
+                                   (position-lat-lon 53.940985 37.1548407))))
                   (def (join-strings (cons "Пришня" region))
                       (list (vital "Пришня" '("place-village")
-                                   (position-lat-lon 53.9272875 37.3128496))))
+                                   (position-lat-lon 53.9250392 37.3138554))))
                   (def (join-strings (cons "Щёкино" region))
                       (list (vital "Щёкино" '("place-town")
                                    (position-lat-lon 54.0044567 37.5179073))))))
@@ -412,7 +412,8 @@
                                    (position-lat-lon 59.938567 30.3183096)
                                    :house-number "6-8")
                             (vital "Государственный Эрмитаж" '("tourism-museum")
-                                   (position-lat-lon 59.9409881 30.3129948))
+                                   (position-lat-lon 59.9409881 30.3129948)
+                                   :house-number "38")
                             (relevant "Новый Эрмитаж" '("building")
                                       (position-lat-lon 59.9413851 30.3172474)
                                       :house-number "35")
@@ -426,7 +427,7 @@
                                       (position-lat-lon 59.7135334 30.4033383))
                             (relevant "Эрмитаж" '("amenity-cafe")
                                       (position-lat-lon 59.7195307 30.4087738))
-                            (relevant "Гостиница «Эрмитаж»" '("building" "tourism-hotel")
+                            (relevant "Эрмитаж" '("building" "tourism-hotel")
                                       (position-lat-lon 59.9233988 30.343724)
                                       :house-number "10")
                             (relevant "дворец \"Эрмитаж\"" '("building" "tourism-museum")
@@ -479,4 +480,48 @@
   *moscow-position*
   *moscow-viewport*
   (list (vital "Юность" '("amenity-restaurant")
-               (position-lat-lon 55.7697202 37.6254771))))
+               (position-lat-lon 55.7697202 37.6254771)
+               :house-number "2")))
+
+(defsample "кафе " "ru"
+  (position-lat-lon 55.6613499 37.6333682)
+  (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
+  (list (vital "Принц" '("amenity-restaurant")
+               (position-lat-lon 55.6613499 37.6333682))
+        (relevant "Il Патио" '("amenity-restaurant")
+                  (position-lat-lon 55.6641957 37.6273976))
+        (relevant "Cтарбакс" '("amenity-cafe")
+                  (position-lat-lon 55.6645603 37.6281835))))
+
+(defsample "гостиница " "ru"
+  (position-lat-lon 55.6613499 37.6333682)
+  (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
+  (list (vital "Дуэт" '("tourism-hotel")
+               (position-lat-lon 55.6616465 37.6469482))))
+
+(defsample "магнит " "ru"
+  (position-lat-lon 55.6613499 37.6333682)
+  (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
+  (list (vital "Магнит" '("shop-supermarket")
+               (position-lat-lon 55.6535784 37.6080964))
+        (relevant "Магнит" '("shop-convenience")
+                  (position-lat-lon 55.6406377 37.6579989)
+                  :house-number "19 к3")
+        (relevant "\"Магнит\"" '("building" "shop-convenience")
+                  (position-lat-lon 55.633934 37.6043427))))
+
+(defsample "детский мир " "ru"
+  (position-lat-lon 55.6613499 37.6333682)
+  (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
+  (list (vital "Детский Мир" '("shop-toys")
+               (position-lat-lon 55.7049239 37.6413907))
+        (vital "Детский мир" '("shop-toys")
+               (position-lat-lon 55.6225043 37.6676576))))
+
+(defsample "пятерочка " "ru"
+  (position-lat-lon 55.6613499 37.6333682)
+  (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
+  (list (vital "Пятёрочка" '("shop-supermarket")
+               (position-lat-lon 55.6657373 37.650698))
+        (relevant "Пятерочка" '("building" "shop-supermarket")
+                  (position-lat-lon 55.656211 37.607834))))
