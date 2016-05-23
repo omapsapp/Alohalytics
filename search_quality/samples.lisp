@@ -525,3 +525,15 @@
                (position-lat-lon 55.6657373 37.650698))
         (relevant "Пятерочка" '("building" "shop-supermarket")
                   (position-lat-lon 55.656211 37.607834))))
+
+;;; Position near СК Олимпийский
+(defsample "гостиница " "ru"
+  (position-lat-lon 55.781 37.626)
+  (viewport :maxx 37.63 :maxy 67.5107 :minx 37.6229 :miny 67.5053)
+  (list (vital "СК \"Олимпийский\"" '("tourism-hotel")
+               (position-lat-lon 55.7826394 37.6266707))
+        (relevant "Славянка" '("tourism-hotel")
+                  (position-lat-lon 55.7805805 37.6194985))
+        (relevant "Azimut Moscow Olympic Hotel" '("building" "tourism-hotel")
+                  (position-lat-lon 55.7849825 37.6239282)
+                  :house-number "18/1")))
