@@ -1,7 +1,9 @@
 import collections
+import itertools
 import operator
 
 from alohalytics import ResultCollector as BaseResultCollector
+from alohalytics import ResultProcessor as BaseResultProcessor
 from alohalytics import StreamProcessor as BaseProcessor
 from alohalytics import day_deserialize, day_serialize
 
@@ -9,61 +11,71 @@ import events
 
 
 class StreamProcessor(BaseProcessor):
-    __events__ = (events.onstart.Launch,)
+    __events__ = (
+        events.onstart.TechnicalLaunch,
+        events.onstart.AndroidVisibleLaunch
+    )
 
     def __init__(self):
         self.visit_days = collections.defaultdict(dict)
         self.lost_users = set()
         self.count_events = 0
+        self.android_vstarts = collections.defaultdict(set)
 
     def process_unspecified(self, event):
         self.count_events += 1
         dtime = event.event_time.dtime
         if event.event_time.is_accurate:
             dt = day_serialize(dtime)
-            # TODO: agg
-            self.visit_days[dt][event.user_info.uid] = event.user_info.stripped_info()
+            if isinstance(event, events.onstart.AndroidVisibleLaunch):
+                self.android_vstarts[dt].add(event.user_info.uid)
+            else:
+                # TODO: agg
+                self.visit_days[dt][event.user_info.uid] = event.user_info.stripped()
         else:
             self.lost_users.add(event.user_info.uid)
 
     def finish(self):
-        pass
+        for dte, users in self.visit_days.iteritems():
+            for uid, uinfo in users.items():
+                if uinfo.os_t == 1 and uid not in self.android_vstarts[dte]:
+                    del users[uid]
+        del self.android_vstarts
 
 
 class ResultCollector(BaseResultCollector):
-    def __init__(self):
-        super(ResultCollector, self).__init__()
-
-        self.total_count = 0
-        self.lost_users = set()
-        self.agg_visit_days = collections.defaultdict(dict)
-
-        self.subscribers = (
-            DAUStats, OSDAUStats, NumOfDaysStats,
-            ThreeMonthCoreStats, ThreeWeekCoreStats
+    def __init__(self, *args, **kwargs):
+        super(ResultCollector, self).__init__(
+            *args, **kwargs
         )
 
+        self.complete_worker = collector_complete_worker
+
+        # self.total_count = 0
+        # self.lost_users = set()
+        # self.agg_visit_days = collections.defaultdict(dict)
+
     def add(self, processor_results):
-        self.total_count += processor_results.count_events
+        # self.total_count += processor_results.count_events
 
-        self.lost_users.update(processor_results.lost_users)
+        # self.lost_users.update(processor_results.lost_users)
         for dte, users in processor_results.visit_days.iteritems():
-            self.agg_visit_days[day_deserialize(dte)].update(users)
+            ResultCollector.save_day(
+                fname=self.get_result_file_path(day_deserialize(dte)),
+                iterable=users.iteritems(),
+                mode='a+'
+            )
+            # self.agg_visit_days[day_deserialize(dte)].update(users)
 
-    def gen_stats(self):
-        yield 'Lost users %s' % len(self.lost_users), []
-        del self.lost_users
 
-        procs = tuple(s() for s in self.subscribers)
-
-        for item in sorted(self.agg_visit_days.iteritems()):
-            for p in procs:
-                p.collect(item)
-            # uids set: do not need that, 2 times less memory consumption
-            item[1].clear()
-
-        for p in procs:
-            yield p.gen_stats()
+def collector_complete_worker(fname):
+    results = ResultCollector.load_day(fname)
+    # TODO: agg
+    reduced = dict(results)
+    ResultCollector.save_day(
+        fname=fname,
+        iterable=reduced.iteritems()
+    )
 
 
 class StatsProcessor(object):
@@ -96,9 +108,11 @@ class OSDAUStats(StatsProcessor):
             operator.itemgetter(1),
             sorted(
                 collections.Counter(
-                    map(
-                        lambda (k, u): u.os_t,
-                        users.iteritems()
+                    itertools.imap(
+                        operator.itemgetter('os_t'),
+                        itertools.imap(
+                            operator.itemgetter(1), users
+                        )
                     )
                 ).iteritems()
             )
@@ -116,7 +130,7 @@ class NumOfDaysStats(StatsProcessor):
     def collect(self, item):
         dte, users = item
         self.days_per_user.update(
-            users.iterkeys()
+            itertools.imap(operator.itemgetter(0), users)
         )
 
     def gen_stats(self):
@@ -132,8 +146,8 @@ class ThreeWeekCoreStats(StatsProcessor):
 
     def collect(self, item):
         dte, users = item
-        self.users_per_week[dte.date().isocalendar()[:2]].update(
-            users.iterkeys()
+        self.users_per_week[dte.isocalendar()[:2]].update(
+            itertools.imap(operator.itemgetter(0), users)
         )
 
     def gen_stats(self):
@@ -160,7 +174,7 @@ class ThreeMonthCoreStats(StatsProcessor):
     def collect(self, item):
         dte, users = item
         self.users_per_month[(dte.year, dte.month)].update(
-            users.iterkeys()
+            itertools.imap(operator.itemgetter(0), users)
         )
 
     def gen_stats(self):
@@ -177,3 +191,35 @@ class ThreeMonthCoreStats(StatsProcessor):
             ))
             for m_count in range(3, len(self.users_per_month), +1)
         )
+
+
+class ResultProcessor(BaseResultProcessor):
+    subscribers = (
+        DAUStats, OSDAUStats, NumOfDaysStats,
+        ThreeMonthCoreStats, ThreeWeekCoreStats
+    )
+
+    def gen_stats(self):
+        # yield 'Lost users %s' % len(self.lost_users), []
+        # del self.lost_users
+
+        procs = tuple(s() for s in self.subscribers)
+
+        def prepare(fname):
+            users = self.collector.load_day(fname)
+            return self.collector.extract_date_from_path(fname), users
+
+        users_by_days = sorted(
+            itertools.imap(
+                prepare,
+                self.collector.iterate_saved_days()
+            )
+        )
+
+        for dte, users in users_by_days:
+            users = tuple(users)
+            for p in procs:
+                p.collect((dte, users))
+
+        for p in procs:
+            yield p.gen_stats()

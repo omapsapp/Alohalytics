@@ -26,8 +26,8 @@ class CEVENTTIME(ctypes.Structure):
         )
 
         self.dtime = self.server_dtime
-        if self.client_dtime.year >= self.current_time.year - 1 and\
-                self.client_dtime <= self.current_time:
+        if self.client_dtime >= self.server_dtime - datetime.timedelta(days=6 * 30) and\
+                self.client_dtime <= self.server_dtime + datetime.timedelta(days=1):
             self.dtime = self.client_dtime
 
             self.is_accurate = True
@@ -46,22 +46,18 @@ class IDInfo(ctypes.Structure):
     uid = None
 
     def __dumpdict__(self):
-        dct = {
-            '__loaddict__': '__import__("ccode").IDInfo.__loaddict__',
-            '__fields__': {
-                'os_t': self.os_t
-            }
+        return {
+            'os_t': self.os_t
         }
-        return dct
 
-    @classmethod
-    def __loaddict__(cls, dct):
-        instance = cls()
-        for fn, fv in dct['__fields__'].iteritems():
-            if fn == 'uid':
-                fv = int(fv)
-            setattr(instance, fn, fv)
-        return instance
+    #@classmethod
+    #def __loaddict__(cls, dct):
+    #    instance = cls()
+    #    for fn, fv in dct['__fields__'].iteritems():
+    #        if fn == 'uid':
+    #            fv = int(fv)
+    #        setattr(instance, fn, fv)
+    #    return instance
 
 
 class GeoIDInfo(IDInfo):
@@ -83,10 +79,9 @@ class GeoIDInfo(IDInfo):
 
     def __dumpdict__(self):
         dct = super(GeoIDInfo, self).__dumpdict__()
-        dct['__loaddict__'] = '__import__("ccode").GeoIDInfo.__loaddict__'
         if self.has_geo():
-            dct['__fields__']['lat'] = round(self.lat, 6)
-            dct['__fields__']['lon'] = round(self.lon, 6)
+            dct['lat'] = round(self.lat, 6)
+            dct['lon'] = round(self.lon, 6)
         return dct
 
 
@@ -98,7 +93,7 @@ class CUSERINFO(GeoIDInfo):
     def setup(self):
         setattr(self, 'uid', int(self.raw_uid, 16))
 
-    def stripped_info(self):
+    def stripped(self):
         if self.has_geo():
             return GeoIDInfo(
                 uid=self.uid, os_t=self.os_t,

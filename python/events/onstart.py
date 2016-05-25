@@ -1,4 +1,4 @@
-from .base import _PairsEvent
+from .base import Event, _PairsEvent
 
 
 # Event of the app launch with props:
@@ -8,13 +8,13 @@ from .base import _PairsEvent
 # user_info.uid
 # user_info.os_t: 0 (Unknown), 1 (Android), 2 (iOS)
 
-class Launch(_PairsEvent):
+class TechnicalLaunch(_PairsEvent):
     keys = (
         '$launch',
     )
 
     def __init__(self, *args, **kwargs):
-        super(Launch, self).__init__(*args, **kwargs)
+        super(TechnicalLaunch, self).__init__(*args, **kwargs)
 
         try:
             if self.data['connected'] == 'yes':
@@ -24,3 +24,13 @@ class Launch(_PairsEvent):
         except KeyError:
             self.connection = None
             self.in_roaming = None
+
+
+class IOSVisibleLaunch(TechnicalLaunch):
+    pass
+
+
+class AndroidVisibleLaunch(Event):
+    keys = (
+        '$onResume',
+    )

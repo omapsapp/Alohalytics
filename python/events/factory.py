@@ -2,7 +2,8 @@ import itertools
 
 from .base import Event
 from .misc import GPSTracking, SearchResults
-from .onstart import Launch
+from .onstart import AndroidVisibleLaunch, TechnicalLaunch
+from .placepage import ObjectSelection
 from .routing import RouteEnd, RouteRequest, RouteStart, RouteTracking
 
 
@@ -15,7 +16,8 @@ def check_events(events):
 
 
 CUSTOM_EVENTS = (
-    Launch,
+    ObjectSelection,
+    TechnicalLaunch, AndroidVisibleLaunch,
     SearchResults, GPSTracking,
     RouteRequest, RouteStart, RouteEnd, RouteTracking,
 )
