@@ -1,3 +1,32 @@
+"""
+    This is a useful stats processing pattern when data is processed
+in a daily fashion, accumulated into day files (minimizing memory usage),
+after that files are postprocessed and saved again.
+    Then accumulated and postprocessed data is read from fs
+in a date ascending order and given to a daily stats subscribers (
+each solving one particular problem like DAU calculation).
+    Finally subscribers are called to generate stats reports.
+
+    By default (if you don't overload any methods):
+    1) Aggregator uses data_per_days dict field of a worker as a
+preprocessed stats data to be dumped into the files.
+Its keys are serialized dates and values are another dicts.
+    {
+        date_str: {
+            some_key: serializable_object
+        }
+    }
+For example:
+    {
+        date_str: {
+            uid: event
+        }
+    }
+    2) Aggregator postprocesses files and leaves only one (undefined what)
+object for a key within one date.
+
+"""
+
 import itertools
 import os
 

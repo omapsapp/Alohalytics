@@ -17,7 +17,7 @@ def c_string(c_data):
 
 class CEVENTTIME(ctypes.Structure):
     _fields_ = [
-        ('client_created', ctypes.c_uint64),
+        ('client_creation', ctypes.c_uint64),
         ('server_upload', ctypes.c_uint64)
     ]
 
@@ -30,7 +30,7 @@ class CEVENTTIME(ctypes.Structure):
 
     def _setup_time(self):
         self.client_dtime = datetime.datetime.utcfromtimestamp(
-            self.client_created / 1000.  # timestamp is in millisecs
+            self.client_creation / 1000.  # timestamp is in millisecs
         )
         self.server_dtime = datetime.datetime.utcfromtimestamp(
             self.server_upload / 1000.  # timestamp is in millisecs
@@ -40,25 +40,24 @@ class CEVENTTIME(ctypes.Structure):
         if self.client_dtime >= self.server_dtime - self.delta_past and\
                 self.client_dtime <= self.server_dtime + self.delta_future:
             self.dtime = self.client_dtime
-
             self.is_accurate = True
 
     def get_approx_time(self):
         if self.dtime is None:
             self._setup_time()
-        return self.dtime, self.accuracy
+        return self.dtime, self.is_accurate
 
 
 class IDInfo(ctypes.Structure):
     _fields_ = [
-        ('os_t', ctypes.c_byte),
+        ('os', ctypes.c_byte),
     ]
 
     uid = None
 
     def __dumpdict__(self):
         return {
-            'os_t': self.os_t
+            'os': self.os
         }
 
 
@@ -69,6 +68,9 @@ class GeoIDInfo(IDInfo):
     ]
 
     def has_geo(self):
+        # TODO: if client will send actual (0, 0) we will
+        # intepretate them as a geo info absence.
+        # For now it is acceptable though.
         return (
             round(self.lat, 2) != 0.0 or
             round(self.lon, 2) != 0.0
@@ -98,11 +100,11 @@ class CUSERINFO(GeoIDInfo):
     def stripped(self):
         if self.has_geo():
             return GeoIDInfo(
-                uid=self.uid, os_t=self.os_t,
+                uid=self.uid, os=self.os,
                 lat=self.lat, lon=self.lon
             )
         return IDInfo(
-            uid=self.uid, os_t=self.os_t
+            uid=self.uid, os=self.os
         )
 
 
@@ -128,8 +130,8 @@ def iterate_events(stream_processor):
         e.keys for e in stream_processor.__events__
     ))
     keylist_type = ctypes.c_char_p * len(use_keys)
-    c_module.iterate.argtypes = [CCALLBACK, keylist_type, ctypes.c_int]
-    c_module.iterate(
+    c_module.Iterate.argtypes = [CCALLBACK, keylist_type, ctypes.c_int]
+    c_module.Iterate(
         CCALLBACK(
             stream_processor.process_event
         ),

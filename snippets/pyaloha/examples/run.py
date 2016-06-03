@@ -11,5 +11,5 @@ sys.path.append(pyaloha_path)
 
 PYSCRIPT_PATH = base_path
 
-pyaloha = __import__('pyaloha.base')
-pyaloha.base.cmd_run(plugin_dir=PYSCRIPT_PATH)
+pyaloha = __import__('pyaloha.main')
+pyaloha.main.cmd_run(plugin_dir=PYSCRIPT_PATH)

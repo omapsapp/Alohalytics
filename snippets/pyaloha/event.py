@@ -14,16 +14,35 @@ class Event(object):
         processor.process_unspecified(self)
 
 
-class _PairsEvent(Event):
+class DictEvent(Event):
+    """
+    This is a simplified form of any Alohalytics pairs event
+when all event params (except datetime and user/device identification)
+are accumulated into a dict.
+    You can try to convert Event instance to it with a @method from_event.
+    """
     def __init__(self,
                  key, event_time, user_info,
                  data_list, data_list_len):
-        super(_PairsEvent, self).__init__(
+        super(DictEvent, self).__init__(
             key, event_time, user_info,
             data_list, data_list_len
         )
 
+        if self.data_list_len % 2 != 0:
+            raise ValueError(
+                "Event can't be casted to a dict without additional knowledge"
+            )
+
         self.data = dict(
             (self.data_list[i], self.data_list[i + 1])
             for i in range(0, data_list_len, +2)
+        )
+
+    @classmethod
+    def from_event(cls, event):
+        return DictEvent(
+            event.key,
+            event.event_time, event.user_info,
+            event.data_list, event.data_list_len
         )
