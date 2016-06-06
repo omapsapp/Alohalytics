@@ -537,3 +537,20 @@
         (relevant "Azimut Moscow Olympic Hotel" '("building" "tourism-hotel")
                   (position-lat-lon 55.7849825 37.6239282)
                   :house-number "18/1")))
+
+;;; Position near Montreal, Canada.
+(scoped-samples ("en"
+                 (position-lat-lon 45.4955 -73.5370)
+                 (viewport :maxx -73.9 :maxy 51.1 :minx -74.0 :miny 51))
+
+                (def "notre-dame-de-l'ile-perrot "
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
+                                    (position-lat-lon 45.3852 -73.9001))))
+
+                (def "notre-dame perrot "
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
+                                    (position-lat-lon 45.3852 -73.9001))))
+
+                (def "l'Île-Perrot "
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
+                                    (position-lat-lon 45.3852 -73.9001)))))
