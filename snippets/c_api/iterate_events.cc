@@ -27,6 +27,7 @@
 #define EXPORT extern "C"
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <set>
 #include <string>
