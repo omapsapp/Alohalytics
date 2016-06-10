@@ -24,7 +24,7 @@
 
 // Prints number of users with specified event values.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <iostream>
 #include <map>

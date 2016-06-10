@@ -24,8 +24,8 @@
 
 // Calculates statistics for all search queries.
 
+#include "../Alohalytics/src/processor.h"
 #include "../include/mapsme_events.h"
-#include "../include/processor.h"
 #include "../include/search.h"
 
 #include <map>

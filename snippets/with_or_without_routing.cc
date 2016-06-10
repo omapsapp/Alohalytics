@@ -24,7 +24,7 @@
 
 // Calculates daily statistics about map downloads with and without routing files.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <iostream>
 #include <map>

@@ -24,7 +24,7 @@
 
 // Calculates search by category statistics.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 #include "../include/search.h"
 
 #include <map>

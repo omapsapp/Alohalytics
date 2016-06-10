@@ -24,7 +24,7 @@
 
 // Prints detailed device info for users with specified events.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <map>
 #include <set>

@@ -25,7 +25,7 @@
 // Calculates map viewport statistics, for Framework::EnterBackground event.
 // Dumps zoom,sessionSeconds,lat,lon in CSV format to stdout.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <set>
 #include <string>

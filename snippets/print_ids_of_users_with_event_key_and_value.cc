@@ -26,7 +26,7 @@
 // Value is matched as a substring.
 // User ids are not unique and can repeat itself!
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 using namespace std;
 

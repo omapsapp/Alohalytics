@@ -24,7 +24,7 @@
 
 // Calculates how many sessions were launched while in offline.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <set>
 #include <string>

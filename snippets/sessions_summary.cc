@@ -24,7 +24,7 @@
 
 // Calculates total sum of all sessions in the events flow.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <algorithm>
 #include <iostream>

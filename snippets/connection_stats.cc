@@ -24,7 +24,7 @@
 
 // Calculates statistics for connection state (roaming, wifi, offline).
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <set>
 #include <string>

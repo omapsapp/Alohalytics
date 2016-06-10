@@ -22,7 +22,7 @@
  SOFTWARE.
  *******************************************************************************/
 
-#include"../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <algorithm>
 #include <unordered_map>
