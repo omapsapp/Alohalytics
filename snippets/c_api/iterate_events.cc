@@ -127,8 +127,8 @@ struct EventTime
 using TCallback = void (char const *, EventTime const &, UserInfo const &, char const **, int);
 
 /*
-Helper function that flatten KeyPairs events to a 1-dim plain lists
-processed on the Python side as lists of pairs while conberting them to dicts.
+Helper function that flattens KeyPairs events to a 1-dim plain lists
+processed on the Python side as lists of pairs while converting them to dicts.
 */
 std::vector<char const *> getPairs(std::map<std::string, std::string> const & eventPairs)
 {
@@ -159,7 +159,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         if (!processKeys.empty() && !processKeys.count(event->key))
           return;
 
-        char const * kKey = event->key.c_str();
+        char const * key = event->key.c_str();
 
         EventTime const eventTime(event->timestamp, idEvent->server_timestamp);
 
@@ -172,7 +172,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         {
           char const * kValues[1] = {kve->value.c_str()};
 
-          callback(kKey, eventTime, userInfo, kValues, 1);
+          callback(key, eventTime, userInfo, kValues, 1);
           return;
         }
 
@@ -181,7 +181,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         {
           std::vector<char const *> pairs = getPairs(kpe->pairs);
 
-          callback(kKey, eventTime, userInfo, pairs.data(), pairs.size());
+          callback(key, eventTime, userInfo, pairs.data(), pairs.size());
           return;
         }
 
@@ -190,7 +190,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         {
           userInfo.setGeo(kle->location);
 
-          callback(kKey, eventTime, userInfo, NULL, 0);
+          callback(key, eventTime, userInfo, NULL, 0);
           return;
         }
 
@@ -200,7 +200,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
           std::vector<char const *> pairs = getPairs(kple->pairs);
           userInfo.setGeo(kple->location);
 
-          callback(kKey, eventTime, userInfo, pairs.data(), pairs.size());
+          callback(key, eventTime, userInfo, pairs.data(), pairs.size());
           return;
         }
       });

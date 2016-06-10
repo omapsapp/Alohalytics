@@ -1,6 +1,6 @@
 # This is an example stats processing script that
 # counts unique users and total events
-# for the given period of a server time
+# for the given period of server time
 # USAGE: from the examples directory
 # (processing only one server day stats file):
 # python2.7 run.py count_users_and_events 20150401 20150401
@@ -28,7 +28,7 @@ def info_item():
 
 class DataStreamWorker(BaseDataStreamWorker):
     """
-    This is a class representing of the workers that collects unique users and
+    This is a class representing a worker that collects unique users and
 total events within given sequence of events (one by one).
     This worker is not guaranteed to have all available data
     @method process_unspecified is a generic method called on every event
@@ -48,7 +48,7 @@ despite of its actual type in its own process
 
 class DataAggregator(BaseDataAggregator):
     """
-    This is a 'singletone' class that accumulates results from the workers.
+    This is a 'singleton' class that accumulates results from the workers.
     @method aggregate is called every time a worker is done with its events
     """
     def __init__(self, *args, **kwargs):
@@ -66,7 +66,7 @@ class DataAggregator(BaseDataAggregator):
 
 class StatsProcessor(BaseStatsProcessor):
     """
-    This is stats results processor and representator. It is instantiated
+    This is a stats results processor and representator. It is instantiated
 with a pointer to aggregator that has already been done with all workers and
 his postprocessing.
     Class can be used as a business logic processor

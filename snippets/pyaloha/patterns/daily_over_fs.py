@@ -22,7 +22,7 @@ For example:
             uid: event
         }
     }
-    2) Aggregator postprocesses files and leaves only one (undefined what)
+    2) Aggregator postprocesses files and leaves only one (arbitrary)
 object for a key within one date.
 
 """
