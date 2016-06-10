@@ -12,6 +12,7 @@ from pyaloha.patterns.daily_over_fs import (
 from pyaloha.protocol import day_serialize
 
 from .stats.dau import DAUStats, OSDAUStats, NumOfDaysStats
+from .stats.mau import MAUStats
 from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats
 
 
@@ -58,5 +59,6 @@ class DataAggregator(DailyAggregator):
 class StatsProcessor(DailyStatsProcessor):
     subscribers = (
         DAUStats, OSDAUStats, NumOfDaysStats,
+        MAUStats,
         ThreeMonthCoreStats, ThreeWeekCoreStats
     )
