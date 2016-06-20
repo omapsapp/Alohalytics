@@ -554,3 +554,9 @@
                 (def "l'Île-Perrot "
                     (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
                                     (position-lat-lon 45.3852 -73.9001)))))
+
+(defsample "Stevenson Avenue London" "en"
+  (position-lat-lon 42.98901 -81.19323)
+  (viewport :maxx -81.129 :maxy 47.7621 :minx -81.2715 :miny 47.652)
+  (list (vital "Stevenson Avenue" '("highway-residential")
+               (position-lat-lon 42.98846 -81.1935105))))
