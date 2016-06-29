@@ -171,7 +171,7 @@
   (loop for (house-number lat lon) in '(("75 к1" 55.804945 37.512323)
                                         ("75 к1А" 55.804198 37.513327)
                                         ("75 к1Б" 55.804729 37.510496)
-                                        ("75с2" 55.804332 37.511761)
+                                        ("75 с2" 55.804332 37.511761)
                                         ("75А" 55.803425 37.512232)
                                         ("75Б" 55.804002 37.511482))
      collecting (relevant "" '("building") (position-lat-lon lat lon)
@@ -331,8 +331,8 @@
                     (list (vital "Санкт-Петербург" '("place-city-capital-3")
                                  (position-lat-lon 59.9393579 30.3153813)))))
 
-(dolist (query (list "restaurant пушкинъ " "restaurant пушкин" "cafe пушкинъ"))
-  (defsample query "en"
+(dolist (query (list "ресторан пушкинъ " "ресторан пушкин" "кафе пушкинъ"))
+  (defsample query "ru"
     *skylight-position*
     *skylight-viewport*
     (list (vital "Пушкинъ" '("building" "amenity-restaurant")
@@ -468,11 +468,11 @@
   (list (vital "Burg Metternich" '("historic-castle")
                (position-lat-lon 50.1088593 7.2392299))))
 
-(defsample "мороженое" "en"
+(defsample "мороженое" "ru"
   *zelenograd-position*
   *zelenograd-viewport*
   (list (relevant "Мороженое" '("shop")
-                  (position-lat-lon 55.9819392 37.1530784))
+                  (position-lat-lon 55.9846161 37.1509488))
         (relevant "Мороженое" '("amenity" "shop-kiosk")
                   (position-lat-lon 55.9736582 37.1624689))))
 
@@ -486,7 +486,7 @@
 (defsample "кафе " "ru"
   (position-lat-lon 55.6613499 37.6333682)
   (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
-  (list (vital "Принц" '("amenity-restaurant")
+  (list (vital "Усадьба принца" '("amenity-restaurant")
                (position-lat-lon 55.6613499 37.6333682))
         (relevant "Il Патио" '("amenity-restaurant")
                   (position-lat-lon 55.6641957 37.6273976))
@@ -496,7 +496,7 @@
 (defsample "гостиница " "ru"
   (position-lat-lon 55.6613499 37.6333682)
   (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
-  (list (vital "Дуэт" '("tourism-hotel")
+  (list (vital "Hotel Duet" '("tourism-hotel")
                (position-lat-lon 55.6616465 37.6469482))))
 
 (defsample "магнит " "ru"
@@ -532,7 +532,7 @@
   (viewport :maxx 37.63 :maxy 67.5107 :minx 37.6229 :miny 67.5053)
   (list (vital "СК \"Олимпийский\"" '("tourism-hotel")
                (position-lat-lon 55.7826394 37.6266707))
-        (relevant "Славянка" '("tourism-hotel")
+        (relevant "Slavyanka" '("tourism-hotel")
                   (position-lat-lon 55.7805805 37.6194985))
         (relevant "Azimut Moscow Olympic Hotel" '("building" "tourism-hotel")
                   (position-lat-lon 55.7849825 37.6239282)
@@ -544,19 +544,35 @@
                  (viewport :maxx -73.9 :maxy 51.1 :minx -74.0 :miny 51))
 
                 (def "notre-dame-de-l'ile-perrot "
-                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
-                                    (position-lat-lon 45.3852 -73.9001))))
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-suburb")
+                                    (position-lat-lon 45.37806 -73.9344872))))
 
                 (def "notre-dame perrot "
-                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
-                                    (position-lat-lon 45.3852 -73.9001))))
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-suburb")
+                                    (position-lat-lon 45.37806 -73.9344872))))
 
                 (def "l'Île-Perrot "
-                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-village")
-                                    (position-lat-lon 45.3852 -73.9001)))))
+                    (list (vital "Notre-Dame-de-l'Île-Perrot" '("place-suburb")
+                                    (position-lat-lon 45.37806 -73.9344872)))))
 
+;;; There are several Londons on the World map, one of them is located
+;;; in Canada, state Ontario. And there is a Stevenson Avenue in the
+;;; city.
 (defsample "Stevenson Avenue London" "en"
   (position-lat-lon 42.98901 -81.19323)
   (viewport :maxx -81.129 :maxy 47.7621 :minx -81.2715 :miny 47.652)
   (list (vital "Stevenson Avenue" '("highway-residential")
                (position-lat-lon 42.98846 -81.1935105))))
+
+(defsample "Plaßstraße 4 14165" "en"
+  (position-lat-lon 52.5170364 13.3888593)
+  (viewport :maxx 13.3915 :maxy 61.9339 :minx 13.3863 :miny 61.928)
+  (list (vital ""  '("building-address")
+               (position-lat-lon 52.4156159 13.2636967)
+               :house-number "4")
+        (relevant "" '("building-address")
+                  (position-lat-lon 52.4157795 13.2636457)
+                  :house-number "4A")
+        (relevant "" '("building-address")
+                  (position-lat-lon 52.4157386 13.2632246)
+                  :house-number "4B")))
