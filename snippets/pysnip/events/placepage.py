@@ -12,7 +12,7 @@ from pyaloha.event import DictEvent
 # object_types: building,..
 # user_info.get_location(): None, (lat, lon)
 # user_info.uid
-# user_info.os_t: 0 (Unknown), 1 (Android), 2 (iOS)
+# user_info.os: 0 (Unknown), 1 (Android), 2 (iOS)
 
 class ObjectSelection(DictEvent):
     keys = (

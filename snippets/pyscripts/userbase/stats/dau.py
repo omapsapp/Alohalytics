@@ -1,3 +1,5 @@
+# User stats calculated on a daily basis
+
 import collections
 import itertools
 import operator
@@ -38,6 +40,8 @@ class DAUStats(StatsSubscriber):
         return DAU_HEADER, self.DAU
 
 
+# DAU by OS
+
 class OSDAUStats(StatsSubscriber):
     def __init__(self):
         super(OSDAUStats, self).__init__()
@@ -64,6 +68,10 @@ class OSDAUStats(StatsSubscriber):
     def gen_stats(self):
         return DAU_BY_OS_HEADER, self.DAU
 
+
+# How many users were active 1 day, 2 days, 3 days and so on
+# NOTE: if a user was active 2 days, he will be calculated in both
+# 1 and 2 days active periods
 
 class NumOfDaysStats(StatsSubscriber):
     def __init__(self):

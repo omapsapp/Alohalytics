@@ -1,3 +1,5 @@
+# Monthly based user stats
+
 import collections
 import itertools
 import operator

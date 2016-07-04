@@ -1,12 +1,13 @@
 from pyaloha.event import Event, DictEvent
 
 
-# Event of the app launch with props:
-# connection: None, wifi, mobile
-# in_roaming: True, False
-# user_info.get_location(): None, (lat, lon)
+# App launch event. It is not necessary visible for a user.
+# Its properties are:
+# connection: {None, wifi, mobile}
+# in_roaming: {True, False}
+# user_info.get_location(): None or (lat, lon)
 # user_info.uid
-# user_info.os_t: 0 (Unknown), 1 (Android), 2 (iOS)
+# user_info.os: {0 (Unknown), 1 (Android), 2 (iOS)}
 
 class TechnicalLaunch(DictEvent):
     keys = (
@@ -26,8 +27,14 @@ class TechnicalLaunch(DictEvent):
             self.in_roaming = None
 
 
+# TechnicalLaunch event in iOS is always associated with a UI launch
+
+
 class IOSVisibleLaunch(TechnicalLaunch):
     pass
+
+# This event is trusted to be the one associated with an actual UI launch
+# in Android
 
 
 class AndroidVisibleLaunch(Event):

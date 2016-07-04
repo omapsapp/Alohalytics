@@ -1,3 +1,10 @@
+# Technically this is the main module for a task of
+# calculating different period-based (days, weeks, months) statistics
+# for the users of Maps.Me
+# Scheme is base on pyaloha.patterns.daily_over_fs pattern
+# Stats subscribers (actual business logic of stats calculation)
+# are located in stats subpackage
+
 import collections
 
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
@@ -15,6 +22,12 @@ from .stats.dau import DAUStats, OSDAUStats, NumOfDaysStats
 from .stats.mau import MAUStats
 from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats
 
+
+# Data stream worker processes app launch events
+# using basic event scheme (process_unspecified callback)
+# Main problem worth mentioning is matching TechnicalLaunch events
+# (that are not necessarily visible) for Android with visible UI
+# launch events
 
 class DataStreamWorker(BaseDataStreamWorker):
     __events__ = (

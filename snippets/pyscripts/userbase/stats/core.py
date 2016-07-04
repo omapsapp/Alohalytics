@@ -1,3 +1,6 @@
+# Calculating core users by a sequencial three-month
+# or three-week period of usage
+
 import collections
 import itertools
 import operator
@@ -15,6 +18,9 @@ Counting users active 3 weeks straight
 Week\tUsers
 """
 
+
+# Base class for working with generic periods of usage
+# pretty much defined through get_period_from_date
 
 class CoreStats(StatsSubscriber):
     header = None
@@ -41,7 +47,7 @@ class CoreStats(StatsSubscriber):
         self.users_per_period = sorted(self.users_per_period.iteritems())
 
         period_numbers = range(
-            self.period_depth,
+            self.period_depth - 1,
             len(self.users_per_period),
             +1
         )
@@ -60,7 +66,7 @@ class CoreStats(StatsSubscriber):
 
     def _n_deep_intersection_count(self, period_num, n=3):
         user_set = self.users_per_period[period_num][1]
-        for prev_n in range(period_num - 1, n, -1):
+        for prev_n in range(period_num - 1, period_num - n, -1):
             user_set = user_set.intersection(
                 self.users_per_period[prev_n][1]
             )

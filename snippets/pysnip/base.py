@@ -1,3 +1,6 @@
+# The whole purpose of this module is to provide
+# named Python aloha events from Maps.Me to a data stream worker
+
 from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 
 from pyaloha.event_factory import EventFactory
@@ -5,7 +8,9 @@ from pyaloha.event_factory import EventFactory
 from pysnip.events.misc import GPSTracking, SearchResults
 from pysnip.events.onstart import AndroidVisibleLaunch, TechnicalLaunch
 from pysnip.events.placepage import ObjectSelection
-from pysnip.events.routing import RouteEnd, RouteRequest, RouteStart, RouteTracking
+from pysnip.events.routing import (
+    RouteEnd, RouteRequest, RouteStart, RouteTracking
+)
 
 
 CUSTOM_EVENTS = (
