@@ -1,8 +1,9 @@
 #!/bin/env python2.7
 
-# This a helper cmd run script to be used like:
-# ./pysnip/run <pyscript_name>
-# It will take care of PYTHONPATH and plugin_path
+# This helper cmd run script is to be used like:
+# ./pysnip/run <pyscript_name> <params>
+# It will take care of PYTHONPATH and plugin_dir
+# and start pyaloha with specified script and params
 
 import os
 import sys

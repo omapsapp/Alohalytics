@@ -1,5 +1,6 @@
-# Calculating core users by a sequencial three-month
-# or three-week period of usage
+# Calculating the number of users
+# active for the past three months or three weeks straight
+# for every month or week in the given period
 
 import collections
 import itertools

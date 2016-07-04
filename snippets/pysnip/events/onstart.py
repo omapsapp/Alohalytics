@@ -29,13 +29,12 @@ class TechnicalLaunch(DictEvent):
 
 # TechnicalLaunch event in iOS is always associated with a UI launch
 
-
 class IOSVisibleLaunch(TechnicalLaunch):
     pass
 
+
 # This event is trusted to be the one associated with an actual UI launch
 # in Android
-
 
 class AndroidVisibleLaunch(Event):
     keys = (

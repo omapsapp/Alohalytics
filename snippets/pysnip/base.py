@@ -1,5 +1,6 @@
 # The whole purpose of this module is to provide
 # named Python aloha events from Maps.Me to a data stream worker
+# and to define more specific callbacks
 
 from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 

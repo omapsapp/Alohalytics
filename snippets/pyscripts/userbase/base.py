@@ -7,26 +7,24 @@
 
 import collections
 
-from pysnip.base import DataStreamWorker as BaseDataStreamWorker
-
-import pysnip.events as events
-
 from pyaloha.patterns.daily_over_fs import (
     DataAggregator as DailyAggregator,
     StatsProcessor as DailyStatsProcessor
 )
-
 from pyaloha.protocol import day_serialize
 
+from pysnip.base import DataStreamWorker as BaseDataStreamWorker
+import pysnip.events as events
+
+from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats
 from .stats.dau import DAUStats, OSDAUStats, NumOfDaysStats
 from .stats.mau import MAUStats
-from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats
 
 
 # Data stream worker processes app launch events
 # using basic event scheme (process_unspecified callback)
-# Main problem worth mentioning is matching TechnicalLaunch events
-# (that are not necessarily visible) for Android with visible UI
+# The only problem worth mentioning is matching TechnicalLaunch events
+# (that are not necessarily visible) for Android to visible UI
 # launch events
 
 class DataStreamWorker(BaseDataStreamWorker):
