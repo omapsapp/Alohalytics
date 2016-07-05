@@ -60,6 +60,15 @@ class IDInfo(ctypes.Structure):
             'os': self.os
         }
 
+    def is_on_android(self):
+        return self.os == 1
+
+    def is_on_ios(self):
+        return self.os == 2
+
+    def is_on_unknown_os(self):
+        return self.os == 0
+
 
 class GeoIDInfo(IDInfo):
     _fields_ = [
