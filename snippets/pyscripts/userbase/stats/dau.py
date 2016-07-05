@@ -8,20 +8,20 @@ from pyaloha.patterns.daily_over_fs import StatsSubscriber
 from pyaloha.protocol import day_serialize
 
 
-DAU_HEADER = '''\
+DAU_HEADER = """\
 Calculating DAU
 Date\tUsers
-'''
+"""
 
-DAU_BY_OS_HEADER = '''\
+DAU_BY_OS_HEADER = """\
 Calculating DAU by OS
-Date\tAndroid\tiOS'
-'''
+Date\tAndroid\tiOS
+"""
 
-DAYS_ACTIVE_HEADER = '''\
+DAYS_ACTIVE_HEADER = """\
 Calculating days users were active (total, not straight)
-'Days\tUsers'
-'''
+Days\tUsers
+"""
 
 
 class DAUStats(StatsSubscriber):
@@ -51,10 +51,12 @@ class OSDAUStats(StatsSubscriber):
     def collect(self, item):
         dte, users = item
 
-        os_types = itertools.imap(
-            lambda x: x[1]['os'],
-            users
+        os_types = (
+            user[1]['os']
+            for user in users
+            if user[1]['os']
         )
+
         ordered_counted_os_types = map(
             operator.itemgetter(1),
             sorted(
@@ -85,8 +87,28 @@ class NumOfDaysStats(StatsSubscriber):
             itertools.imap(operator.itemgetter(0), users)
         )
 
+    # After consultations with collegues
+    # this basic solution:
+    #
+    # def gen_stats(self):
+    #    users_per_day = collections.Counter()
+    #    for cnt in self.days_per_user.itervalues():
+    #        users_per_day.update(range(1, cnt + 1))
+    #    return DAYS_ACTIVE_HEADER, sorted(users_per_day.iteritems())
+    #
+    # becomes this (keep in mind that max(days) << len(days_per_user) ):
+
     def gen_stats(self):
-        users_per_day = collections.Counter()
-        for u, cnt in self.days_per_user.iteritems():
-            users_per_day.update(range(1, cnt + 1))
-        return DAYS_ACTIVE_HEADER, sorted(users_per_day.iteritems())
+        compressed_days = collections.Counter(
+            self.days_per_user.itervalues()
+        )
+
+        results_len = max(compressed_days)
+        results = [0] * results_len
+
+        user_num = 0
+        for days_num in range(results_len, 0, -1):
+            user_num += compressed_days.get(days_num, 0)
+            results[days_num - 1] = user_num
+
+        return DAYS_ACTIVE_HEADER, enumerate(results, start=1)

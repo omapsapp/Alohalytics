@@ -1,7 +1,10 @@
+# To run the script do smth like this:
+# ./pysnip/run.py userbase 20150601 20160610 > userbase.stats
+#
 # Technically this is the main module for a task of
 # calculating different period-based (days, weeks, months) statistics
 # for the users of Maps.Me
-# Scheme is base on pyaloha.patterns.daily_over_fs pattern
+# Scheme is based on pyaloha.patterns.daily_over_fs pattern
 # Stats subscribers (actual business logic of stats calculation)
 # are located in stats subpackage
 
@@ -39,7 +42,7 @@ class DataStreamWorker(BaseDataStreamWorker):
         self.data_per_days = collections.defaultdict(dict)
         self.lost_users = set()
         self.count_events = 0
-        self.android_vstarts = collections.defaultdict(set)
+        self.android_visible_launches = collections.defaultdict(set)
 
     def process_unspecified(self, event):
         self.count_events += 1
@@ -48,19 +51,29 @@ class DataStreamWorker(BaseDataStreamWorker):
         if event.event_time.is_accurate:
             dt = day_serialize(dtime)
             if isinstance(event, events.onstart.AndroidVisibleLaunch):
-                self.android_vstarts[dt].add(uid)
+                self.android_visible_launches[dt].add(uid)
             else:
                 # TODO: agg
                 self.data_per_days[dt][uid] = event.user_info.stripped()
         else:
             self.lost_users.add(uid)
 
+    def is_invisible_android_launch(self, dte, uid, user_info):
+        return (
+            user_info.is_on_android() and
+            uid not in self.android_visible_launches[dte]
+        )
+
+    # TODO: to think about more clear scheme of providing results
+    # from worker to aggregator
+    # For now worker destroys non-visible android launches
+    # and deletes temporary structures
     def pre_output(self):
         for dte, users in self.data_per_days.iteritems():
             for uid, uinfo in users.items():
-                if uinfo.os == 1 and uid not in self.android_vstarts[dte]:
+                if self.is_invisible_android_launch(dte, uid, uinfo):
                     del users[uid]
-        del self.android_vstarts
+        del self.android_visible_launches
 
 
 class DataAggregator(DailyAggregator):

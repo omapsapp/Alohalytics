@@ -22,7 +22,7 @@ class RouteRequest(DictEvent):
 
         # vehicle, astar-bidirectional-pedestrian
         self.mode = self.data.get('name', self.data.get('router'))
-        if self.mode in ('astar-bidirectional-pedestrian',):
+        if self.mode == 'astar-bidirectional-pedestrian':
             self.mode = 'pedestrian'
 
     def process_me(self, processor):

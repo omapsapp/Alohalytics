@@ -7,10 +7,10 @@ import operator
 from pyaloha.patterns.daily_over_fs import StatsSubscriber
 
 
-MAU_HEADER = '''\
+MAU_HEADER = """\
 Calculating MAU
 Month\tUsers
-'''
+"""
 
 
 class MAUStats(StatsSubscriber):
@@ -27,8 +27,8 @@ class MAUStats(StatsSubscriber):
         )
 
     def gen_stats(self):
-        results = (
+        result_generator = (
             (m, len(uids))
             for m, uids in self.MAU.iteritems()
         )
-        return MAU_HEADER, sorted(results)
+        return MAU_HEADER, sorted(result_generator)
