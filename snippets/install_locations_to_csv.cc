@@ -24,7 +24,7 @@
 
 // Writes to stdout locations of app installs in lat,lon format
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <iostream>
 

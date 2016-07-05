@@ -29,8 +29,8 @@
 // This sample is tailored to be used with the kSearchEmitResultsAndCoords event
 // that was introduced around Feb 2016.
 
+#include "../Alohalytics/src/processor.h"
 #include "../include/mapsme_events.h"
-#include "../include/processor.h"
 #include "../include/search.h"
 
 #include <algorithm>

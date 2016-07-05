@@ -30,7 +30,7 @@
 // This define is needed to preserve client's timestamps in events.
 #define ALOHALYTICS_SERVER
 #include "../Alohalytics/src/event_base.h"
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <algorithm>
 #include <iostream>

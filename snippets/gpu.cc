@@ -24,7 +24,7 @@
 
 // Calculates GPU statistics.
 
-#include "../include/processor.h"
+#include "../Alohalytics/src/processor.h"
 
 #include <algorithm>
 #include <map>
