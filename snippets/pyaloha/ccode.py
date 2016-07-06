@@ -54,11 +54,25 @@ class IDInfo(ctypes.Structure):
     ]
 
     uid = None
+    _os_valid_range = range(3)
 
     def __dumpdict__(self):
         return {
             'os': self.os
         }
+
+    def is_on_android(self):
+        return self.os == 1
+
+    def is_on_ios(self):
+        return self.os == 2
+
+    def is_on_unknown_os(self):
+        return self.os == 0
+
+    def validate(self):
+        if self.os not in IDInfo._os_valid_range:
+            raise ValueError('Incorrect os value: %s' % self.os)
 
 
 class GeoIDInfo(IDInfo):
@@ -95,6 +109,7 @@ class CUSERINFO(GeoIDInfo):
     ]
 
     def setup(self):
+        self.validate()
         setattr(self, 'uid', int(self.raw_uid, 16))
 
     def stripped(self):
