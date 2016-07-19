@@ -13,6 +13,13 @@ class Event(object):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+    def __dumpdict__(self):
+        return {
+            'type': self.__class__.__name__,
+            'user_info': self.user_info.stripped(),
+            'event_time': self.event_time
+        }
+
 
 class DictEvent(Event):
     """
@@ -46,3 +53,8 @@ are accumulated into a dict.
             event.event_time, event.user_info,
             event.data_list, event.data_list_len
         )
+
+    def __dumpdict__(self):
+        d = super(DictEvent, self).__dumpdict__()
+        d.update(self.data)
+        return d
