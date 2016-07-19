@@ -9,7 +9,7 @@ import traceback
 from pyaloha.ccode import iterate_events
 
 
-def setup_logs(filepath=os.path.join('/tmp', 'py_alohalytics_stats.log')):
+def setup_logs(filepath=os.path.join('.', 'py_alohalytics_stats.log')):
     logger = multiprocessing.get_logger()
 
     handler = logging.FileHandler(filepath)
