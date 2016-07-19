@@ -47,7 +47,7 @@ to write a stats processor class. This is a low-level preprocessor/filter/etc.
     @method process_unspecified is a generic method called on every event
 regardless of its actual type. In general this is the most basic method
 to overload while writing worker in your script.
-    __events__ field is used in low-level filtering of the events to provide to
+    __events__ field is used in low-level filtering of the events provided to
 specific worker.
     """
 
@@ -96,14 +96,17 @@ Look for an example in daily_over_fs usage pattern.
     """
 
     def __init__(self,
-                 results_dir=None, post_aggregate_worker=lambda x: x,
-                 *args, **kwargs):
-        self.post_aggregate_worker = post_aggregate_worker
+                 results_dir=None, *args, **kwargs):
+        self.logger = multiprocessing.get_logger()
 
         self.results_dir = results_dir
         if self.results_dir:
             self.created_dirs = set()
             shutil.rmtree(self.results_dir, ignore_errors=True)
+
+            self.logger.info(
+                "Results directory '%s' is set and cleaned" % self.results_dir
+            )
 
         self.setup_shareable_data(*args, **kwargs)
 
