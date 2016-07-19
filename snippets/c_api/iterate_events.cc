@@ -185,12 +185,30 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
           return;
         }
 
+        AlohalyticsKeyEvent const * ke = dynamic_cast<AlohalyticsKeyEvent const *>(event);
+        if (ke)
+        {
+          callback(key, eventTime, userInfo, NULL, 0);
+          return;
+        }
+
         AlohalyticsKeyLocationEvent const * kle = dynamic_cast<AlohalyticsKeyLocationEvent const *>(event);
         if (kle)
         {
           userInfo.setGeo(kle->location);
 
           callback(key, eventTime, userInfo, NULL, 0);
+          return;
+        }
+
+        AlohalyticsKeyValueLocationEvent const * kvle = dynamic_cast<AlohalyticsKeyValueLocationEvent const *>(event);
+        if (kvle)
+        {
+          char const * kValues[1] = {kve->value.c_str()};
+
+          userInfo.setGeo(kvle->location);
+
+          callback(key, eventTime, userInfo, kValues, 1);
           return;
         }
 
