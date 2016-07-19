@@ -16,7 +16,7 @@ Category\tUsers
 """
 
 
-def setup_shareable_data(self, *args, **kwargs):
+def init_mau_per_tag(self, *args, **kwargs):
     self.monthly_users_per_type = collections.defaultdict(
         functools.partial(collections.defaultdict, set)
     )
@@ -27,7 +27,7 @@ class DataStreamWorker(BaseDataStreamWorker):
         events.placepage.ObjectSelection,
     )
 
-    setup_shareable_data = setup_shareable_data
+    setup_shareable_data = init_mau_per_tag
 
     def process_unspecified(self, event):
         dte = event.event_time.dtime.date()
@@ -43,7 +43,7 @@ class DataStreamWorker(BaseDataStreamWorker):
 
 class DataAggregator(BaseDataAggregator):
 
-    setup_shareable_data = setup_shareable_data
+    setup_shareable_data = init_mau_per_tag
 
     def aggregate(self, results):
         for month, otypes in results.monthly_users_per_type.iteritems():
