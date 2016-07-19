@@ -14,7 +14,31 @@ from pyaloha.event_factory import EventFactory
 from pyaloha.protocol import WorkerResults
 
 
-class DataStreamWorker(object):
+class ShareableData(object):
+    """
+    Base class for both worker and aggregator
+to optional access of the same routine of instantiating same data properties.
+    Can be used like (guaranteed to run in __init__):
+
+
+    def shared_method(instance, *constructor_args, **constructor_kwargs):
+        instance.mega_storage = collections.defaultdict(list)
+
+
+    class Worker(BaseWorker):
+        setup_shareable_data = shared_method
+        ...
+
+
+    class Aggregator(BaseAggregator):
+        setup_shareable_data = shared_method
+        ...
+    """
+    def setup_shareable_data(self):
+        pass
+
+
+class DataStreamWorker(ShareableData):
     """
     This is a base class representing a worker that preprocesses
 given raw events (one by one).
@@ -29,8 +53,11 @@ specific worker.
 
     __events__ = tuple()
 
-    def __init__(self, event_factory=None):
+    def __init__(self,
+                 event_factory=None,
+                 *args, **kwargs):
         self._event_factory = event_factory or EventFactory(custom_events=[])
+        self.setup_shareable_data(*args, **kwargs)
 
     def process_unspecified(self, event):
         pass
@@ -58,7 +85,7 @@ specific worker.
         pass
 
 
-class DataAggregator(object):
+class DataAggregator(ShareableData):
     """
     This is a 'singleton' class that accumulates results from the workers.
     @method aggregate must be overloaded in your script.
@@ -68,13 +95,17 @@ It is called after all results are accumulated.
 Look for an example in daily_over_fs usage pattern.
     """
 
-    def __init__(self, results_dir=None, post_aggregate_worker=lambda x: x):
+    def __init__(self,
+                 results_dir=None, post_aggregate_worker=lambda x: x,
+                 *args, **kwargs):
         self.post_aggregate_worker = post_aggregate_worker
 
         self.results_dir = results_dir
         if self.results_dir:
             self.created_dirs = set()
             shutil.rmtree(self.results_dir, ignore_errors=True)
+
+        self.setup_shareable_data(*args, **kwargs)
 
     def aggregate(self):
         raise NotImplementedError()
