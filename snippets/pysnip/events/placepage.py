@@ -41,3 +41,11 @@ class ObjectSelection(DictEvent):
             self.object_types = self.data.get('types', None).split(' ')
         except AttributeError:
             self.object_types = []
+
+    def __dumpdict__(self):
+        d = super(DictEvent, self).__dumpdict__()
+        d.update({
+            'by_longtap': self.by_longtap,
+            'object_types': self.object_types
+        })
+        return d
