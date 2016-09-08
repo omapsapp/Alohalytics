@@ -149,7 +149,7 @@ NOTE: We need a C interface, so prepare yourself for C-style structures in the p
 this function (called from a Python code with a ctypes wrapper) and
 callback function (actual Python function - also a ctypes wrapper).
 */
-EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames)
+EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int events_limit)
 {
   std::set<std::string> processKeys(eventNames, eventNames + numEventNames);
 
@@ -166,6 +166,37 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         UserInfo userInfo;
         userInfo.setOSType(idEvent->id[0]);
         userInfo.setUid(idEvent->id);
+
+        AlohalyticsKeyValueLocationEvent const * kvle = dynamic_cast<AlohalyticsKeyValueLocationEvent const *>(event);
+        if (kvle)
+        {
+          char const * kValues[1] = {kvle->value.c_str()};
+
+          userInfo.setGeo(kvle->location);
+
+          callback(key, eventTime, userInfo, kValues, 1);
+          return;
+        }
+
+        AlohalyticsKeyLocationEvent const * kle = dynamic_cast<AlohalyticsKeyLocationEvent const *>(event);
+        if (kle)
+        {
+          userInfo.setGeo(kle->location);
+
+          callback(key, eventTime, userInfo, NULL, 0); // no data in event so data list and its size are NULL and 0
+          return;
+        }
+
+        AlohalyticsKeyPairsLocationEvent const * kple = dynamic_cast<AlohalyticsKeyPairsLocationEvent const *>(event);
+        if (kple)
+        {
+          std::vector<char const *> pairs = getPairs(kple->pairs);
+
+          userInfo.setGeo(kple->location);
+
+          callback(key, eventTime, userInfo, pairs.data(), pairs.size());
+          return;
+        }
 
         AlohalyticsKeyValueEvent const * kve = dynamic_cast<AlohalyticsKeyValueEvent const *>(event);
         if (kve)
@@ -192,34 +223,5 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
           return;
         }
 
-        AlohalyticsKeyLocationEvent const * kle = dynamic_cast<AlohalyticsKeyLocationEvent const *>(event);
-        if (kle)
-        {
-          userInfo.setGeo(kle->location);
-
-          callback(key, eventTime, userInfo, NULL, 0);
-          return;
-        }
-
-        AlohalyticsKeyValueLocationEvent const * kvle = dynamic_cast<AlohalyticsKeyValueLocationEvent const *>(event);
-        if (kvle)
-        {
-          char const * kValues[1] = {kve->value.c_str()};
-
-          userInfo.setGeo(kvle->location);
-
-          callback(key, eventTime, userInfo, kValues, 1);
-          return;
-        }
-
-        AlohalyticsKeyPairsLocationEvent const * kple = dynamic_cast<AlohalyticsKeyPairsLocationEvent const *>(event);
-        if (kple)
-        {
-          std::vector<char const *> pairs = getPairs(kple->pairs);
-          userInfo.setGeo(kple->location);
-
-          callback(key, eventTime, userInfo, pairs.data(), pairs.size());
-          return;
-        }
-      });
+      }, std::cin, events_limit);
 }
