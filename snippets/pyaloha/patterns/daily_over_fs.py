@@ -47,7 +47,7 @@ def brute_post_aggregate(fname):
     )
 
 
-def list_extention_post_aggregate(fname):
+def list_extension_post_aggregate(fname):
     results = DataAggregator.load_day(fname)
 
     reduced = collections.defaultdict(list)
@@ -77,7 +77,17 @@ class DataAggregator(BaseDataAggregator):
                 mode='a+'
             )
 
+        self.lost_data.update(processor_results.lost_data)
+
     def post_aggregate(self, pool=None):
+        self.logger.warn(
+            "daily_over_fs: lost keys: %s" % (
+                len(self.lost_data)
+            )
+        )
+
+        del self.lost_data
+
         engine = itertools.imap
         if pool:
             engine = pool.imap_unordered
@@ -120,11 +130,16 @@ class DataAggregator(BaseDataAggregator):
         full_data_len = 0
         with open(fname, mode) as fout:
             for obj in iterable:
-                data = FileProtocol.dumps(obj) + '\n'
+                try:
+                    data = FileProtocol.dumps(obj) + '\n'
+                except TypeError:
+                    raise Exception(
+                        "Object can't be serialized: %s" % repr(obj)
+                    )
                 fout.write(data)
                 full_data_len += len(data)
         multiprocessing.get_logger().info(
-            "daily_over_fs: written %d characters to %s" % (
+            "daily_over_fs: wrote %d characters to %s" % (
                 full_data_len, fname
             )
         )
