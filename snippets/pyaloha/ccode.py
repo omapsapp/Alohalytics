@@ -47,6 +47,12 @@ class CEVENTTIME(ctypes.Structure):
             self._setup_time()
         return self.dtime, self.is_accurate
 
+    def __dumpdict__(self):
+        return {
+            'dtime': self.dtime,
+            'is_accurate': self.is_accurate
+        }
+
 
 class IDInfo(ctypes.Structure):
     _fields_ = [

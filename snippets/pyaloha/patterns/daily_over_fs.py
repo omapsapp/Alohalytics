@@ -27,7 +27,9 @@ object for a key within one date.
 
 """
 
+import collections
 import itertools
+import multiprocessing
 import os
 
 from pyaloha.base import DataAggregator as BaseDataAggregator
@@ -36,14 +38,38 @@ from pyaloha.base import StatsProcessor as BaseStatsProcessor
 from pyaloha.protocol import FileProtocol, day_deserialize, str2date
 
 
+def brute_post_aggregate(fname):
+    results = DataAggregator.load_day(fname)
+    reduced = dict(results)
+    DataAggregator.save_day(
+        fname=fname,
+        iterable=reduced.iteritems()
+    )
+
+
+def list_extension_post_aggregate(fname):
+    results = DataAggregator.load_day(fname)
+
+    reduced = collections.defaultdict(list)
+    for key, _list in results:
+        reduced[key].extend(_list)
+
+    DataAggregator.save_day(
+        fname=fname,
+        iterable=reduced.iteritems()
+    )
+
+
 class DataAggregator(BaseDataAggregator):
-    def __init__(self, *args, **kwargs):
-        super(DataAggregator, self).__init__(
-            post_aggregate_worker=post_aggregate_worker,
-            *args, **kwargs
-        )
+    post_aggregate_worker = staticmethod(brute_post_aggregate)
 
     def aggregate(self, processor_results):
+        self.logger.info(
+            "Aggregator: got %d dates from worker" % len(
+                processor_results.data_per_days
+            )
+        )
+
         for dte, data_dict in processor_results.data_per_days.iteritems():
             self.save_day(
                 fname=self.get_result_file_path(day_deserialize(dte)),
@@ -51,7 +77,17 @@ class DataAggregator(BaseDataAggregator):
                 mode='a+'
             )
 
+        self.lost_data.update(processor_results.lost_data)
+
     def post_aggregate(self, pool=None):
+        self.logger.warn(
+            "daily_over_fs: lost keys: %s" % (
+                len(self.lost_data)
+            )
+        )
+
+        del self.lost_data
+
         engine = itertools.imap
         if pool:
             engine = pool.imap_unordered
@@ -71,9 +107,15 @@ class DataAggregator(BaseDataAggregator):
         if month_dir not in self.created_dirs:
             try:
                 os.makedirs(month_dir)
+            except OSError as error:
+                self.logger.warn(
+                    "daily_over_fs: result subdir '%s' creation failed: %s" % (
+                        month_dir, error
+                    )
+                )
+            else:
                 self.created_dirs.add(month_dir)
-            except OSError:
-                pass
+
         return os.path.join(month_dir, str(dte.day))
 
     def extract_date_from_path(self, path):
@@ -84,10 +126,23 @@ class DataAggregator(BaseDataAggregator):
         return str2date(dte)
 
     @staticmethod
-    def save_day(iterable, fname=None, mode='w'):
+    def save_day(iterable, fname, mode='w'):
+        full_data_len = 0
         with open(fname, mode) as fout:
             for obj in iterable:
-                fout.write(FileProtocol.dumps(obj) + '\n')
+                try:
+                    data = FileProtocol.dumps(obj) + '\n'
+                except TypeError:
+                    raise Exception(
+                        "Object can't be serialized: %s" % repr(obj)
+                    )
+                fout.write(data)
+                full_data_len += len(data)
+        multiprocessing.get_logger().info(
+            "daily_over_fs: wrote %d characters to %s" % (
+                full_data_len, fname
+            )
+        )
 
     @staticmethod
     def load_day(fname):
@@ -99,16 +154,6 @@ class DataAggregator(BaseDataAggregator):
         for root, dirs, fnames in os.walk(self.results_dir):
             for fn in fnames:
                 yield os.path.join(root, fn)
-
-
-def post_aggregate_worker(fname):
-    results = DataAggregator.load_day(fname)
-    # TODO: agg
-    reduced = dict(results)
-    DataAggregator.save_day(
-        fname=fname,
-        iterable=reduced.iteritems()
-    )
 
 
 class StatsSubscriber(object):

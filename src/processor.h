@@ -45,11 +45,11 @@ struct Processor {
   std::set<std::string> unique_user_ids;
   std::chrono::seconds::rep processing_time_sec;
 
-  Processor(TLambda lambda, std::istream & input = std::cin) {
+  Processor(TLambda lambda, std::istream & input = std::cin, uint64_t events_limit = 0 /* unlimited */) {
     cereal::BinaryInputArchive ar(input);
     std::unique_ptr<AlohalyticsBaseEvent> ptr, server_id_ptr;
     const auto start_time = std::chrono::system_clock::now();
-    while (true) {
+    while (events_limit == 0 || total_events_processed < events_limit) {
       try {
         ar(ptr);
       } catch (const cereal::Exception & ex) {
