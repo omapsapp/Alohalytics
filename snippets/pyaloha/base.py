@@ -11,7 +11,7 @@ import shutil
 import traceback
 
 from pyaloha.event_factory import EventFactory
-from pyaloha.protocol import WorkerResults
+from pyaloha.protocol import WorkerResults, to_unicode, SerializableSet
 
 
 class ShareableData(object):
@@ -35,7 +35,7 @@ to optional access of the same routine of instantiating same data properties.
         ...
     """
     def setup_shareable_data(self):
-        pass
+        self.lost_data = SerializableSet()
 
 
 class DataStreamWorker(ShareableData):
@@ -56,6 +56,8 @@ specific worker.
     def __init__(self,
                  event_factory=None,
                  *args, **kwargs):
+        super(DataStreamWorker, self).__init__(*args, **kwargs)
+
         self._event_factory = event_factory or EventFactory(custom_events=[])
         self.setup_shareable_data(*args, **kwargs)
 
@@ -97,6 +99,8 @@ Look for an example in daily_over_fs usage pattern.
 
     def __init__(self,
                  results_dir=None, *args, **kwargs):
+        super(DataAggregator, self).__init__(*args, **kwargs)
+
         self.logger = multiprocessing.get_logger()
 
         self.results_dir = results_dir
@@ -150,5 +154,7 @@ It is called just before calling gen_stats.
             print(header)
             print('-' * 20)
             for row in stats_generator:
-                print(u'\t'.join(map(unicode, row)))
+                print(
+                    u'\t'.join(map(to_unicode, row))
+                )
             print()
