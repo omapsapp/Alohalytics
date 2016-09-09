@@ -1,9 +1,80 @@
+import calendar
 import datetime
 import inspect
 import json
+import multiprocessing
+import traceback
 
 DAY_FORMAT = '%Y%m%d'
 UNIQ_DAY_FORMAT = 'dt' + DAY_FORMAT
+
+
+# assuming all date & datetime objects are UTC
+def utc_to_timestamp(dt):
+    return calendar.timegm(dt.timetuple())
+
+
+timestamp_to_utc = datetime.datetime.utcfromtimestamp
+
+
+class AutoSerialized(dict):
+    def __init__(self, tpe, value):
+        self.update({
+            '_st_': tpe,
+            '_sv_': value
+        })
+
+    @classmethod
+    def extract_value(cls, dct):
+        return dct['_sv_']
+
+    @classmethod
+    def get_type(cls, dct):
+        return dct.get('_st_')
+
+
+class SerializableDatetime(datetime.datetime):
+    def __dumpdict__(self):
+        return AutoSerialized('dt', utc_to_timestamp(self))
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return cls.utcfromtimestamp(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableDate(datetime.date):
+    def __dumpdict__(self):
+        return AutoSerialized('dte', utc_to_timestamp(self))
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return cls.utcfromtimestamp(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableSet(set):
+    def __dumpdict__(self):
+        return AutoSerialized('set', tuple(self))
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return set(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableFrozenset(set):
+    def __dumpdict__(self):
+        return AutoSerialized('fset', tuple(self))
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return frozenset(
+            AutoSerialized.extract_value(dct)
+        )
 
 
 def day_serialize(dtime):
@@ -18,10 +89,7 @@ def str2date(s):
     return datetime.datetime.strptime(s, DAY_FORMAT).date()
 
 
-def custom_loads(dct):
-    if '__stype__' in dct and dct['__stype__'] == 'repr':
-        return eval(dct['__svalue__'])
-
+def convert_keys_if_possible(dct):
     for str_key in dct.keys():
         try:
             int_key = int(str_key)
@@ -30,19 +98,28 @@ def custom_loads(dct):
         else:
             dct[int_key] = dct[str_key]
             del dct[str_key]
-
     return dct
+
+
+DESERIALIZERS = {
+    'dt': SerializableDatetime.__loaddict__,
+    'dte': SerializableDate.__loaddict__,
+    'set': SerializableSet.__loaddict__,
+    'fset': SerializableFrozenset.__loaddict__,
+    None: convert_keys_if_possible
+}
+
+
+def custom_loads(dct):
+    return DESERIALIZERS[AutoSerialized.get_type(dct)](dct)
 
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if hasattr(obj, '__dumpdict__'):
             return obj.__dumpdict__()
-
-        if isinstance(obj, (datetime.datetime, datetime.date, set, frozenset)):
-            return {'__stype__': 'repr', '__svalue__': repr(obj)}
         # Let the base class default method raise the TypeError
-        return json.JSONEncoder.default(self, obj)
+        return super(CustomEncoder, self).default(obj)
 
 
 class FileProtocol(object):
@@ -54,7 +131,13 @@ class FileProtocol(object):
 
     @classmethod
     def loads(cls, json_text):
-        return json.loads(json_text, object_hook=custom_loads)
+        try:
+            return json.loads(json_text, object_hook=custom_loads)
+        except ValueError as err:
+            logger = multiprocessing.get_logger()
+            logger.error('Corrupted json:\n%s' % json_text)
+            traceback.print_exc(err)
+            return []
 
 
 class WorkerResults(FileProtocol):
@@ -79,3 +162,10 @@ class WorkerResults(FileProtocol):
         for key, value in cls.loads(json_text):
             setattr(instance, key, value)
         return instance
+
+
+def to_unicode(obj):
+    try:
+        return unicode(obj)
+    except UnicodeDecodeError:
+        return unicode(obj, encoding='utf8')
