@@ -8,12 +8,14 @@ class RouteDictEvent(DictEvent):
         self.setup_mode()
 
     def setup_mode(self):
-        # vehicle, astar-bidirectional-pedestrian
+        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle
         self.mode = self.data.get(
             'router', self.data.get('name', None)
         )
         if self.mode == 'astar-bidirectional-pedestrian':
             self.mode = 'pedestrian'
+        if self.mode == 'astar-bidirectional-bicycle':
+            self.mode = 'bicycle'
 
     def process_me(self, processor):
         processor.process_routing(self)
@@ -107,10 +109,16 @@ class RouteEnd(RouteDictEvent):
         self.percent = float(self.data.get('percent', 100))
 
 
-class RouteTracking(Event):
+# ALOHA: RouteTracking_PercentUpdate [
+#   percent=75.3459
+# ] <utc=0,lat=-9.9709619,lon=-67.8104598,acc=1.00>
+
+class RouteTracking(RouteDictEvent):
     keys = (
         'RouteTracking_PercentUpdate',
     )
 
     def __init__(self, *args, **kwargs):
         super(RouteTracking, self).__init__(*args, **kwargs)
+
+        self.percent = float(self.data.get('percent', 100))
