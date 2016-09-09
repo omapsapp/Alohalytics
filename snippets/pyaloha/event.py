@@ -15,6 +15,7 @@ class Event(object):
 
     def __dumpdict__(self):
         return {
+            'key': self.key,
             'type': self.__class__.__name__,
             'user_info': self.user_info.stripped(),
             'event_time': self.event_time
@@ -41,10 +42,10 @@ are accumulated into a dict.
                 "Event can't be casted to a dict without additional knowledge"
             )
 
-        self.data = dict(
-            (self.data_list[i], self.data_list[i + 1])
+        self.data = {
+            self.data_list[i]: self.data_list[i + 1]
             for i in range(0, data_list_len, +2)
-        )
+        }
 
     @classmethod
     def from_event(cls, event):
