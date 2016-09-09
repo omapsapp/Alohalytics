@@ -13,17 +13,23 @@ def cmd_run(plugin_dir):
 
     # TODO: argparse
     plugin_name = sys.argv[1]
+    start_date, end_date = map(str2date, sys.argv[2:4])
     try:
-        start_date, end_date = map(str2date, sys.argv[2:4])
-    except ValueError:
-        start_date, end_date = None, None
+        events_limit = int(sys.argv[4])
+    except IndexError:
+        events_limit = 0
 
-    run(plugin_name, start_date, end_date, plugin_dir=plugin_dir)
+    run(
+        plugin_name,
+        start_date, end_date,
+        plugin_dir=plugin_dir, events_limit=events_limit
+    )
 
 
 def run(plugin_name, start_date, end_date, plugin_dir,
         data_dir='/mnt/disk1/alohalytics/by_date',
-        results_dir='./stats'):
+        results_dir='./stats',
+        events_limit=0):
     """
     Pyaloha stats processing pipeline:
 0. Load worker, aggregator, processor classes from a specified plugin (script)
@@ -34,7 +40,7 @@ def run(plugin_name, start_date, end_date, plugin_dir,
 
     aggregator = aggregate_raw_data(
         data_dir, results_dir, plugin_dir, plugin_name,
-        start_date, end_date
+        start_date, end_date, events_limit
     )
 
     stats = load_plugin(
@@ -55,6 +61,7 @@ def run(plugin_name, start_date, end_date, plugin_dir,
 def aggregate_raw_data(
         data_dir, results_dir, plugin_dir, plugin,
         start_date=None, end_date=None,
+        events_limit=0,
         worker_num=3 * multiprocessing.cpu_count() / 4):
     """
     Workers-aggregator subpipeline:
@@ -70,7 +77,7 @@ def aggregate_raw_data(
 
     try:
         items = (
-            (plugin_dir, plugin, os.path.join(data_dir, fname))
+            (plugin_dir, plugin, os.path.join(data_dir, fname), events_limit)
             for fname in os.listdir(data_dir)
             if check_fname(fname, start_date, end_date)
         )
