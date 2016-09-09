@@ -9,7 +9,7 @@ import traceback
 from pyaloha.ccode import iterate_events
 
 
-def setup_logs(filepath=os.path.join('.', 'py_alohalytics_stats.log')):
+def setup_logs(filepath='py_alohalytics_stats.log'):
     logger = multiprocessing.get_logger()
 
     handler = logging.FileHandler(filepath)
@@ -29,10 +29,10 @@ def invoke_cmd_worker(item):
         logger = multiprocessing.get_logger()
         pid = multiprocessing.current_process().pid
 
-        plugin_dir, plugin, filepath = item
+        plugin_dir, plugin, filepath, events_limit = item
         worker_fpath = os.path.abspath(__file__)
-        cmd = 'gzip -d -c %s | python2.7 %s %s %s' % (
-            filepath, worker_fpath, plugin_dir, plugin
+        cmd = 'gzip -d -c %s | python2.7 %s %s %s %s' % (
+            filepath, worker_fpath, plugin_dir, plugin, events_limit
         )
         logger.info(
             '%d: Starting job: %s', pid, cmd
@@ -58,10 +58,11 @@ def worker():
     try:
         plugin_dir = sys.argv[1]
         plugin = sys.argv[2]
+        events_limit = int(sys.argv[3])
         processor = load_plugin(
             plugin, plugin_dir=plugin_dir
         ).DataStreamWorker()
-        iterate_events(processor)
+        iterate_events(processor, events_limit=events_limit)
         processor.pre_output()
         print processor.dumps_results()
     except Exception:

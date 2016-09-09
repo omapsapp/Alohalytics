@@ -149,7 +149,7 @@ NOTE: We need a C interface, so prepare yourself for C-style structures in the p
 this function (called from a Python code with a ctypes wrapper) and
 callback function (actual Python function - also a ctypes wrapper).
 */
-EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int events_limit)
+EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int eventsLimit)
 {
   std::set<std::string> processKeys(eventNames, eventNames + numEventNames);
 
@@ -174,7 +174,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
 
           userInfo.setGeo(kvle->location);
 
-          callback(key, eventTime, userInfo, kValues, 1);
+          callback(key, eventTime, userInfo, kValues, 1 /* length of kValues */);
           return;
         }
 
@@ -203,7 +203,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         {
           char const * kValues[1] = {kve->value.c_str()};
 
-          callback(key, eventTime, userInfo, kValues, 1);
+          callback(key, eventTime, userInfo, kValues, 1 /* length of kValues */);
           return;
         }
 
@@ -219,9 +219,9 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         AlohalyticsKeyEvent const * ke = dynamic_cast<AlohalyticsKeyEvent const *>(event);
         if (ke)
         {
-          callback(key, eventTime, userInfo, NULL, 0);
+          callback(key, eventTime, userInfo, NULL, 0); // no data in event so data list and its size are NULL and 0
           return;
         }
 
-      }, std::cin, events_limit);
+      }, std::cin, eventsLimit);
 }
