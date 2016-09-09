@@ -14,7 +14,7 @@ from pyaloha.patterns.daily_over_fs import (
     DataAggregator as DailyAggregator,
     StatsProcessor as DailyStatsProcessor
 )
-from pyaloha.protocol import day_serialize
+from pyaloha.protocol import day_serialize, SerializableSet
 
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
 import pysnip.events as events
@@ -40,7 +40,6 @@ class DataStreamWorker(BaseDataStreamWorker):
         super(DataStreamWorker, self).__init__()
 
         self.data_per_days = collections.defaultdict(dict)
-        self.lost_users = set()
         self.count_events = 0
         self.android_visible_launches = collections.defaultdict(set)
 
@@ -55,8 +54,8 @@ class DataStreamWorker(BaseDataStreamWorker):
             else:
                 # TODO: agg
                 self.data_per_days[dt][uid] = event.user_info.stripped()
-        else:
-            self.lost_users.add(uid)
+        elif uid not in self.data_per_days:
+            self.lost_data.add(uid)
 
     def is_invisible_android_launch(self, dte, uid, user_info):
         return (
