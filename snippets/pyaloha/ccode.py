@@ -3,6 +3,8 @@ import datetime
 import itertools
 import os
 
+from pyaloha.protocol import SerializableDatetime
+
 
 ctypes.set_conversion_mode('utf8', 'strict')
 
@@ -24,15 +26,14 @@ class CEVENTTIME(ctypes.Structure):
     dtime = None
     is_accurate = False
 
-    current_time = datetime.datetime.utcnow()
     delta_past = datetime.timedelta(days=6 * 30)
     delta_future = datetime.timedelta(days=1)
 
     def _setup_time(self):
-        self.client_dtime = datetime.datetime.utcfromtimestamp(
+        self.client_dtime = SerializableDatetime.utcfromtimestamp(
             self.client_creation / 1000.  # timestamp is in millisecs
         )
-        self.server_dtime = datetime.datetime.utcfromtimestamp(
+        self.server_dtime = SerializableDatetime.utcfromtimestamp(
             self.server_upload / 1000.  # timestamp is in millisecs
         )
 
@@ -139,7 +140,7 @@ CCALLBACK = ctypes.CFUNCTYPE(
 )  # key, event_time, user_info, data, data_len
 
 
-def iterate_events(stream_processor):
+def iterate_events(stream_processor, events_limit):
     base_path = os.path.dirname(os.path.abspath(__file__))
     c_module = ctypes.cdll.LoadLibrary(
         os.path.join(
@@ -157,5 +158,6 @@ def iterate_events(stream_processor):
             stream_processor.process_event
         ),
         keylist_type(*use_keys),
-        len(use_keys)
+        len(use_keys),
+        events_limit
     )
