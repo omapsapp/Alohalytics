@@ -12,6 +12,7 @@ from pysnip.events.placepage import ObjectSelection
 from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking
 )
+from pysnip.events.maps import MapActionRequest, MapDownloadFinished
 
 
 CUSTOM_EVENTS = (
@@ -19,6 +20,7 @@ CUSTOM_EVENTS = (
     TechnicalLaunch, AndroidVisibleLaunch,
     SearchResults, GPSTracking,
     RouteRequest, RouteStart, RouteEnd, RouteTracking,
+    MapActionRequest, MapDownloadFinished
 )
 
 
@@ -29,10 +31,10 @@ class DataStreamWorker(BaseDataStreamWorker):
         )
 
     def process_search_results(self, event):
-        pass
+        self.process_unspecified(event)
 
     def process_gps_tracking(self, event):
-        pass
+        self.process_unspecified(event)
 
     def process_routing(self, event):
-        pass
+        self.process_unspecified(event)

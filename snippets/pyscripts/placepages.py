@@ -4,6 +4,7 @@ import operator
 
 from pyaloha.base import DataAggregator as BaseDataAggregator
 from pyaloha.base import StatsProcessor as BaseStatsProcessor
+from pyaloha.protocol import SerializableSet
 
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
 
@@ -18,8 +19,9 @@ Category\tUsers
 
 def init_mau_per_tag(self, *args, **kwargs):
     self.monthly_users_per_type = collections.defaultdict(
-        functools.partial(collections.defaultdict, set)
+        functools.partial(collections.defaultdict, SerializableSet)
     )
+    self.lost_data = SerializableSet()
 
 
 class DataStreamWorker(BaseDataStreamWorker):
