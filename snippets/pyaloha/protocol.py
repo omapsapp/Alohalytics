@@ -17,66 +17,6 @@ def utc_to_timestamp(dt):
 timestamp_to_utc = datetime.datetime.utcfromtimestamp
 
 
-class AutoSerialized(dict):
-    def __init__(self, tpe, value):
-        self.update({
-            '_st_': tpe,
-            '_sv_': value
-        })
-
-    @classmethod
-    def extract_value(cls, dct):
-        return dct['_sv_']
-
-    @classmethod
-    def get_type(cls, dct):
-        return dct.get('_st_')
-
-
-class SerializableDatetime(datetime.datetime):
-    def __dumpdict__(self):
-        return AutoSerialized('dt', utc_to_timestamp(self))
-
-    @classmethod
-    def __loaddict__(cls, dct):
-        return cls.utcfromtimestamp(
-            AutoSerialized.extract_value(dct)
-        )
-
-
-class SerializableDate(datetime.date):
-    def __dumpdict__(self):
-        return AutoSerialized('dte', utc_to_timestamp(self))
-
-    @classmethod
-    def __loaddict__(cls, dct):
-        return cls.utcfromtimestamp(
-            AutoSerialized.extract_value(dct)
-        )
-
-
-class SerializableSet(set):
-    def __dumpdict__(self):
-        return AutoSerialized('set', tuple(self))
-
-    @classmethod
-    def __loaddict__(cls, dct):
-        return set(
-            AutoSerialized.extract_value(dct)
-        )
-
-
-class SerializableFrozenset(set):
-    def __dumpdict__(self):
-        return AutoSerialized('fset', tuple(self))
-
-    @classmethod
-    def __loaddict__(cls, dct):
-        return frozenset(
-            AutoSerialized.extract_value(dct)
-        )
-
-
 def day_serialize(dtime):
     return dtime.strftime(UNIQ_DAY_FORMAT)
 
@@ -101,17 +41,104 @@ def convert_keys_if_possible(dct):
     return dct
 
 
-DESERIALIZERS = {
-    'dt': SerializableDatetime.__loaddict__,
-    'dte': SerializableDate.__loaddict__,
-    'set': SerializableSet.__loaddict__,
-    'fset': SerializableFrozenset.__loaddict__,
-    None: convert_keys_if_possible
+class AutoSerialized(dict):
+    def __init__(self, tpe, value):
+        self.update({
+            '_st_': tpe,  # type of serialized object
+            '_sv_': value  # serialized value
+        })
+
+    @classmethod
+    def extract_value(cls, dct):
+        return dct['_sv_']
+
+    @classmethod
+    def extract_type(cls, dct):
+        return dct['_st_']
+
+    # returns None for missing type instead of an Exception
+    @classmethod
+    def get_type(cls, dct):
+        return dct.get('_st_')
+
+
+class SerializableDatetime(datetime.datetime):
+    alias = 'dtime'
+
+    def __dumpdict__(self):
+        return AutoSerialized(
+            SerializableDatetime.alias, utc_to_timestamp(self)
+        )
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return cls.utcfromtimestamp(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableDate(datetime.date):
+    alias = 'date'
+
+    def __dumpdict__(self):
+        return AutoSerialized(
+            SerializableDate.alias, utc_to_timestamp(self)
+        )
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return cls.utcfromtimestamp(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableSet(set):
+    alias = 'set'
+
+    def __dumpdict__(self):
+        return AutoSerialized(
+            SerializableSet.alias, tuple(self)
+        )
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return set(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+class SerializableFrozenset(set):
+    alias = 'fset'
+
+    def __dumpdict__(self):
+        return AutoSerialized(
+            SerializableFrozenset.alias, tuple(self)
+        )
+
+    @classmethod
+    def __loaddict__(cls, dct):
+        return frozenset(
+            AutoSerialized.extract_value(dct)
+        )
+
+
+DESERIALIZERS = (
+    SerializableDatetime, SerializableDate,
+    SerializableSet, SerializableFrozenset
+)
+
+DESERIALIZERS_BY_ALIAS = {
+    dserializer.alias: dserializer.__loaddict__
+    for dserializer in DESERIALIZERS
 }
+
+DESERIALIZERS_BY_ALIAS.update({
+    None: convert_keys_if_possible
+})
 
 
 def custom_loads(dct):
-    return DESERIALIZERS[AutoSerialized.get_type(dct)](dct)
+    return DESERIALIZERS_BY_ALIAS[AutoSerialized.get_type(dct)](dct)
 
 
 class CustomEncoder(json.JSONEncoder):
