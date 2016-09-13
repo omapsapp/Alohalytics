@@ -34,6 +34,7 @@ import os
 
 from pyaloha.base import DataAggregator as BaseDataAggregator
 from pyaloha.base import StatsProcessor as BaseStatsProcessor
+from pyaloha.base import ShareableData
 
 from pyaloha.protocol import FileProtocol, day_deserialize, str2date
 
@@ -60,8 +61,19 @@ def list_extension_post_aggregate(fname):
     )
 
 
+def setup_daily_data(self, *args, **kwargs):
+    ShareableData.setup_shareable_data(self, *args, **kwargs)
+
+    self.data_per_days = collections.defaultdict(dict)
+
+
+class DailyWorkerMixin(object):
+    setup_shareable_data = setup_daily_data
+
+
 class DataAggregator(BaseDataAggregator):
     post_aggregate_worker = staticmethod(brute_post_aggregate)
+    setup_shareable_data = setup_daily_data
 
     def aggregate(self, processor_results):
         self.logger.info(
