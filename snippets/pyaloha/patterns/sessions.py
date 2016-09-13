@@ -31,7 +31,7 @@ class SessionWorkerMixin(DailyWorkerMixin):
     def get_session_history(self, dtime, uid):
         return self.data_per_days[day_serialize(dtime)].setdefault(uid, [])
 
-    def get_last_session(self, dtime, uid):
+    def get_last_open_session(self, dtime, uid):
         dt = day_serialize(dtime)
         try:
             return self.data_per_days[dt][uid][-1]
@@ -62,9 +62,8 @@ class SessionWorkerMixin(DailyWorkerMixin):
         raise NotImplementedError()
 
     def process_unspecified(self, event):
-        if event.event_time.is_accurate:
-            if self.process_boundary(event):
-                self.process_internal(event)
+        if event.event_time.is_accurate and self.process_boundary(event):
+            self.process_internal(event)
 
 
 class SessionAggregator(DailyAggregator):
