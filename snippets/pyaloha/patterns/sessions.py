@@ -36,10 +36,14 @@ class SessionWorkerMixin(DailyWorkerMixin):
         try:
             return self.data_per_days[dt][uid][-1]
         except (KeyError, IndexError) as no_sessions:
+            # some sessions may broke at midnight
+            # as we're looking on daily basis
             prev_dt = day_serialize(dtime - datetime.timedelta(days=1))
             try:
                 return self.data_per_days[prev_dt][uid][-1]
             except (KeyError, IndexError) as no_prev_day_sessions:
+                # we assume we have no sessions with a 24-hour duration
+                # looking to the end is considered inefficient
                 return
 
     def create_broken_session(self, dtime, uid):
@@ -54,7 +58,7 @@ class SessionWorkerMixin(DailyWorkerMixin):
 
         return session
 
-    # returns True if internal need to process this event as well
+    # returns True if internal must process this event as well
     def process_boundary(self, event):
         raise NotImplementedError()
 
