@@ -586,7 +586,7 @@ static BOOL gIsFirstSession = NO;
 }
 
 + (NSString *)installationId {
-  return [[NSUserDefaults standardUserDefaults] stringForKey:kAlohalyticsInstallationId];
+  return @(InstallationId().first.c_str());
 }
 
 + (void)disable {
