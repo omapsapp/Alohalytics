@@ -1,4 +1,4 @@
-# by popularity
+# Groups sorted by popularity.
 GROUPS = (
     ('roads', frozenset((
         'highway-pedestrian',
@@ -92,7 +92,7 @@ GROUPS = (
 )
 
 
-def get_group_by_tag(tag):
+def get_groups_by_tag(tag):
     for group, tag_set in GROUPS:
         if tag in tag_set:
             yield group

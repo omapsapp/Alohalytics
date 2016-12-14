@@ -7,7 +7,7 @@ from pyaloha.base import StatsProcessor as BaseStatsProcessor
 from pyaloha.protocol import SerializableSet
 
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
-from pysnip.osm_tags import get_group_by_tag
+from pysnip.osm_tags import get_groups_by_tag
 
 import pysnip.events as events
 
@@ -38,12 +38,12 @@ class DataStreamWorker(BaseDataStreamWorker):
     def process_unspecified(self, event):
         dte = event.event_time.dtime.date()
         if event.event_time.is_accurate:
-            # there's a limitation to current serialization through json module
-            # only common types are acceptable as keys to the serializable dict
+            # There's a limitation to current serialization through json module:
+            # only common types are acceptable as keys in serializable dict.
             month = '%s-%s' % (dte.year, dte.month)
             set_groups = []
             for tag in event.object_types:
-                for group in get_group_by_tag(tag):
+                for group in get_groups_by_tag(tag):
                     if group not in set_groups:
                         set_groups.append(group)
 
