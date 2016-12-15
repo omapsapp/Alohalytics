@@ -38,7 +38,7 @@ class DataStreamWorker(BaseDataStreamWorker):
     def process_unspecified(self, event):
         dte = event.event_time.dtime.date()
         if event.event_time.is_accurate:
-            # There's a limitation to current serialization through json module:
+            # There's a limitation to the current serialization through json module:
             # only common types are acceptable as keys in serializable dict.
             month = '%s-%s' % (dte.year, dte.month)
             set_groups = []

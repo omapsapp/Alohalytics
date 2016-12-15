@@ -1,4 +1,4 @@
-# Groups sorted by popularity.
+# Groups are sorted by popularity.
 GROUPS = (
     ('roads', frozenset((
         'highway-pedestrian',
