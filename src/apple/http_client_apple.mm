@@ -53,13 +53,13 @@ static const double kTimeoutInSeconds = 24.0;
 bool HTTPClientPlatformWrapper::RunHTTPRequest() {
   @autoreleasepool {
 
-    NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:
-        [NSURL URLWithString:[NSString stringWithUTF8String:url_requested_.c_str()]]
+    NSURL * url = [NSURL URLWithString:@(url_requested_.c_str())];
+    NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url
         cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:kTimeoutInSeconds];
     // We handle cookies manually.
     request.HTTPShouldHandleCookies = NO;
 
-    request.HTTPMethod = [NSString stringWithUTF8String:http_method_.c_str()];
+    request.HTTPMethod = @(http_method_.c_str());
     if (!content_type_.empty()) {
       [request setValue:[NSString stringWithUTF8String:content_type_.c_str()] forHTTPHeaderField:@"Content-Type"];
     }
@@ -133,7 +133,7 @@ bool HTTPClientPlatformWrapper::RunHTTPRequest() {
           server_response_.assign(reinterpret_cast<char const *>(url_data.bytes), url_data.length);
         }
         else {
-          [url_data writeToFile:[NSString stringWithUTF8String:received_file_.c_str()] atomically:YES];
+          [url_data writeToFile:@(received_file_.c_str()) atomically:YES];
         }
       }
       return true;
