@@ -567,3 +567,39 @@
         (relevant "" '("building-address")
                   (position-lat-lon 52.4157386 13.2632246)
                   :house-number "4B")))
+
+(defsample "Мазурова 14" "ru"
+  *minsk-position*
+  *minsk-viewport*
+  (list (vital "" '("building")
+               (position-lat-lon 53.8973455 27.4250898)
+               :house-number "14")
+        (irrelevant "" '("building")
+                    (position-lat-lon 53.9145531 27.5746485)
+                    :house-number "14")))
+
+(dolist (query '("никольская 25" "никольская 25 "))
+  (defsample query "ru"
+    *moscow-airport-station-position*
+    *moscow-airport-station-viewport*
+    (list (vital "Nautilus shopping center"
+                 '("building" "shop-mall" "sponsored-banner-lamoda_ru")
+                 (position-lat-lon 55.7591572 37.6247583)
+                 :house-number "25")
+
+          ; A group of relevant results from Moscow satellite cities
+          ; (Рыбное, Рыбинск and Железногорск, in order).
+          (relevant "" '("building")
+                    (position-lat-lon 54.7011511 39.5314428)
+                    :house-number "25")
+          (relevant "" '("building")
+                    (position-lat-lon 58.0546492 38.8921517)
+                    :house-number "25")
+          (relevant "" '("building")
+                    (position-lat-lon 52.3326383 35.3358952)
+                    :house-number "25")
+
+          (irrelevant "Hostel on Leningradskoe Shosse 25/1"
+                      '("sponsored-booking" "tourism-hostel")
+                      (position-lat-lon 55.8269943 37.4888106)
+                      :house-number "25/1"))))
