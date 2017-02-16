@@ -603,3 +603,15 @@
                       '("sponsored-booking" "tourism-hostel")
                       (position-lat-lon 55.8269943 37.4888106)
                       :house-number "25/1"))))
+
+(defsample "london" "en"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "London" '("place-city-capital-2")
+               (position-lat-lon 51.5073179 -0.1276517))))
+
+(defsample "new york" "en"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "New York" '("place-city")
+               (position-lat-lon 40.7305963 -73.9865987))))
