@@ -8,6 +8,11 @@
 (defparameter *minsk-position*
   (position-lat-lon 53.9023339 27.5618798))
 
+(defparameter *hrodna-viewport*
+  (viewport :maxx 23.841444 :maxy 63.879684 :minx 23.8265894 :miny 63.869197))
+(defparameter *hrodna-position*
+  (position-lat-lon 53.6834584 23.8342624))
+
 (defparameter *skylight-viewport*
   (viewport :maxx 37.5409 :maxy 67.538 :minx 37.533 :miny 67.533))
 (defparameter *skylight-position*
@@ -615,3 +620,29 @@
   *moscow-viewport*
   (list (vital "New York" '("place-city")
                (position-lat-lon 40.7305963 -73.9865987))))
+
+(defsample "горького 1" "ru"
+  *hrodna-position*
+  *hrodna-viewport*
+  (cons (vital "" '("building")
+               (position-lat-lon 53.6861244 23.8312382)
+               :house-number "1")
+        (loop
+           for position in (list (position-lat-lon 53.6863976 23.8308586)
+                                 (position-lat-lon 53.68557 23.8319221)
+                                 (position-lat-lon 53.6858218 23.8315694))
+           for index = 1 then (1+ index)
+           collecting (relevant "" '("building")
+                                position
+                                :house-number (format nil "1/~a" index)))))
+
+(defsample "проспект независимости" "ru"
+  *minsk-position*
+  *minsk-viewport*
+  (mapcar (lambda (position)
+            (vital "praspiekt Niezaliežnasci"
+                   '("psurface-paved_good" "hwtag-nobicycle" "hwtag-nofoot" "hwtag-oneway"
+                     "highway-primary")
+                   position))
+          (list (position-lat-lon 53.9010958 27.5599433)
+                (position-lat-lon 53.9267342 27.6230016))))
