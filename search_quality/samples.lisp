@@ -646,3 +646,13 @@
                    position))
           (list (position-lat-lon 53.9010958 27.5599433)
                 (position-lat-lon 53.9267342 27.6230016))))
+
+(defsample "улица милашенкова" "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "улица Милашенкова"
+               '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-secondary")
+               (position-lat-lon 55.8219341 37.5891989))
+        (vital "улица Милашенкова"
+               '("hwtag-oneway" "highway-residential")
+               (position-lat-lon 55.8284474 37.5790077))))
