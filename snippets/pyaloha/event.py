@@ -1,9 +1,10 @@
 class Event(object):
     def __init__(self,
                  key, event_time, user_info,
-                 data_list, data_list_len):
-        self.data_list = data_list
-        self.data_list_len = data_list_len
+                 data_list=None, data_list_len=0):
+        if data_list_len:
+            self.data_list = data_list
+            self.data_list_len = data_list_len
         event_time._setup_time()
         self.event_time = event_time
         self.user_info = user_info
@@ -12,6 +13,9 @@ class Event(object):
 
     def process_me(self, processor):
         processor.process_unspecified(self)
+
+    def __basic_dumpdict__(self):
+        return self.__dumpdict__()
 
     def __dumpdict__(self):
         return {
@@ -29,21 +33,22 @@ when all event params (except datetime and user/device identification)
 are accumulated into a dict.
     You can try to convert Event instance to it with a @method from_event.
     """
+    __slots__ = ('data', 'event_time', 'key', 'user_info')
+
     def __init__(self,
                  key, event_time, user_info,
                  data_list, data_list_len):
         super(DictEvent, self).__init__(
-            key, event_time, user_info,
-            data_list, data_list_len
+            key, event_time, user_info
         )
 
-        if self.data_list_len % 2 != 0:
+        if data_list_len % 2 != 0:
             raise ValueError(
                 "Event can't be casted to a dict without additional knowledge"
             )
 
         self.data = {
-            self.data_list[i]: self.data_list[i + 1]
+            data_list[i]: data_list[i + 1]
             for i in range(0, data_list_len, +2)
         }
 
@@ -55,7 +60,10 @@ are accumulated into a dict.
             event.data_list, event.data_list_len
         )
 
+    def __basic_dumpdict__(self):
+        return super(DictEvent, self).__dumpdict__()
+
     def __dumpdict__(self):
-        d = super(DictEvent, self).__dumpdict__()
+        d = self.__basic_dumpdict__()
         d.update(self.data)
         return d

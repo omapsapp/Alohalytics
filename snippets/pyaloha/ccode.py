@@ -23,28 +23,31 @@ class CEVENTTIME(ctypes.Structure):
         ('server_upload', ctypes.c_uint64)
     ]
 
-    dtime = None
-    is_accurate = False
+    __slots__ = (
+        'client_creation', 'server_upload',
+        'dtime', 'is_accurate'
+    )
 
     delta_past = datetime.timedelta(days=6 * 30)
     delta_future = datetime.timedelta(days=1)
 
     def _setup_time(self):
-        self.client_dtime = SerializableDatetime.utcfromtimestamp(
+        client_dtime = SerializableDatetime.utcfromtimestamp(
             self.client_creation / 1000.  # timestamp is in millisecs
         )
-        self.server_dtime = SerializableDatetime.utcfromtimestamp(
+        server_dtime = SerializableDatetime.utcfromtimestamp(
             self.server_upload / 1000.  # timestamp is in millisecs
         )
 
-        self.dtime = self.server_dtime
-        if self.client_dtime >= self.server_dtime - self.delta_past and\
-                self.client_dtime <= self.server_dtime + self.delta_future:
-            self.dtime = self.client_dtime
+        self.dtime = server_dtime
+        self.is_accurate = False
+        if client_dtime >= server_dtime - CEVENTTIME.delta_past and\
+                client_dtime <= server_dtime + CEVENTTIME.delta_future:
+            self.dtime = client_dtime
             self.is_accurate = True
 
     def get_approx_time(self):
-        if self.dtime is None:
+        if not self.dtime:
             self._setup_time()
         return self.dtime, self.is_accurate
 
@@ -60,8 +63,9 @@ class IDInfo(ctypes.Structure):
         ('os', ctypes.c_byte),
     ]
 
-    uid = None
     _os_valid_range = range(3)
+
+    __slots__ = ('os', 'uid')
 
     def __dumpdict__(self):
         return {
@@ -87,6 +91,8 @@ class GeoIDInfo(IDInfo):
         ('lat', ctypes.c_float),
         ('lon', ctypes.c_float)
     ]
+
+    __slots__ = ('lat', 'lon')
 
     def has_geo(self):
         # TODO: if client will send actual (0, 0) we will
@@ -114,6 +120,8 @@ class CUSERINFO(GeoIDInfo):
     _fields_ = [
         ('raw_uid', (ctypes.c_char * 32)),
     ]
+
+    __slots__ = ('raw_uid',)
 
     def setup(self):
         self.validate()
