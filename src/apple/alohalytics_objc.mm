@@ -206,23 +206,6 @@ static void LogSystemInformation(NSString * userAgent) {
 }
 #endif  // TARGET_OS_IPHONE
 
-// Returns <unique id, true if it's the very-first app launch>.
-static std::pair<std::string, bool> InstallationId() {
-  bool firstLaunch = false;
-  NSUserDefaults * ud = [NSUserDefaults standardUserDefaults];
-  NSString * installationId = [ud stringForKey:kAlohalyticsInstallationId];
-  if (installationId == nil) {
-    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-    // All iOS IDs start with I:
-    installationId = [@"I:" stringByAppendingString:(NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid))];
-    CFRelease(uuid);
-    [ud setValue:installationId forKey:kAlohalyticsInstallationId];
-    [ud synchronize];
-    firstLaunch = true;
-  }
-  return std::make_pair([installationId UTF8String], firstLaunch);
-}
-
 // Returns path to store statistics files.
 static std::string StoragePath() {
   // Store files in special directory which is not backed up automatically.
@@ -339,6 +322,7 @@ static NSString * const kIsAlohalyticsDisabledKey = @"AlohalyticsDisabledKey";
 // setup should be called to activate counting.
 static NSDate * gSessionStartTime = nil;
 static BOOL gIsFirstSession = NO;
+static NSString * gInstallationId = nil;
 
 @implementation Alohalytics
 
@@ -370,9 +354,8 @@ static BOOL gIsFirstSession = NO;
   [nc addObserver:cls selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
   [nc addObserver:cls selector:@selector(applicationWillTerminate:) name:UIApplicationWillTerminateNotification object:nil];
 #endif // TARGET_OS_IPHONE
-  const auto installationId = InstallationId();
   Stats & instance = Stats::Instance();
-  instance.SetClientId(installationId.first)
+  instance.SetClientId([self installationId].UTF8String)
           .SetServerUrl([serverUrl UTF8String])
           .SetStoragePath(StoragePath());
 
@@ -386,8 +369,7 @@ static BOOL gIsFirstSession = NO;
   BOOL shouldSendUpdatedSystemInformation = NO;
   // Do not generate $install event for old users who did not have Alohalytics installed but already used the app.
   const BOOL appWasNeverInstalledAndLaunchedBefore = (NSOrderedAscending == [[Alohalytics buildDate] compare:[Alohalytics installDate]]);
-  if (installationId.second && appWasNeverInstalledAndLaunchedBefore && installedVersion == nil) {
-    gIsFirstSession = YES;
+  if ([self isFirstSession] && appWasNeverInstalledAndLaunchedBefore && installedVersion == nil) {
     instance.LogEvent("$install", [Alohalytics bundleInformation:version]);
     [ud setValue:version forKey:kInstalledVersionKey];
     // Also store first launch date for future use.
@@ -544,7 +526,7 @@ static BOOL gIsFirstSession = NO;
 #pragma mark Utility methods
 
 + (BOOL)isFirstSession {
-  return gIsFirstSession;
+  return [self installationId] != nil && gIsFirstSession;
 }
 
 + (NSDate *)firstLaunchDate {
@@ -587,7 +569,21 @@ static BOOL gIsFirstSession = NO;
 }
 
 + (NSString *)installationId {
-  return @(InstallationId().first.c_str());
+  if (gInstallationId == nil) {
+    gIsFirstSession = NO;
+    NSUserDefaults * ud = [NSUserDefaults standardUserDefaults];
+    gInstallationId = [ud stringForKey:kAlohalyticsInstallationId];
+    if (gInstallationId == nil) {
+      CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+      // All iOS IDs start with I:
+      gInstallationId = [@"I:" stringByAppendingString:(NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid))];
+      CFRelease(uuid);
+      [ud setValue:gInstallationId forKey:kAlohalyticsInstallationId];
+      [ud synchronize];
+      gIsFirstSession = YES;
+    }
+  }
+  return gInstallationId;
 }
 
 + (void)disable {
