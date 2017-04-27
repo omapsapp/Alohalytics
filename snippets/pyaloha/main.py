@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import sys
+import traceback
 
 from pyaloha.protocol import str2date, WorkerResults
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
@@ -76,10 +77,15 @@ def aggregate_raw_data(
     pool = multiprocessing.Pool(worker_num)
 
     try:
-        items = (
-            (plugin_dir, plugin, os.path.join(data_dir, fname), events_limit)
+        files = [
+            os.path.join(data_dir, fname)
             for fname in os.listdir(data_dir)
             if check_fname(fname, start_date, end_date)
+        ]
+
+        items = (
+            (plugin_dir, plugin, fpath, events_limit)
+            for fpath in files
         )
 
         aggregator = load_plugin(
@@ -87,8 +93,16 @@ def aggregate_raw_data(
         ).DataAggregator(results_dir)
 
         logger.info('Aggregator: aggregate')
-        for results in pool.imap_unordered(invoke_cmd_worker, items):
-            aggregator.aggregate(WorkerResults.loads_object(results))
+        for i, results in enumerate(pool.imap(invoke_cmd_worker, items)):
+            try:
+                aggregator.aggregate(WorkerResults.loads_object(results))
+            except Exception:
+                logger.error(
+                    'Aggregator: processing of %s failed: %s' % (
+                        files[i],
+                        traceback.format_exc()
+                    )
+                )
 
         logger.info('Aggregator: post_aggregate')
         aggregator.post_aggregate(pool)
