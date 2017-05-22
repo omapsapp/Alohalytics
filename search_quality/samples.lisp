@@ -656,3 +656,11 @@
         (vital "улица Милашенкова"
                '("hwtag-oneway" "highway-residential")
                (position-lat-lon 55.8284474 37.5790077))))
+
+(defsample "фото" "ru"
+  *moscow-airport-station-position*
+  *moscow-airport-station-viewport*
+  (list (vital "фото на документы"
+               '("craft-photographer")
+               (position-lat-lon 55.7990477 37.5367443))))
+  
