@@ -16,6 +16,8 @@ class RouteDictEvent(DictEvent):
             self.mode = 'pedestrian'
         if self.mode == 'astar-bidirectional-bicycle':
             self.mode = 'bicycle'
+        if self.mode == 'astar-bidirectional-car':
+            self.mode = 'mixed-car'
 
     def process_me(self, processor):
         processor.process_routing(self)
@@ -71,7 +73,8 @@ class RouteRequest(RouteDictEvent):
 
 class RouteStart(Event):
     keys = (
-        'Routing. Start',
+        'Routing. Start', 
+        'Point to point Go',
     )
 
     def process_me(self, processor):
