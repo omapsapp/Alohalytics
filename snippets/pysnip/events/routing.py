@@ -73,6 +73,8 @@ class RouteRequest(RouteDictEvent):
 
 # Event for a start of the route with specific props
 # with no specific fields
+# Android: Routing. Start
+# iOS: Point to point Go
 
 class RouteStart(Event):
     keys = (
