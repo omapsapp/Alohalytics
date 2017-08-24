@@ -14,11 +14,9 @@ class RouteDictEvent(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
-
         self.setup_mode()
 
     def setup_mode(self):
-        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle, astar-bidirectional-car
         self.mode = self.data.get(
             'router', self.data.get('name', None)
         )    
