@@ -2,22 +2,24 @@ from pyaloha.event import Event, DictEvent
 
 
 class RouteDictEvent(DictEvent):
+    mode_alliases = {
+        'astar-bidirectional-pedestrian': 'pedestrian',
+        'astar-bidirectional-bicycle': 'bicycle',
+        'astar-bidirectional-car': 'vehicle'
+    }
+
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
 
         self.setup_mode()
 
     def setup_mode(self):
-        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle
+        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle, astar-bidirectional-car
         self.mode = self.data.get(
             'router', self.data.get('name', None)
-        )
-        if self.mode == 'astar-bidirectional-pedestrian':
-            self.mode = 'pedestrian'
-        if self.mode == 'astar-bidirectional-bicycle':
-            self.mode = 'bicycle'
-        if self.mode == 'astar-bidirectional-car':
-            self.mode = 'mixed-car'
+        )    
+        if self.mode in mode_alliases:
+            self.mode = mode_alliases[self.mode]
 
     def process_me(self, processor):
         processor.process_routing(self)
