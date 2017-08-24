@@ -5,7 +5,11 @@ class RouteDictEvent(DictEvent):
     mode_alliases = {
         'astar-bidirectional-pedestrian': 'pedestrian',
         'astar-bidirectional-bicycle': 'bicycle',
-        'astar-bidirectional-car': 'vehicle'
+        'astar-bidirectional-car': 'vehicle',
+        'pedestrian': 'pedestrian',
+        'bicycle': 'bicycle',
+        'vehicle': 'vehicle',
+        'mixed-car': 'vehicle'
     }
 
     def __init__(self, *args, **kwargs):
@@ -18,8 +22,7 @@ class RouteDictEvent(DictEvent):
         self.mode = self.data.get(
             'router', self.data.get('name', None)
         )    
-        if self.mode in mode_alliases:
-            self.mode = mode_alliases[self.mode]
+        self.mode = mode_alliases[self.mode]
 
     def process_me(self, processor):
         processor.process_routing(self)
