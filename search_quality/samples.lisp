@@ -663,4 +663,20 @@
   (list (vital "фото на документы"
                '("craft-photographer")
                (position-lat-lon 55.7990477 37.5367443))))
-  
+
+(defsample "hotel" "en"
+  *moscow-airport-station-position*
+  *moscow-airport-station-viewport*
+  (list (relevant "ArtDeSon"
+                  '("internet_access-wlan" "tourism-hostel")
+                  (position-lat-lon 55.7960534 37.5439943))
+        (relevant "Аэрополис"
+                  '("internet_access-wlan" "tourism-hotel")
+                  (position-lat-lon 55.7947084 37.5429188)
+                  :house-number "37 к5")
+        (irrelevant "Homel"
+                    '("place-city")
+                    (position-lat-lon 52.4239014 31.0131849))
+        (irrelevant "d/o Morozovka"
+                    '("place-hamlet" "tourism-hotel")
+                    (position-lat-lon 56.0521307 37.224444))))
