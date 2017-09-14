@@ -20,7 +20,7 @@ class RouteDictEvent(DictEvent):
         mode = self.data.get(
             'router', self.data.get('name', None)
         )    
-        self.mode = mode_alliases[mode]
+        self.mode = self.mode_alliases[mode]
 
     def process_me(self, processor):
         processor.process_routing(self)
