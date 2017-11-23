@@ -680,3 +680,17 @@
         (irrelevant "d/o Morozovka"
                     '("place-hamlet" "tourism-hotel")
                     (position-lat-lon 56.0521307 37.224444))))
+
+(defsample "звонарский переулок 1 " "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Звонарский переулок, 1" '("building")
+               (position-lat-lon 55.7647899 37.6209898))
+        (relevant "Звонарский переулок" '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-unclassified")
+               (position-lat-lon 55.7645951 37.6217676))))
+
+(defsample "звонарский переулок 123456 " "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Звонарский переулок" '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-unclassified")
+               (position-lat-lon 55.7645951 37.6217676))))
