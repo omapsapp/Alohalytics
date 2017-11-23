@@ -694,3 +694,15 @@
   *moscow-viewport*
   (list (vital "Звонарский переулок" '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-unclassified")
                (position-lat-lon 55.7645951 37.6217676))))
+
+(defsample "москва гугл " "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Гугл" '("office-company")
+               (position-lat-lon 55.746745 37.6264991))))
+
+(defsample "москва балчуг 7 гугл " "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Гугл" '("office-company")
+               (position-lat-lon 55.746745 37.6264991))))
