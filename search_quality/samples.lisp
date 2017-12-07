@@ -42,7 +42,7 @@
 (defsample "первомайск " "ru"
   (position-lat-lon 55.82483 37.566872)
   (viewport :maxx 37.5704 :maxy 67.5886 :minx 37.5633 :miny 67.5831)
-  (list (vital "Первомайск" '("place-town") (position-lat-lon 54.865758 43.805049))))
+  (list (vital "Первомайск" '("place-town") (position-lat-lon 54.8666499 43.8054101))))
 
 (defsample "бежецк" "ru"
   (position-lat-lon 55.662164 37.63057)
@@ -52,7 +52,7 @@
 (defsample "бутово" "ru"
   (position-lat-lon 55.662164 37.63057)
   (viewport :maxx 37.6341 :maxy 67.2996 :minx 37.627 :miny 67.2941)
-  (list (vital "Бутово" '("place-hamlet") (position-lat-lon 55.5428188 37.5854318))))
+  (list (vital "Бутово" '("place-hamlet") (position-lat-lon 55.5459024 37.5903992))))
 
 (dolist (query '("старо" "старок"))
   (defsample query "ru"
@@ -78,8 +78,8 @@
 (defsample "АЗС" "ru"
   (position-lat-lon 55.658 37.6403)
   (viewport :maxx 37.6438 :maxy 67.2923 :minx 37.6367 :miny 67.2868)
-  (list (relevant "Eka" '("amenity-fuel")
-                  (position-lat-lon 55.658089 37.640331))))
+  (list (relevant "ЕКА" '("shop" "amenity-fuel")
+                  (position-lat-lon 55.6580968 37.6403473))))
 
 (defsample "Шереметьево" "ru"
   (position-lat-lon 55.658 37.6403)
@@ -110,21 +110,10 @@
   (list (vital "Подольск" '("railway-station")
                (position-lat-lon 55.431798 37.565417))))
 
-(defsample "Байкал" "en"
-  (position-lat-lon 55.751624 37.618715)
-  (viewport :maxx 37.6215 :maxy 67.4589 :minx 37.616 :miny 67.4525)
-  (cons (relevant "Озеро \"Байкал\"" '("natural-water")
-                  (position-lat-lon 53.737727 108.290227))
-        (loop for (lat lon) in '((53.027245 106.74882)
-                                 (53.518324 107.535302)
-                                 (53.500603 108.29637))
-           collecting (relevant "озеро Байкал" '("natural-water")
-                                (position-lat-lon lat lon)))))
-
 (defsample "памятник высоцкому" "ru"
   *moscow-position*
   *moscow-viewport*
-  (list (vital "Памятник В.С. Высоцкому" '("historic-memorial")
+  (list (vital "В.С. Высоцкому" '("historic-memorial")
                (position-lat-lon 55.768153 37.613128))))
 
 (defsample "san francisco golden gate " "en"
@@ -136,7 +125,7 @@
 (defsample "810 7th street northwest washington" "en"
   (position-lat-lon 38.900353 -77.022134)
   (viewport :maxx -77.0202 :maxy 42.2884 :minx -77.024 :miny 42.2853)
-  (list (vital "RFD" '("amenity-pub")
+  (list (vital "" '("shop")
                (position-lat-lon 38.900353 -77.022134)
                :house-number "810")))
 
@@ -174,7 +163,7 @@
   (position-lat-lon 55.804683 37.511168)
   (viewport :maxx 37.5145 :maxy 67.552 :minx 37.5094 :miny 67.5472)
   (loop for (house-number lat lon) in '(("75 к1" 55.804945 37.512323)
-                                        ("75 к1А" 55.804198 37.513327)
+                                        ("75 к1А" 55.804198 37.513282)
                                         ("75 к1Б" 55.804729 37.510496)
                                         ("75 с2" 55.804332 37.511761)
                                         ("75А" 55.803425 37.512232)
@@ -227,17 +216,15 @@
 (defsample "540 queen street brisbane" "en"
   (position-lat-lon -27.469546 153.024131)
   (viewport :maxx 153.027 :maxy -28.5833 :minx 153.02 :miny -28.5888)
-  (list (vital "Willahra Tower" '("building")
+  (list (vital "Willahra Towers" '("building")
                (position-lat-lon -27.463288 153.030955)
                :house-number "540")))
 
 (defsample "casino" "en"
   (position-lat-lon 33.749495 -117.873221)
   (viewport :maxx -117.308 :maxy 36.5515 :minx -118.718 :miny 35.279)
-  (list (relevant "Crystal Casino & Hotel" '("building")
-                  (position-lat-lon 33.87517 -118.220612))
-        (relevant "The Bicycle Casino" '("landuse-commercial" "amenity-casino")
-                  (position-lat-lon 33.966085 -118.166707)
+  (list (relevant "The Bicycle Casino" '("landuse-commercial" "amenity-casino")
+                  (position-lat-lon 33.96635 -118.16644)
                   :house-number "7301")
         (relevant "The Commerce Casino" '("amenity-casino")
                   (position-lat-lon 33.998295 -118.144928)
@@ -245,9 +232,17 @@
         (relevant "Commerce Casino" '("amenity-casino")
                   (position-lat-lon 34.000141 -118.143703))
         (relevant "Hollywood Park Casino" '("building" "amenity-casino")
-                  (position-lat-lon 33.947588 -118.33938))
+                  (position-lat-lon 33.94757 -118.33951))
         (relevant "San Manuel Indian Bingo and Casino" '("tourism-attraction" "amenity-casino")
-                  (position-lat-lon 34.150149 -117.227594))))
+                  (position-lat-lon 34.150149 -117.227594))
+        (irrelevant "Camino Avenue" '("highway-residential")
+                    (position-lat-lon 33.76464 -117.84096))
+        (irrelevant "El Camino Real Park" '("leisure-park")
+                    (position-lat-lon 33.79407 -117.86915))
+        (irrelevant "El Camino Real" '("place-suburb")
+                    (position-lat-lon 33.6956 -117.78111))
+        (irrelevant "Camino Avenue" '("highway-residential")
+                    (position-lat-lon 33.76464 -117.84096))))
 
 (scoped-samples ("en"
                  (position-lat-lon 55.688087 37.590087)
@@ -296,14 +291,12 @@
                       (viewport :minx 36.782572394712019559 :miny 66.470419751926755225
                                 :maxx 38.395587605287985866 :maxy 68.064943854992364436))
                 (def "рио "
-                    (list (vital "ТЦ РИО" '("building" "shop-mall")
+                    (list (vital "Торговый центр \"РИО\"" '("building" "shop-mall")
                                  (position-lat-lon 55.689754 37.602154)
                                  :house-number "1")
                           (vital "Рио" '("building" "shop-mall")
                                  (position-lat-lon 55.663783 37.51131)
-                                 :house-number "109")
-                          (relevant "Рио де Пиво" '("amenity-cafe")
-                                    (position-lat-lon 55.6831596 37.6251419)))))
+                                 :house-number "109"))))
 
 (scoped-samples ("ru" *moscow-position* *moscow-viewport*)
                 (def "Россия "
@@ -315,6 +308,8 @@
                 (def "San Marino"
                     (list (vital "San Marino" '("place-country")
                                  (position-lat-lon 43.9458555 12.4583045))
+                          (relevant "San Marino" '("building" "amenity-restaurant")
+                                    (position-lat-lon 55.8629 37.12115))
                           (vital "Città di San Marino" '("place-town")
                                  (position-lat-lon 43.9363997 12.4467173))))
                 (def "Cyprus"
@@ -350,12 +345,8 @@
 (defsample "restaurant" "en"
   *moscow-airport-station-position*
   *moscow-airport-station-viewport*
-  (list (vital "Кофе Хауз" '("internet_access-wlan" "amenity-cafe")
-               (position-lat-lon 55.8004875 37.5333406))
-        (vital "IL Патио" '("amenity-restaurant")
+  (list (vital "IL Патио" '("amenity-restaurant")
                (position-lat-lon 55.7994352 37.5327398))
-        (vital "Амиго Мигель" '("amenity-restaurant")
-               (position-lat-lon 55.7994925 37.5326057))
         (vital "Марукамэ" '("amenity-restaurant")
                (position-lat-lon 55.799595 37.5323589))
         (vital "Пироговая Штолле" '("internet_access-wlan" "amenity-cafe")
@@ -406,7 +397,7 @@
 ;;; Different Hermitage-related queries.
 (scoped-samples ("en" *moscow-position* *moscow-viewport*)
                 (def "Эрмитаж"
-                    (list (vital "Сад Эрмитаж" '("leisure-park")
+                    (list (vital "Сад \"Эрмитаж\"" '("leisure-park")
                                  (position-lat-lon 55.7707567 37.6091465))
                           (vital "Павильон \"Эрмитаж\"" '("building" "tourism-attraction")
                                  (position-lat-lon 55.7373619 37.8078016))))
@@ -427,7 +418,7 @@
                             (relevant "Большой Эрмитаж" '("building")
                                       (position-lat-lon 59.9418994 30.315939)
                                       :house-number "34")
-                            (relevant "Павильон \"Эрмитаж\"" '("building")
+                            (relevant "Павильон «Эрмитаж»" '("building")
                                       (position-lat-lon 59.7135334 30.4033383))
                             (relevant "Эрмитаж" '("building" "tourism-hotel")
                                       (position-lat-lon 59.9233988 30.343724)
@@ -473,7 +464,15 @@
 (defsample "мороженое" "ru"
   *zelenograd-position*
   *zelenograd-viewport*
-  (list (relevant "Мороженое" '("shop")
+  (list (relevant "" '("amenity-ice_cream")
+                  (position-lat-lon 55.9953 37.18908))
+        (relevant "" '("shop-kiosk" "amenity-ice_cream" )
+                  (position-lat-lon 56.00048 37.20498))
+        (relevant "Dolce Bacio" '("amenity-ice_cream")
+                  (position-lat-lon 56.00862 37.20002))
+        (relevant "Баскин Роббинс" '("amenity-ice_cream")
+                  (position-lat-lon 55.98264 37.17549))
+        (relevant "Мороженое" '("shop")
                   (position-lat-lon 55.9845636 37.1522738))
         (relevant "Мороженое" '("amenity" "shop-kiosk")
                   (position-lat-lon 55.9736582 37.1624689))))
@@ -483,7 +482,7 @@
   *moscow-viewport*
   (list (vital "Юность" '("amenity-restaurant")
                (position-lat-lon 55.7697202 37.6254771)
-               :house-number "2")))
+               :house-number "20/2")))
 
 (defsample "кафе " "ru"
   (position-lat-lon 55.6613499 37.6333682)
@@ -492,13 +491,13 @@
                (position-lat-lon 55.6613499 37.6333682))
         (relevant "Il Патио" '("amenity-restaurant")
                   (position-lat-lon 55.6641957 37.6273976))
-        (relevant "Cтарбакс" '("amenity-cafe")
+        (relevant "Старбакс" '("amenity-cafe")
                   (position-lat-lon 55.6645603 37.6281835))))
 
 (defsample "гостиница " "ru"
   (position-lat-lon 55.6613499 37.6333682)
   (viewport :maxx 37.6361 :maxy 67.2982 :minx 37.6306 :miny 67.2926)
-  (list (vital "Hotel Duet" '("tourism-hotel")
+  (list (vital "Дуэт" '("tourism-hotel")
                (position-lat-lon 55.6616465 37.6469482))))
 
 (defsample "магнит " "ru"
@@ -591,19 +590,6 @@
                  '("building" "shop-mall" "sponsored-banner-lamoda_ru")
                  (position-lat-lon 55.7591572 37.6247583)
                  :house-number "25")
-
-          ; A group of relevant results from Moscow satellite cities
-          ; (Рыбное, Рыбинск and Железногорск, in order).
-          (relevant "" '("building")
-                    (position-lat-lon 54.7011511 39.5314428)
-                    :house-number "25")
-          (relevant "" '("building")
-                    (position-lat-lon 58.0546492 38.8921517)
-                    :house-number "25")
-          (relevant "" '("building")
-                    (position-lat-lon 52.3326383 35.3358952)
-                    :house-number "25")
-
           (irrelevant "Hostel on Leningradskoe Shosse 25/1"
                       '("sponsored-booking" "tourism-hostel")
                       (position-lat-lon 55.8269943 37.4888106)
@@ -640,22 +626,20 @@
   *minsk-position*
   *minsk-viewport*
   (mapcar (lambda (position)
-            (vital "praspiekt Niezaliežnasci"
+            (vital "проспект независимости"
                    '("psurface-paved_good" "hwtag-nobicycle" "hwtag-nofoot" "hwtag-oneway"
                      "highway-primary")
                    position))
-          (list (position-lat-lon 53.9010958 27.5599433)
-                (position-lat-lon 53.9267342 27.6230016))))
+          (list (position-lat-lon 53.90243 27.56293)
+                (position-lat-lon 53.90815 27.57483)
+                (position-lat-lon 53.92866 27.63056))))
 
 (defsample "улица милашенкова" "ru"
   *moscow-position*
   *moscow-viewport*
   (list (vital "улица Милашенкова"
                '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-secondary")
-               (position-lat-lon 55.8219341 37.5891989))
-        (vital "улица Милашенкова"
-               '("hwtag-oneway" "highway-residential")
-               (position-lat-lon 55.8284474 37.5790077))))
+               (position-lat-lon 55.8219341 37.5891989))))
 
 (defsample "фото" "ru"
   *moscow-airport-station-position*
@@ -684,8 +668,9 @@
 (defsample "звонарский переулок 1 " "ru"
   *moscow-position*
   *moscow-viewport*
-  (list (vital "Звонарский переулок, 1" '("building")
-               (position-lat-lon 55.7647899 37.6209898))
+  (list (vital "" '("building")
+               (position-lat-lon 55.7647899 37.6209898)
+               :house-number "1")
         (relevant "Звонарский переулок" '("hwtag-lit" "psurface-paved_good" "hwtag-oneway" "highway-unclassified")
                (position-lat-lon 55.7645951 37.6217676))))
 
