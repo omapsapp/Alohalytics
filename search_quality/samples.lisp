@@ -403,13 +403,7 @@
                                  (position-lat-lon 55.7373619 37.8078016))))
                 (dolist (query '("Эрмитаж Пете" "Эрмитаж Петербург"))
                   (def query
-                      (list (vital "Государственный Эрмитаж (Главный штаб Восточное крыло)"
-                                   '("building" "tourism-museum")
-                                   (position-lat-lon 59.938567 30.3183096)
-                                   :house-number "6-8")
-                            (vital "Государственный Эрмитаж" '("tourism-museum")
-                                   (position-lat-lon 59.9409881 30.3129948))
-                            (relevant "Новый Эрмитаж" '("building")
+                      (list (relevant "Новый Эрмитаж" '("building")
                                       (position-lat-lon 59.9413851 30.3172474)
                                       :house-number "35")
                             (relevant "Малый Эрмитаж" '("building")
