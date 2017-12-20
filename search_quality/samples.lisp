@@ -317,7 +317,7 @@
                                  (position-lat-lon 34.9823169 33.1451336))))
                 (def "Korea, North"
                     (list (vital "North Korea" '("place-country")
-                                 (position-lat-lon 40.3124091 127.3999867))))
+                                 (position-lat-lon 40.37367 127.08705))))
                 (def "Винзавод "
                     (list (vital "Винзавод" '("amenity" "landuse-commercial")
                                  (position-lat-lon 55.7559047 37.6656405))))
@@ -685,3 +685,25 @@
   *moscow-viewport*
   (list (vital "Гугл" '("office-company")
                (position-lat-lon 55.746745 37.6264991))))
+
+(defsample "М.Видео" "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (relevant "М.видео" '("shop-electronics")
+                  (position-lat-lon 55.76591 37.62143))
+        (relevant "М.Видео" '("internet_access-wlan" "shop-electronics")
+                  (position-lat-lon 55.77133 37.64175))
+        (relevant "М.Видео" '("wheelchair-yes" "shop-electronics")
+                  (position-lat-lon 55.76173 37.56851))
+        (relevant "М.Видео" '("shop-electronics")
+                  (position-lat-lon 55.70743 37.59147))
+        (irrelevant "Школа № 1948 \"Лингвист-М\". Центр дополнительного образования"
+                    '("barrier-fence")
+                    (position-lat-lon 55.665 37.58436))
+        (irrelevant "Школа № 1948 \"Лингвист-М\". Учебный корпус 6 и 7"
+                    '("barrier-fence")
+                    (position-lat-lon 55.66333 37.5822))
+        (irrelevant "ЗАО \"Вестмет-М\"" '("landuse-commercial")
+                    (position-lat-lon 55.45891 37.57549))
+        (irrelevant "ЗАО \"Вестмет-М\"" '("barrier-fence")
+                    (position-lat-lon 55.45818 37.57584))))
