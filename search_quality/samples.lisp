@@ -707,3 +707,9 @@
                     (position-lat-lon 55.45891 37.57549))
         (irrelevant "ЗАО \"Вестмет-М\"" '("barrier-fence")
                     (position-lat-lon 55.45818 37.57584))))
+
+(defsample "ленинградский проспект 52 medci " "ru"
+  *moscow-position*
+  *moscow-viewport*
+  (list (vital "Medci" '("amenity-clinic" "wheelchair-no")
+                  (position-lat-lon 55.7972717 37.54084273))))
