@@ -29,23 +29,134 @@ from pyaloha.event import DictEvent
 
 class ObjectSelection(DictEvent):
     keys = (
-        # '$GetUserMark',
+        '$GetUserMark',
         '$SelectMapObject',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(ObjectSelection, self).__init__(*args, **kwargs)
+    __slots__ = tuple()
 
-        self.by_longtap = self.data['longTap'] != 0
+    @property
+    def by_longtap(self):
+        return self.data['longTap'] != 0
+
+    @property
+    def bookmark(self):
         try:
-            self.object_types = self.data.get('types', None).split(' ')
+            return int(self.data['bookmark'])
+        except KeyError:
+            return -1
+
+    @property
+    def object_types(self):
+        try:
+            return self.data.get('types', None).split(' ')
         except AttributeError:
-            self.object_types = []
+            return []
 
     def __dumpdict__(self):
-        d = super(DictEvent, self).__dumpdict__()
+        d = super(DictEvent, self).__basic_dumpdict__()
         d.update({
             'by_longtap': self.by_longtap,
             'object_types': self.object_types
         })
+        return d
+
+
+# ALOHA: Placepage_Hotel_book [
+# Provider='Booking.com'
+# provider= 'Booking.com' //for android
+# hotel=1474657 //booking hotel_id
+#
+# hotel_location='35.7128819,139.7953817'
+# hotel_lon='35.7128819'
+# hotel_lat='139.7953817'
+#
+# user location:
+# lon='35.7128819'
+# lat='139.7953817'
+# ]
+
+
+class HotelClick(DictEvent):
+    keys = (
+        'Placepage_Hotel_book',
+    )
+
+    __slots__ = tuple()
+
+    @property
+    def provider(self):
+        try:
+            return self.data['provider'].lower()
+        except KeyError:
+            return self.data['Provider'].lower()
+
+# ALOHA: searchShowResult [
+# pos=0
+# result=Ituzaing|Pueblo|0
+# ]
+# result[0] = Name of POI
+# result[1] = Type of POI on local language
+# result[2] = 1: Open pp from suggest; 0: Open pp from search without suggest
+# result[3] = Osm tag. Will be add in task jira.mail.ru/browse/MAPSME-6699
+
+
+class ObjectSelectionFromList(DictEvent):
+    keys = (
+        'searchShowResult',
+    )
+
+    __slots__ = tuple()
+
+    @property
+    def position(self):
+        return self.data['pos']
+
+    @property
+    def object_type(self):
+        try:
+            return self.data.get('result', None).split('|')[1]
+        except IndexError:
+            return 'Unknown'
+
+    @property
+    def name(self):
+        try:
+            return self.data.get('result', None).split('|')[0]
+        except IndexError:
+            return None
+
+    @property
+    def fromsuggest(self):
+        try:
+            if self.data.get('result', None).split('|')[2] == '0':
+                return False
+            else:
+                return True
+        except IndexError:
+            return False
+
+    def __dumpdict__(self):
+        return super(DictEvent, self).__basic_dumpdict__()
+
+# ALOHA:
+# iOS:
+# Place page Share [
+# Country=AZ
+# Language=ru-AZ
+# Orientation=Portrait
+# ]
+# Ansroid:
+# PP. Share
+
+
+class PlacepageShare(DictEvent):
+    keys = (
+        'PP. Share',
+        'Place page Share',
+    )
+
+    def __dumpdict__(self):
+        d = super(DictEvent, self).__basic_dumpdict__()
+
         return d
