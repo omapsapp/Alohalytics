@@ -2,20 +2,31 @@ from pyaloha.event import Event, DictEvent
 
 
 class RouteDictEvent(DictEvent):
+    
+    mode_alliases = {
+        'astar-bidirectional-pedestrian': 'pedestrian',
+        'astar-bidirectional-bicycle': 'bicycle',
+        'astar-bidirectional-car': 'vehicle',
+        'pedestrian': 'pedestrian',
+        'bicycle': 'bicycle',
+        'vehicle': 'vehicle',
+        'mixed-car': 'vehicle',
+        'astar-bidirectional-transit': 'transit',
+        'subway': 'transit'
+    }
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
-
         self.setup_mode()
 
     def setup_mode(self):
-        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle
-        self.mode = self.data.get(
+
+        mode = self.data.get(
             'router', self.data.get('name', None)
-        )
-        if self.mode == 'astar-bidirectional-pedestrian':
-            self.mode = 'pedestrian'
-        if self.mode == 'astar-bidirectional-bicycle':
-            self.mode = 'bicycle'
+        ).lower()
+        if mode in self.mode_alliases:
+            self.mode = self.mode_alliases[mode]
+        else: 
+            self.mode = mode
 
     def process_me(self, processor):
         processor.process_routing(self)
@@ -68,10 +79,18 @@ class RouteRequest(RouteDictEvent):
 
 # Event for a start of the route with specific props
 # with no specific fields
+# Android: Routing. Start []
+# iOS: Point to point Go [
+# Country = 'AR'
+# Language = 'ru-UA'
+# Orientation = 'Portrait'
+# Value: {'From my position', 'Point to point', 'To my position'}
+# ]
 
 class RouteStart(Event):
     keys = (
-        'Routing. Start',
+        'Routing. Start', 
+        'Point to point Go',
     )
 
     def process_me(self, processor):
@@ -122,3 +141,147 @@ class RouteTracking(RouteDictEvent):
         super(RouteTracking, self).__init__(*args, **kwargs)
 
         self.percent = float(self.data.get('percent', 100))
+
+# ALOHA: Routing_Build_Taxi [ provider=Uber ]
+# provider = {'Uber', 'Yandex'}
+
+class TaxiRouteRequest(DictEvent):
+    keys = (
+        'Routing_Build_Taxi',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(TaxiRouteRequest, self).__init__(*args, **kwargs)
+        self.mode = 'taxi'
+        try:
+            self.provider = self.data['provider']
+        except KeyError:
+            self.provider = 'Unknown'
+
+    def process_me(self, processor):
+        processor.process_routing(self)
+
+# ALOHA: 
+# $TrafficChangeState [ state=WaitingData ]
+
+class Traffic(DictEvent):
+    keys = (
+        '$TrafficChangeState',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(Traffic, self).__init__(*args, **kwargs)
+        try:
+            self.state = self.data['state']
+        except KeyError:
+            self.action = 'Unknown'
+
+
+    def process_me(self, processor):
+        processor.process_traffic(self)
+
+# ALOHA: 
+# ios: Routing_Bookmarks_click [ 
+# Country=IQ 
+# Language=ar-IQ 
+# Orientation=Portrait 
+# mode=planning 
+# ]
+# android: Routing_Bookmarks_click [ 
+# mode=onroute 
+# ]
+
+class RoutingBookmarksClick(DictEvent):
+    keys = (
+        'Routing_Bookmarks_click',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingBookmarksClick, self).__init__(*args, **kwargs)
+        try:
+            self.mode = self.data['mode']
+        except KeyError:
+            self.action = 'Unknown'
+
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+# ALOHA: 
+# ios: Routing_Point_add [ 
+# Country=PK 
+# Language=en-PK 
+# Orientation=Portrait 
+# method: {'planning_pp', 'outside_pp'}
+# mode: {'planning', 'onroute', None} 
+# type: {'start', 'finish', 'inner'} 
+# value: {'gps', 'point'}
+# ]
+# 
+# android: Routing_Point_add [ 
+# method: {'planning_pp', 'outside_pp'}
+# mode: {'planning', 'onroute', None} 
+# type: {'start', 'finish', 'inner'} 
+# value: {'gps', 'point'}
+# ]
+
+class RoutingPointAdd(DictEvent):
+    keys = (
+        'Routing_Point_add',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingPointAdd, self).__init__(*args, **kwargs)
+        try:
+            self.mode = self.data['mode']
+        except KeyError:
+            self.action = 'onroute'
+        try:
+            self.method = self.data['method']
+        except KeyError:
+            self.action = 'outside_pp'
+        try:
+            self.type = self.data['type']
+        except KeyError:
+            self.action = 'unknown'
+        try:
+            self.value = self.data['value']
+        except KeyError:
+            self.action = 'unknown'
+
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+# ALOHA: 
+# ios: Routing_Search_click [
+# Country=PK 
+# Language=en-PK 
+# Orientation=Portrait 
+# mode: {'planning', 'onroute'} 
+# ]
+# 
+# android: Routing_Search_click [ 
+# mode: {'planning', 'onroute'} 
+# ]
+
+class RoutingSearch(DictEvent):
+    keys = (
+        'Routing_Search_click',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingSearch, self).__init__(*args, **kwargs)
+        try:
+            self.mode = self.data['mode']
+        except KeyError:
+            self.action = 'onroute'
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+
+        
+

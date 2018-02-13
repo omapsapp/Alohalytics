@@ -1,4 +1,4 @@
-# Groups are sorted by popularity.
+# by popularity
 GROUPS = (
     ('roads', frozenset((
         'highway-pedestrian',
@@ -15,6 +15,16 @@ GROUPS = (
     ('hotels', frozenset((
         'sponsored-booking',
     ))),
+    ('hotels_all', frozenset((
+        'tourism-apartment',
+        'tourism-camp_site',
+        'tourism-chalet',
+        'tourism-guest_house',
+        'tourism-hostel',
+        'tourism-hotel',
+        'tourism-motel',
+        'tourism-resort',
+    ))),
     ('food', frozenset((
         'amenity-bar',
         'amenity-fast_food',
@@ -29,16 +39,6 @@ GROUPS = (
         'highway-bus_stop'
     ))),
     ('global_transport', frozenset((
-        'aeroway-aerodrome',
-        'amenity-ferry_terminal',
-        'railway-halt',
-        'railway-station',
-        'amenity-bus_station'
-    ))),
-    ('all_transport', frozenset((
-        'railway-station-subway',
-        'railway-tram_stop',
-        'highway-bus_stop',
         'aeroway-aerodrome',
         'amenity-ferry_terminal',
         'railway-halt',
@@ -92,7 +92,8 @@ GROUPS = (
 )
 
 
-def get_groups_by_tag(tag):
+def get_group_by_tag(tag):
     for group, tag_set in GROUPS:
         if tag in tag_set:
-            yield group
+            return group
+    return None

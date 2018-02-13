@@ -6,21 +6,31 @@ from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 
 from pyaloha.event_factory import EventFactory
 
-from pysnip.events.misc import GPSTracking, SearchResults
-from pysnip.events.onstart import AndroidVisibleLaunch, TechnicalLaunch
-from pysnip.events.placepage import ObjectSelection
+from pysnip.events.misc import (
+    GPSTracking, SearchResults, Menu, SponsoredClicks, 
+    RecentTrack, MobileInternet
+)
+from pysnip.events.onstart import AndroidVisibleLaunch, TechnicalLaunch, DeviceInfo
+from pysnip.events.placepage import ObjectSelection, HotelClick, ObjectSelectionFromList, PlacepageShare
 from pysnip.events.routing import (
-    RouteEnd, RouteRequest, RouteStart, RouteTracking
+    RouteEnd, RouteRequest, RouteStart, RouteTracking, TaxiRouteRequest, 
+    Traffic, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch
 )
 from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+from pysnip.events.bookmark import BookmarkCreated
+from pysnip.events.ugc import EditorAdd, EditorAddClick, EditorEdit, UGCReviewStart, UGCReviewSuccess, UGCAuthError, UGCAuthSuccess
 
 
 CUSTOM_EVENTS = (
-    ObjectSelection,
-    TechnicalLaunch, AndroidVisibleLaunch,
+    ObjectSelection, HotelClick, ObjectSelectionFromList, PlacepageShare,
+    TechnicalLaunch, AndroidVisibleLaunch, DeviceInfo,
     SearchResults, GPSTracking,
-    RouteRequest, RouteStart, RouteEnd, RouteTracking,
-    MapActionRequest, MapDownloadFinished
+    RouteRequest, RouteStart, RouteEnd, RouteTracking, TaxiRouteRequest, 
+    Traffic, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
+    MapActionRequest, MapDownloadFinished, 
+    Menu, SponsoredClicks, RecentTrack,
+    EditorAdd, EditorAddClick, EditorEdit, UGCReviewStart, UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
+    BookmarkCreated, MobileInternet
 )
 
 
