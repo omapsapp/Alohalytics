@@ -1,16 +1,17 @@
-from pyaloha.event import Event, DictEvent
+from pyaloha.event import DictEvent
 
-# ALOHA: 
+# ALOHA:
 # ios
-# Bookmark. Bookmark created [ 
-# Country=NZ 
-# Language=fr-FR 
-# Orientation=Portrait 
+# Bookmark. Bookmark created [
+# Country=NZ
+# Language=fr-FR
+# Orientation=Portrait
 # ]
 # android
-# Bookmark. Bookmark created [ 
-# Count=1 
+# Bookmark. Bookmark created [
+# Count=1
 # ]
+
 
 class BookmarkCreated(DictEvent):
     keys = (

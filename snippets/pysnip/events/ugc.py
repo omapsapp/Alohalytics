@@ -1,65 +1,74 @@
 # -*- coding: utf-8 -*-
 
-from pyaloha.event import Event, DictEvent
+from pyaloha.event import DictEvent
 
 
-# ALOHA: 
-# Editor_Add_start [ 
-# is_authenticated=false 
-# is_online=true 
-# mwm_name=INVALID 
-# mwm_version=-1.0 
+# ALOHA:
+# Editor_Add_start [
+# is_authenticated=false
+# is_online=true
+# mwm_name=INVALID
+# mwm_version=-1.0
 # ]
-# Editor_Add_success [ 
-# is_authenticated=false 
-# is_online=false 
-# mwm_name=Iran_North 
-# mwm_version=170119.0 
+# Editor_Add_success [
+# is_authenticated=false
+# is_online=false
+# mwm_name=Iran_North
+# mwm_version=170119.0
 # ]
-# 
+# Editor_Edit_start [
+# is_authenticated=false
+# is_online=false
+# mwm_name=Nepal_Kathmandu
+# mwm_version=171020.0
+# ]
+# Editor_Edit_success [
+# is_authenticated=false
+# is_online=false
+# mwm_name=Nepal_Kathmandu
+# mwm_version=171020.0
+# ]
 
-class EditorAdd(DictEvent):
+
+class Editor(DictEvent):
     keys = (
-        'Editor_Add_start', 'Editor_Add_success'
+        'Editor_Add_start', 'Editor_Add_success',
+        'Editor_Edit_start', 'Editor_Edit_success'
     )
 
     def __init__(self, *args, **kwargs):
-        super(EditorAdd, self).__init__(*args, **kwargs)
+        super(Editor, self).__init__(*args, **kwargs)
 
-        try:
-            self.auth = bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
+        self.auth = self.to_bool(self.data.get('is_authenticated'))
+        self.online = self.to_bool(self.data.get('is_online'))
 
-        try:
-            self.online = bool(self.data['is_online'])
-        except KeyError:
-            self.online = None
-
-        try:
-            self.mwm_name = self.data['mwm_name']
-        except KeyError:
-            self.mwm_name = None
-
-        try:
-            self.mwm_version = self.data['mwm_version']
-        except KeyError:
-            self.mwm_version = None
+        self.mwm_name = self.data.get('mwm_name')
+        self.mwm_version = self.data.get('mwm_version')
 
         if self.key == 'Editor_Add_start':
             self.action = 'start'
+            self.mode = 'add'
         elif self.key == 'Editor_Add_success':
             self.action = 'finish'
+            self.mode = 'add'
+        elif self.key == 'Editor_Edit_start':
+            self.action = 'start'
+            self.mode = 'edit'
+        elif self.key == 'Editor_Edit_success':
+            self.action = 'finish'
+            self.mode = 'edit'
 
-        self.mode = 'add'
+    def to_bool(self, s):
+        return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
 
     def process_me(self, processor):
         processor.process_unspecified(self)
 
-# ALOHA: 
-# Editor_Add_click [ 
-# from=main_menu 
+# ALOHA:
+# Editor_Add_click [
+# from=main_menu
 # ]
+
 
 class EditorAddClick(DictEvent):
     keys = (
@@ -69,75 +78,19 @@ class EditorAddClick(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorAddClick, self).__init__(*args, **kwargs)
 
-        try:
-            self.source = self.data['from']
-        except KeyError:
-            self.source = None
+        self.source = self.data.get('from')
 
     def process_me(self, processor):
         processor.process_unspecified(self)
 
-# ALOHA: 
-# Editor_Edit_start [ 
-# is_authenticated=false 
-# is_online=false 
-# mwm_name=Nepal_Kathmandu 
-# mwm_version=171020.0 
-# ]
-# Editor_Edit_success [ 
-# is_authenticated=false 
-# is_online=false 
-# mwm_name=Nepal_Kathmandu 
-# mwm_version=171020.0 
+# ALOHA:
+# UGC_Review_start [
+# from=placepage
+# is_authenticated=false
+# is_online=true
+# mode=add
 # ]
 
-class EditorEdit(DictEvent):
-    keys = (
-        'Editor_Edit_start', 'Editor_Edit_success'
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(EditorEdit, self).__init__(*args, **kwargs)
-
-        try:
-            self.auth = bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
-
-        try:
-            self.online = bool(self.data['is_online'])
-        except KeyError:
-            self.online = None
-
-        try:
-            self.mwm_name = self.data['mwm_name']
-        except KeyError:
-            self.mwm_name = None
-
-        try:
-            self.mwm_version = self.data['mwm_version']
-        except KeyError:
-            self.mwm_version = None
-
-        if self.key == 'Editor_Edit_start':
-            self.action = 'start'
-        elif self.key == 'Editor_Edit_success':
-            self.action = 'finish'
-
-        self.mode = 'edit'
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
-
-# ALOHA: 
-# UGC_Review_start [ 
-# from=placepage 
-# is_authenticated=false 
-# is_online=true 
-# mode=add 
-# ]
 
 class UGCReviewStart(DictEvent):
     keys = (
@@ -147,35 +100,21 @@ class UGCReviewStart(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCReviewStart, self).__init__(*args, **kwargs)
 
-        try:        
-            self.auth = self.to_bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
-        
-        try:
-            self.online = self.to_bool(self.data['is_online'])
-        except KeyError:    
-            self.online = None
+        self.auth = self.to_bool(self.data.get('is_authenticated'))
+        self.online = self.to_bool(self.data.get('is_online'))
+        self.source = self.data.get('from')
+        self.mode = self.data.get('mode')
 
-        try:
-            self.source = self.data['from']
-        except KeyError:
-            self.source = None
-
-        try:
-            self.mode = self.data['mode']
-        except KeyError:
-            self.mode = None
-
-    def to_bool(seld, s):
-        return {'1': True,'true': True,'0': False,'false': False}.get(s)
+    def to_bool(self, s):
+        return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
 
     def process_me(self, processor):
         processor.process_unspecified(self)
 
-# ALOHA: 
-# UGC_Review_success [ 
+# ALOHA:
+# UGC_Review_success [
 # ]
+
 
 class UGCReviewSuccess(DictEvent):
     keys = (
@@ -188,22 +127,23 @@ class UGCReviewSuccess(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
-# ALOHA: 
-# UGC_Auth_error [ 
-# error=CONNECTION_FAILURE: CONNECTION_FAILURE 
-# provider=facebook 
+# ALOHA:
+# UGC_Auth_error [
+# error=CONNECTION_FAILURE: CONNECTION_FAILURE
+# provider=facebook
 # ]
-# UGC_Auth_error [ 
-# Country=NL 
-# Error=The user canceled the sign-in flow. 
-# Language=nl-NL 
-# Orientation=Portrait 
-# Provider=Google 
+# UGC_Auth_error [
+# Country=NL
+# Error=The user canceled the sign-in flow.
+# Language=nl-NL
+# Orientation=Portrait
+# Provider=Google
 # ]
+
 
 class UGCAuthError(DictEvent):
     keys = (
-        'UGC_Auth_error', 
+        'UGC_Auth_error',
     )
 
     def __init__(self, *args, **kwargs):
@@ -211,20 +151,21 @@ class UGCAuthError(DictEvent):
 
     def process_me(self, processor):
         processor.process_unspecified(self)
-# ALOHA: 
-# UGC_Auth_external_request_success [ 
-# Country=CZ 
-# Language=cs-CZ 
-# Orientation=Landscape 
-# Provider=Google 
+# ALOHA:
+# UGC_Auth_external_request_success [
+# Country=CZ
+# Language=cs-CZ
+# Orientation=Landscape
+# Provider=Google
 # ]
-# UGC_Auth_external_request_success [ 
-# provider=facebook 
+# UGC_Auth_external_request_success [
+# provider=facebook
 # ]
+
 
 class UGCAuthSuccess(DictEvent):
     keys = (
-        'UGC_Auth_external_request_success', 
+        'UGC_Auth_external_request_success',
     )
 
     def __init__(self, *args, **kwargs):

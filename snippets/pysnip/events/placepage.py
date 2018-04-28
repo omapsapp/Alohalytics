@@ -41,7 +41,7 @@ class ObjectSelection(DictEvent):
 
     @property
     def bookmark(self):
-        try: 
+        try:
             return int(self.data['bookmark'])
         except KeyError:
             return -1
@@ -63,10 +63,10 @@ class ObjectSelection(DictEvent):
 
 
 # ALOHA: Placepage_Hotel_book [
-# Provider='Booking.com' 
+# Provider='Booking.com'
 # provider= 'Booking.com' //for android
 # hotel=1474657 //booking hotel_id
-# 
+#
 # hotel_location='35.7128819,139.7953817'
 # hotel_lon='35.7128819'
 # hotel_lat='139.7953817'
@@ -74,7 +74,7 @@ class ObjectSelection(DictEvent):
 # user location:
 # lon='35.7128819'
 # lat='139.7953817'
-# ]  
+# ]
 
 
 class HotelClick(DictEvent):
@@ -91,14 +91,14 @@ class HotelClick(DictEvent):
         except KeyError:
             return self.data['Provider'].lower()
 
-# ALOHA: searchShowResult [ 
-# pos=0 
-# result=Ituzaing|Pueblo|0 
+# ALOHA: searchShowResult [
+# pos=0
+# result=Ituzaing|Pueblo|0
 # ]
 # result[0] = Name of POI
-# result[1] = Type of POI on local language 
+# result[1] = Type of POI on local language
 # result[2] = 1: Open pp from suggest; 0: Open pp from search without suggest
-# result[3] = Osm tag. Will be add in task https://jira.mail.ru/browse/MAPSME-6699
+# result[3] = Osm tag. Will be add in task jira.mail.ru/browse/MAPSME-6699
 
 
 class ObjectSelectionFromList(DictEvent):
@@ -118,6 +118,7 @@ class ObjectSelectionFromList(DictEvent):
             return self.data.get('result', None).split('|')[1]
         except IndexError:
             return 'Unknown'
+
     @property
     def name(self):
         try:
@@ -126,9 +127,9 @@ class ObjectSelectionFromList(DictEvent):
             return None
 
     @property
-    def fromSuggest(self):
+    def fromsuggest(self):
         try:
-            if self.data.get('result', None).split('|')[2] == 0:
+            if self.data.get('result', None).split('|')[2] == '0':
                 return False
             else:
                 return True
@@ -136,19 +137,18 @@ class ObjectSelectionFromList(DictEvent):
             return False
 
     def __dumpdict__(self):
-        d = super(DictEvent, self).__basic_dumpdict__()
-        
-        return d
+        return super(DictEvent, self).__basic_dumpdict__()
 
-# ALOHA: 
+# ALOHA:
 # iOS:
-# Place page Share [ 
-# Country=AZ 
-# Language=ru-AZ 
-# Orientation=Portrait 
+# Place page Share [
+# Country=AZ
+# Language=ru-AZ
+# Orientation=Portrait
 # ]
-# Ansroid: 
+# Ansroid:
 # PP. Share
+
 
 class PlacepageShare(DictEvent):
     keys = (
@@ -158,5 +158,5 @@ class PlacepageShare(DictEvent):
 
     def __dumpdict__(self):
         d = super(DictEvent, self).__basic_dumpdict__()
-        
+
         return d
