@@ -2,7 +2,6 @@ from pyaloha.event import DictEvent, Event
 
 
 class RouteDictEvent(DictEvent):
-
     mode_alliases = {
         'astar-bidirectional-pedestrian': 'pedestrian',
         'astar-bidirectional-bicycle': 'bicycle',
