@@ -162,7 +162,13 @@ class DeviceInfo(DictEvent):
             elif self.key == '$iosDeviceInfo':
                 return self.data['preferredLocalizations'][:2]
         except KeyError:
+<<<<<<< HEAD
             return None
+=======
+            pass
+
+        return None
+>>>>>>> b1d0725f740d928555251fa6f9a765ac69fb849d
 
     @property
     def os_version(self):
