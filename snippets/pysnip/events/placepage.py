@@ -157,6 +157,4 @@ class PlacepageShare(DictEvent):
     )
 
     def __dumpdict__(self):
-        d = super(DictEvent, self).__basic_dumpdict__()
-
-        return d
+        return super(DictEvent, self).__basic_dumpdict__()
