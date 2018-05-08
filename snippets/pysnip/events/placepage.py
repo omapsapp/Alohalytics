@@ -104,9 +104,14 @@ class HotelClick(DictEvent):
     def hotel_location(self):
         hotel_location = self.data.get('hotel_location')
         if hotel_location:
-            return tuple(hotel_location)
+            return tuple(map(
+                float, (hotel_location.split(','))
+            ))
         else:
-            return (self.data.get('hotel_lat'), self.data.get('hotel_lon'))
+            return (
+                float(self.data.get('hotel_lat')),
+                float(self.data.get('hotel_lon'))
+            )
 
     @property
     def hotel_id(self):
