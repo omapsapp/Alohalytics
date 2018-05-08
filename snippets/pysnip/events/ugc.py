@@ -2,7 +2,9 @@
 
 from pyaloha.event import DictEvent
 
-
+# Events *_start send, when user open editor for add/edit point.
+# Events *_success send, when user successfully finish edit point.
+#
 # ALOHA:
 # Editor_Add_start [
 # is_authenticated=false
@@ -64,6 +66,9 @@ class Editor(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+# Event send, when user click «Add place (business)» and start choose
+# position of company.
+# When user tap «Done» — send event 'Editor_Add_start'
 # ALOHA:
 # Editor_Add_click [
 # from=main_menu
@@ -83,6 +88,7 @@ class EditorAddClick(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+# Event send, when user start write a review
 # ALOHA:
 # UGC_Review_start [
 # from=placepage
@@ -90,6 +96,8 @@ class EditorAddClick(DictEvent):
 # is_online=true
 # mode=add
 # ]
+# from = {'placepage', 'placepage_preview'}
+# mode = {'add'}
 
 
 class UGCReviewStart(DictEvent):
@@ -111,6 +119,7 @@ class UGCReviewStart(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+# Event send, when user successfully finish write a review
 # ALOHA:
 # UGC_Review_success [
 # ]
@@ -127,6 +136,8 @@ class UGCReviewSuccess(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+# Event send, when something went wrong with authentication.
+#
 # ALOHA:
 # UGC_Auth_error [
 # error=CONNECTION_FAILURE: CONNECTION_FAILURE
@@ -151,6 +162,9 @@ class UGCAuthError(DictEvent):
 
     def process_me(self, processor):
         processor.process_unspecified(self)
+
+# Event send, when authentication after write review was successful
+#
 # ALOHA:
 # UGC_Auth_external_request_success [
 # Country=CZ
@@ -173,5 +187,3 @@ class UGCAuthSuccess(DictEvent):
 
     def process_me(self, processor):
         processor.process_unspecified(self)
-
-# 'UGC_Auth_shown', 'UGC_Auth_declined'

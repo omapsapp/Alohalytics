@@ -141,6 +141,7 @@ class RouteTracking(RouteDictEvent):
         self.percent = float(self.data.get('percent', 100))
 
 # ALOHA: Routing_Build_Taxi [ provider=Uber ]
+# Event send, when user calculate route on taxi with specific property
 # provider = {'Uber', 'Yandex'}
 
 
@@ -157,8 +158,8 @@ class TaxiRouteRequest(DictEvent):
     def process_me(self, processor):
         processor.process_routing(self)
 
-# ALOHA:
-# $TrafficChangeState [ state=WaitingData ]
+# ALOHA: $TrafficChangeState [ state=WaitingData ]
+# Event send, when user turned on/off traffic jams
 
 
 class Traffic(DictEvent):
@@ -173,6 +174,8 @@ class Traffic(DictEvent):
     def process_me(self, processor):
         processor.process_traffic(self)
 
+# Event send, when user click on bookmark button after build route
+# or after start planning route
 # ALOHA:
 # ios: Routing_Bookmarks_click [
 # Country=IQ
@@ -192,14 +195,13 @@ class RoutingBookmarksClick(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(RoutingBookmarksClick, self).__init__(*args, **kwargs)
-        try:
-            self.mode = self.data['mode']
-        except KeyError:
-            self.action = 'Unknown'
+        self.mode = self.data.get('mode')
 
     def process_me(self, processor):
         processor.process_unspecified(self)
 
+# Event send, when user added point to route. It can be from placepage
+# or on planning page
 # ALOHA:
 # ios: Routing_Point_add [
 # Country=PK
@@ -234,7 +236,8 @@ class RoutingPointAdd(DictEvent):
     def process_me(self, processor):
         processor.process_unspecified(self)
 
-
+# Event send, when user click on search button after build route
+# or after start planning route
 # ALOHA:
 # ios: Routing_Search_click [
 # Country=PK
@@ -246,6 +249,7 @@ class RoutingPointAdd(DictEvent):
 # android: Routing_Search_click [
 # mode: {'planning', 'onroute'}
 # ]
+
 
 class RoutingSearch(DictEvent):
     keys = (

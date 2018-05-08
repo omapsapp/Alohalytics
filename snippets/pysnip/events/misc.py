@@ -3,7 +3,11 @@
 from pyaloha.event import DictEvent, Event
 
 
-# ALOHA: searchEmitResults [
+# ALOHA:
+# Sending when user type a request. It can be one event
+# for every new letter in one word if user type not fast enough
+#
+# searchEmitResults [
 #   blida trib=8
 # ]
 #
@@ -169,12 +173,18 @@ class Menu(DictEvent):
 
 
 # ALOHA:
-# Country = 'RU'
-# Language = 'ru-RU'
-# Orientation = 'Portrait' or 'Landscape'
-# provider = Thor
-# object_lat
+# Send, when user click on sponsored icon in placepage
 #
+# Placepage_SponsoredActionButton_click
+# [
+# Country=RU
+# Language=ru-RU
+# Orientation=Portrait
+# Provider=Thor
+# category=3
+# object_lat=55.70155054541721
+# object_lon=37.52893103308179
+# ]
 
 class SponsoredClicks(DictEvent):
     keys = (
@@ -189,6 +199,8 @@ class SponsoredClicks(DictEvent):
 
 # ALOHA:
 # ios:
+# Record recent track. When enabled, the duration is sent.
+#
 # Change recent track [
 # Country=CN
 # Language=zh-Hans-CN
@@ -196,6 +208,9 @@ class SponsoredClicks(DictEvent):
 # Value={'1 hour(s)','2 hour(s)','6 hour(s)','12 hour(s)','24 hour(s)','Off'}
 # ]
 # android:
+# One event for two actions in settings: record recent track
+# and tracking statistics
+#
 # Statistics status changed  [
 # Enabled={'true', 'false'}
 # ]
@@ -267,6 +282,8 @@ changed blackberry'
 
 
 # ALOHA:
+# Сhoice of value for mobile internet in setting and in pop-up,
+# when placepage was opened
 # ios:
 # Mobile Internet [
 # Country=PL

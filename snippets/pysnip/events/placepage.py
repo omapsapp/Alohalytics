@@ -1,5 +1,8 @@
 from pyaloha.event import DictEvent
 
+# Event tracked, when user select object on the map.
+# It can be POI, search result or any another place.
+#
 # Until April 2016 or smth like that:
 #
 # ALOHA: $GetUserMark [
@@ -62,18 +65,24 @@ class ObjectSelection(DictEvent):
         return d
 
 
-# ALOHA: Placepage_Hotel_book [
-# Provider='Booking.com'
-# provider= 'Booking.com' //for android
-# hotel=1474657 //booking hotel_id
+# Click on the Booking.com button in hotel placepage.
 #
-# hotel_location='35.7128819,139.7953817'
-# hotel_lon='35.7128819'
-# hotel_lat='139.7953817'
-#
-# user location:
-# lon='35.7128819'
-# lat='139.7953817'
+# ALOHA:
+# ios:
+# Placepage_Hotel_book [
+# Country=RU
+# Language=ru-RU
+# Orientation=Portrait
+# Provider=Booking.com
+# hotel=2569121
+# hotel_location=59.93650856114328,30.36258884044429
+# ]
+# android:
+# Placepage_Hotel_book [
+# hotel=40649
+# hotel_lat=53.622651546550166
+# hotel_lon=-6.921042106457378
+# provider=Booking.Com
 # ]
 
 
@@ -91,12 +100,27 @@ class HotelClick(DictEvent):
         except KeyError:
             return self.data['Provider'].lower()
 
+    @property
+    def hotel_location(self):
+        hotel_location = self.data.get('hotel_location')
+        if hotel_location:
+            return tuple(hotel_location)
+        else:
+            return (self.data.get('hotel_lat'), self.data.get('hotel_lon'))
+
+    @property
+    def hotel_id(self):
+        return self.data.get('hotel')
+
+
+# Event tracked, when user select object in list of search results.
+#
 # ALOHA: searchShowResult [
 # pos=0
 # result=Ituzaing|Pueblo|0
 # ]
-# result[0] = Name of POI
-# result[1] = Type of POI on local language
+# result[0] = Name of place
+# result[1] = Type of place on local language
 # result[2] = 1: Open pp from suggest; 0: Open pp from search without suggest
 # result[3] = Osm tag. Will be add in task jira.mail.ru/browse/MAPSME-6699
 
@@ -139,6 +163,7 @@ class ObjectSelectionFromList(DictEvent):
     def __dumpdict__(self):
         return super(DictEvent, self).__basic_dumpdict__()
 
+# Click on share button in placepage. There is no have any special properties.
 # ALOHA:
 # iOS:
 # Place page Share [
@@ -146,7 +171,7 @@ class ObjectSelectionFromList(DictEvent):
 # Language=ru-AZ
 # Orientation=Portrait
 # ]
-# Ansroid:
+# Android:
 # PP. Share
 
 

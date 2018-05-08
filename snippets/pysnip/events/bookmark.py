@@ -1,6 +1,8 @@
 from pyaloha.event import DictEvent
 
 # ALOHA:
+# Sending, when user create bookmark from placepage
+
 # ios
 # Bookmark. Bookmark created [
 # Country=NZ

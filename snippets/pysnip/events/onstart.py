@@ -55,7 +55,7 @@ class AndroidVisibleLaunch(Event):
 
 
 # ALOHA:
-# Sending when user update or install application.
+# Sending only after user update or install application.
 
 # $iosDeviceInfo [
 # browserUserAgent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X)
