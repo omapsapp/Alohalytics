@@ -161,7 +161,6 @@ static void LogSystemInformation(NSString * userAgent) {
   }
   alohalytics::TStringMap info = {
     {"bundleIdentifier", ToStdString([[NSBundle mainBundle] bundleIdentifier])},
-    {"deviceName", ToStdString(device.name)},
     {"deviceSystemName", ToStdString(device.systemName)},
     {"deviceSystemVersion", ToStdString(device.systemVersion)},
     {"deviceModel", ToStdString(device.model)},
@@ -186,23 +185,6 @@ static void LogSystemInformation(NSString * userAgent) {
 
   Stats & instance = Stats::Instance();
   instance.LogEvent("$iosDeviceInfo", info);
-
-  info.clear();
-  if (device.systemVersion.floatValue >= 6.0) {
-    if (device.identifierForVendor) {
-      info.emplace("identifierForVendor", ToStdString(device.identifierForVendor.UUIDString));
-    }
-    if (NSClassFromString(@"ASIdentifierManager")) {
-      ASIdentifierManager * manager = [ASIdentifierManager sharedManager];
-      info.emplace("isAdvertisingTrackingEnabled", manager.isAdvertisingTrackingEnabled ? "YES" : "NO");
-      if (manager.advertisingIdentifier) {
-        info.emplace("advertisingIdentifier", ToStdString(manager.advertisingIdentifier.UUIDString));
-      }
-    }
-  }
-  if (!info.empty()) {
-    instance.LogEvent("$iosDeviceIds", info);
-  }
 }
 #endif  // TARGET_OS_IPHONE
 
