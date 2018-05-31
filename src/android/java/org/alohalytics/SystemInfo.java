@@ -37,8 +37,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-
 import java.util.HashMap;
 
 public class SystemInfo {
@@ -55,12 +53,10 @@ public class SystemInfo {
 
   public static void getDeviceInfoAsync(final Context context) {
     // Collect all information on a separate thread, because:
-    // - Google Advertising ID should be requested in a separate thread.
     // - Do not block UI thread while querying many properties.
     new Thread(new Runnable() {
       @Override
       public void run() {
-        collectIds(context);
         collectDeviceDetails(context);
       }
     }).start();
@@ -93,41 +89,6 @@ public class SystemInfo {
         mPairs.put(key, String.valueOf(value));
       }
     }
-  }
-
-  private static void collectIds(final Context context) {
-
-    final KeyValueWrapper ids = new KeyValueWrapper();
-    // Retrieve GoogleAdvertisingId.
-    // See sample code at http://developer.android.com/google/play-services/id.html
-    try {
-      ids.put("google_advertising_id", AdvertisingIdClient.getAdvertisingIdInfo(context.getApplicationContext()).getId());
-    } catch (Exception ex) {
-      handleException(ex);
-    }
-
-    try {
-      final String android_id = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-      // This is a known bug workaround - https://code.google.com/p/android/issues/detail?id=10603
-      if (!android_id.equals("9774d56d682e549c")) {
-        ids.put("android_id", android_id);
-      }
-    } catch (Exception ex) {
-      handleException(ex);
-    }
-
-    if (SystemInfo.hasPermission("android.permission.READ_PHONE_STATE", context)) {
-      try {
-        // This code works only if the app has READ_PHONE_STATE permission.
-        final TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        ids.put("device_id", tm.getDeviceId());
-        ids.put("sim_serial_number", tm.getSimSerialNumber());
-      } catch (Exception ex) {
-        handleException(ex);
-      }
-    }
-
-    Statistics.logEvent("$androidIds", ids.mPairs);
   }
 
   private static void collectDeviceDetails(Context context) {
@@ -216,18 +177,15 @@ public class SystemInfo {
     }
     kvs.put("build_device", Build.DEVICE);
     kvs.put("build_display", Build.DISPLAY);
-    kvs.put("build_fingerprint", Build.FINGERPRINT);
     kvs.put("build_hardware", Build.HARDWARE);
     kvs.put("build_host", Build.HOST);
     kvs.put("build_id", Build.ID);
     kvs.put("build_manufacturer", Build.MANUFACTURER);
     kvs.put("build_model", Build.MODEL);
     kvs.put("build_product", Build.PRODUCT);
-    kvs.put("build_serial", Build.SERIAL);
     kvs.put("build_tags", Build.TAGS);
     kvs.put("build_time", Build.TIME);
     kvs.put("build_type", Build.TYPE);
-    kvs.put("build_user", Build.USER);
 
     Statistics.logEvent("$androidDeviceInfo", kvs.mPairs);
   }
