@@ -230,7 +230,8 @@ void Stats::Upload(TFileProcessingFinishedCallback upload_finished_callback) {
   if (enabled_) {
     LOG_IF_DEBUG("Trying to upload collected statistics to", upload_url_);
     messages_queue_.ProcessArchivedFiles(
-        std::bind(&Stats::UploadFileImpl, this, std::placeholders::_1, std::placeholders::_2), upload_finished_callback);
+      std::bind(&Stats::UploadFileImpl, this, std::placeholders::_1, std::placeholders::_2),
+      true /* delete_after_processing */, upload_finished_callback);
   } else {
     LOG_IF_DEBUG("Statistics is disabled. Nothing was uploaded.");
   }
@@ -256,6 +257,49 @@ bool Stats::UploadFileImpl(bool file_name_in_content, const std::string & conten
     LOG_IF_DEBUG("Exception in UploadFileImpl:", ex.what());
   }
   return false;
+}
+
+void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback result_callback)
+{
+  auto result = std::make_shared<std::vector<std::string>>();
+  if (enabled_) {
+    LOG_IF_DEBUG("Trying to get blobs for collected statistics");
+    auto file_processor = [this, result](bool content_is_file_name, const std::string & content) {
+      try {
+        if (content_is_file_name) {
+          std::string buffer;
+          try {
+            std::ifstream fi;
+            fi.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+            fi.open(content, std::ifstream::in | std::ifstream::binary);
+            const uint64_t file_size = FileManager::GetFileSize(content);
+            if (file_size > std::numeric_limits<std::string::size_type>::max()
+                || file_size > std::numeric_limits<std::streamsize>::max()) {
+              throw std::out_of_range("File size is out of range.");
+            }
+            buffer.resize(size_t(file_size));
+            fi.read(&buffer[0], static_cast<std::streamsize>(file_size));
+          } catch (const std::exception & ex) {
+            LOG_IF_DEBUG(ex.what());
+          }
+          result->push_back(buffer);
+        } else {
+          result->push_back(alohalytics::Gzip(content));
+        }
+        return true;
+      } catch (const std::exception & ex) {
+        LOG_IF_DEBUG("Exception in GetBlobImpl:", ex.what());
+      }
+      return false;
+    };
+    auto finish_callback = [result, result_callback](ProcessingResult) {
+      if (result_callback)
+        result_callback(*result);
+    };
+    messages_queue_.ProcessArchivedFiles(file_processor, delete_files, finish_callback);
+  } else {
+    LOG_IF_DEBUG("Statistics is disabled. Nothing was collected.");
+  }
 }
 
 }  // namespace alohalytics

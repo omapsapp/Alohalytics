@@ -28,14 +28,17 @@
 #include "location.h"
 #include "messages_queue.h"
 
-#include <string>
-#include <map>
+#include <functional>
 #include <list>
+#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace alohalytics {
 
 typedef std::map<std::string, std::string> TStringMap;
+typedef std::function<void(std::vector<std::string> & blobs)> TGetBlobResultCallback;
 
 class Stats final {
   // Is statistics engine enabled or disabled.
@@ -95,6 +98,9 @@ class Stats final {
 
   // Uploads all previously collected data to the server.
   void Upload(TFileProcessingFinishedCallback upload_finished_callback = TFileProcessingFinishedCallback());
+
+  // Calls |result_callback| on the data blobs that are going to be uploaded to the server.
+  void CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback result_callback = {});
 };
 
 inline void LogEvent(std::string const & event_name) { Stats::Instance().LogEvent(event_name); }
