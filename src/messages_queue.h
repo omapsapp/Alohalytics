@@ -113,10 +113,11 @@ class MessagesQueue final {
   // Optional callback is called when all files are processed.
   // This call automatically archives current file before processing, but zero-sized "current" file is never archived.
   // Executed on the WorkerThread.
-  void ProcessArchivedFiles(TArchivedFilesProcessor processor,
+  void ProcessArchivedFiles(TArchivedFilesProcessor processor, bool delete_after_processing,
                             TFileProcessingFinishedCallback callback = TFileProcessingFinishedCallback()) {
     std::lock_guard<std::mutex> lock(commands_mutex_);
-    commands_queue_.push_back(std::bind(&MessagesQueue::ProcessArchivedFilesCommand, this, processor, callback));
+    commands_queue_.push_back(
+      std::bind(&MessagesQueue::ProcessArchivedFilesCommand, this, processor, delete_after_processing, callback));
     commands_condition_variable_.notify_all();
   }
 
@@ -197,12 +198,14 @@ class MessagesQueue final {
   }
 
   // If there is no file storage directory set, it should also process messages from the memory buffer.
-  void ProcessArchivedFilesCommand(TArchivedFilesProcessor processor, TFileProcessingFinishedCallback callback) {
+  void ProcessArchivedFilesCommand(TArchivedFilesProcessor processor, bool delete_after_processing,
+                                   TFileProcessingFinishedCallback callback) {
     ProcessingResult result = ProcessingResult::ENothingToProcess;
     // Process in-memory messages, if any.
     if (!inmemory_storage_.empty()) {
       if (processor(false /* in-memory buffer */, inmemory_storage_)) {
-        inmemory_storage_.clear();
+        if (delete_after_processing)
+          inmemory_storage_.clear();
         result = ProcessingResult::EProcessedSuccessfully;
       } else {
         result = ProcessingResult::EProcessingError;
@@ -218,7 +221,8 @@ class MessagesQueue final {
     if (current_file_ && current_file_->tellp() > 0) {
       ArchiveCurrentFile();
     }
-    FileManager::ForEachFileInDir(storage_directory_, [&processor, &result](const std::string & full_path_to_file) {
+    FileManager::ForEachFileInDir(storage_directory_,
+      [&processor, &result, delete_after_processing](const std::string & full_path_to_file) {
       // Ignore non-archived files.
       const auto pos = full_path_to_file.rfind(kArchivedFilesExtension);
       if (pos == std::string::npos || pos + sizeof(kArchivedFilesExtension) - 1 != full_path_to_file.size()) {
@@ -238,7 +242,8 @@ class MessagesQueue final {
       if (processor(true /* true here means that second parameter is file path */, full_path_to_file)) {
         result = ProcessingResult::EProcessedSuccessfully;
         // Also delete successfully processed archive.
-        std::remove(full_path_to_file.c_str());
+        if (delete_after_processing)
+          std::remove(full_path_to_file.c_str());
         return true;
       } else {
         result = ProcessingResult::EProcessingError;

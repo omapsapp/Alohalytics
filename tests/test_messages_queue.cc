@@ -117,7 +117,7 @@ TEST(MessagesQueue, InMemory_Empty) {
   q.ProcessArchivedFiles([&processor_was_called](bool, const std::string &) {
     processor_was_called = true;  // This code should not be executed.
     return false;
-  }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+  }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
   EXPECT_EQ(ProcessingResult::ENothingToProcess, finish_task.get());
   EXPECT_FALSE(processor_was_called);
 }
@@ -134,7 +134,7 @@ TEST(MessagesQueue, InMemory_SuccessfulProcessing) {
     EXPECT_EQ(messages, kTestMessage + kTestWorkerMessage);
     processor_was_called = true;
     return true;
-  }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+  }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
   EXPECT_EQ(ProcessingResult::EProcessedSuccessfully, finish_task.get());
   EXPECT_TRUE(processor_was_called);
 }
@@ -149,7 +149,7 @@ TEST(MessagesQueue, InMemory_FailedProcessing) {
     EXPECT_EQ(messages, kTestMessage);
     processor_was_called = true;
     return false;
-  }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+  }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
   EXPECT_EQ(ProcessingResult::EProcessingError, finish_task.get());
   EXPECT_TRUE(processor_was_called);
 }
@@ -180,7 +180,7 @@ TEST(MessagesQueue, SwitchFromInMemoryToFile_and_OfflineEmulation) {
       processor_was_called = true;
       archived_file = full_file_path;
       return false;  // Emulate network error.
-    }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+    }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
     EXPECT_EQ(ProcessingResult::EProcessingError, finish_task.get());
     EXPECT_TRUE(processor_was_called);
     // Current file should be empty as it was archived for processing.
@@ -206,7 +206,7 @@ TEST(MessagesQueue, SwitchFromInMemoryToFile_and_OfflineEmulation) {
         archive2_processed = true;
       }
       return true;  // Archives should be deleted by queue after successful processing.
-    }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+    }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
     EXPECT_EQ(ProcessingResult::EProcessedSuccessfully, finish_task.get());
     EXPECT_TRUE(archive1_processed);
     EXPECT_TRUE(archive2_processed);
@@ -244,7 +244,7 @@ TEST(MessagesQueue, CreateArchiveOnSizeLimitHit) {
     EXPECT_TRUE(is_file);
     file_sizes.push_back(FileManager::ReadFileAsString(full_file_path).size());
     return true;
-  }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+  }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
   EXPECT_EQ(ProcessingResult::EProcessedSuccessfully, finish_task.get());
   EXPECT_EQ(size_t(2), file_sizes.size());
   EXPECT_EQ(size, file_sizes[0] + file_sizes[1]);
@@ -293,7 +293,7 @@ TEST(MessagesQueue, HighLoadAndIntegrity) {
     }
     total_size = 0;
     return true;
-  }, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
+  }, true /* delete_after_processing */, std::bind(&FinishedCallback, std::placeholders::_1, std::ref(finish_task)));
   EXPECT_EQ(ProcessingResult::EProcessedSuccessfully, finish_task.get());
   EXPECT_EQ(size_t(0), total_size);  // Zero means that processor was called.
 }
