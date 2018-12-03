@@ -13,6 +13,7 @@ from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking
 )
 from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+from pysnip.events.rendering import RenderingStats, GPU
 
 
 CUSTOM_EVENTS = (
@@ -20,7 +21,8 @@ CUSTOM_EVENTS = (
     TechnicalLaunch, AndroidVisibleLaunch,
     SearchResults, GPSTracking,
     RouteRequest, RouteStart, RouteEnd, RouteTracking,
-    MapActionRequest, MapDownloadFinished
+    MapActionRequest, MapDownloadFinished,
+    RenderingStats, GPU,
 )
 
 
