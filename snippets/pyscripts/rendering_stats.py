@@ -29,7 +29,8 @@ class DataStreamWorker(BaseDataStreamWorker):
     setup_shareable_data = init_collections
 
     def process_unspecified(self, event):
-        k = (event.device, event.gpu, event.version, event.api)
+        resolution = '{0}x{1}'.format(event.width, event.height)
+        k = (event.device, event.gpu, resolution, event.version, event.api)
         frame_data = self.devices[k]
         merge(event.frame_data, frame_data)
 
@@ -49,10 +50,10 @@ class DataAggregator(BaseDataAggregator):
 class StatsProcessor(BaseStatsProcessor):
     def process_stats(self):
         with open("rendering_stats_by_devices.csv", "w") as text_file:
-            text_file.write("Device;GPU;Version;API;Avg Frame Time (ms);Min Frame Time (ms);Max Frame Time (ms);Slow Frames Percent;\n")
-            for (device, gpu, version, api), frame_data in self.aggregator.devices.iteritems():
+            text_file.write("Device;GPU;Resolution;Version;API;Avg Frame Time (ms);Min Frame Time (ms);Max Frame Time (ms);Slow Frames Percent;\n")
+            for (device, gpu, resolution, version, api), frame_data in self.aggregator.devices.iteritems():
                 slow_frames_percent = 100.0 * frame_data['slow_frames_count'] / frame_data['frames_count']
-                text_file.write("{0};{1};{2};{3};{4};{5};{6};{7};\n".format(device, gpu, version, api, 
+                text_file.write("{0};{1};{2};{3};{4};{5};{6};{7};{8};\n".format(device, gpu, resolution, version, api, 
                     frame_data['avg_frame_time_ms'], frame_data['min_frame_time_ms'],
                     frame_data['max_frame_time_ms'], slow_frames_percent))
 

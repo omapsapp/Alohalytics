@@ -9,6 +9,8 @@ from pyaloha.protocol import AutoSerialized
 # device=iPhone 6s
 # gpu=Apple A9
 # api=OpenGLES3
+# width=1024
+# height=768
 # minFrameTime=1
 # maxFrameTime=455
 # avgFrameTime=80
@@ -32,6 +34,10 @@ class RenderingStats(DictEvent):
         self.device = self.data.get('device', 'Unknown')
         self.gpu = self.data.get('gpu', 'Unknown')
         self.api = self.data.get('api', 'Unknown')
+        w = int(self.data.get('width', 0))
+        h = int(self.data.get('height', 0))
+        self.width = max(w, h)
+        self.height = min(w, h)
         self.frame_data = collections.Counter()
         self.frame_data['min_frame_time_ms'] = int(self.data.get('minFrameTime', 1000000000))
         self.frame_data['max_frame_time_ms'] = int(self.data.get('maxFrameTime', 0))
