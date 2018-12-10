@@ -16,8 +16,6 @@ def merge(frame_data_in, frame_data_out):
     if frames_count > 0:
         frame_data_out['avg_frame_time_ms'] = int(t / frames_count)
     frame_data_out['frames_count'] = frames_count
-    frame_data_out['min_frame_time_ms'] = min(frame_data_out['min_frame_time_ms'], frame_data_in['min_frame_time_ms'])
-    frame_data_out['max_frame_time_ms'] = max(frame_data_out['max_frame_time_ms'], frame_data_in['max_frame_time_ms'])
     frame_data_out['slow_frames_count'] += frame_data_in['slow_frames_count']
     frame_data_out['counter'] += max(1, frame_data_in['counter'])
 
@@ -30,10 +28,12 @@ class DataStreamWorker(BaseDataStreamWorker):
     setup_shareable_data = init_collections
 
     def process_unspecified(self, event):
-        resolution = '{0}x{1}'.format(event.width, event.height)
-        k = (event.device, event.gpu, resolution, event.version, event.api)
-        frame_data = self.devices[k]
-        merge(event.frame_data, frame_data)
+        if event.viewport_min_lat_lon != None and event.viewport_max_lat_lon != None:
+            cx = 0.5 * (event.viewport_min_lat_lon[0] + event.viewport_max_lat_lon[0])
+            cy = 0.5 * (event.viewport_min_lat_lon[1] + event.viewport_max_lat_lon[1])
+            k = (int(cx * 100.0), int(cy * 100.0))
+            frame_data = self.devices[k]
+            merge(event.frame_data, frame_data)
 
     def pre_output(self):
         self.devices = self.devices.items()
@@ -50,15 +50,12 @@ class DataAggregator(BaseDataAggregator):
 
 class StatsProcessor(BaseStatsProcessor):
     def process_stats(self):
-        with open("rendering_stats_by_devices.csv", "w") as text_file:
-            text_file.write("Count;Device;GPU;Resolution;Version;API;Avg Frame Time (ms);Min Frame Time (ms);Max Frame Time (ms);Slow Frames Percent;\n")
-            for (device, gpu, resolution, version, api), frame_data in self.aggregator.devices.iteritems():
+        with open("rendering_stats_by_geo.csv", "w") as text_file:
+            text_file.write("Lat;Lon;Avg Frame Time (ms);Slow Frames Percent;\n")
+            for (lat, lon), frame_data in self.aggregator.devices.iteritems():
                 slow_frames_percent = 100.0 * frame_data['slow_frames_count'] / frame_data['frames_count']
-                text_file.write("{0};{1};{2};{3};{4};{5};{6};{7};{8};{9};\n".format(
-                    frame_data['counter'], device.encode('utf-8'), gpu.encode('utf-8'),
-                    resolution, version, api, frame_data['avg_frame_time_ms'],
-                    frame_data['min_frame_time_ms'], frame_data['max_frame_time_ms'],
-                    slow_frames_percent))
+                text_file.write("{0};{1};{2};{3};{4};\n".format(frame_data['counter'],
+                    lat / 100.0, lon / 100.0, frame_data['avg_frame_time_ms'], slow_frames_percent))
 
     def gen_stats(self):
         return []

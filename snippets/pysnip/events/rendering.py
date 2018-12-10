@@ -44,6 +44,7 @@ class RenderingStats(DictEvent):
         self.frame_data['avg_frame_time_ms'] = int(self.data.get('avgFrameTime', 0))
         self.frame_data['slow_frames_count'] = int(self.data.get('slowFrames', 0))
         self.frame_data['frames_count'] = int(self.data.get('frames', 0))
+        self.frame_data['counter'] = 1
 
         try:
             self.viewport_min_lat_lon = (
