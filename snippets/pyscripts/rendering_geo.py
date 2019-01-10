@@ -51,7 +51,7 @@ class DataAggregator(BaseDataAggregator):
 class StatsProcessor(BaseStatsProcessor):
     def process_stats(self):
         with open("rendering_stats_by_geo.csv", "w") as text_file:
-            text_file.write("Lat;Lon;Avg Frame Time (ms);Slow Frames Percent;\n")
+            text_file.write("Count;Lat;Lon;Avg Frame Time (ms);Slow Frames Percent;\n")
             for (lat, lon), frame_data in self.aggregator.devices.iteritems():
                 slow_frames_percent = 100.0 * frame_data['slow_frames_count'] / frame_data['frames_count']
                 text_file.write("{0};{1};{2};{3};{4};\n".format(frame_data['counter'],
