@@ -4,6 +4,7 @@ from pyaloha.base import DataAggregator as BaseDataAggregator
 from pyaloha.base import StatsProcessor as BaseStatsProcessor
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
 import pysnip.events as events
+import csv
 
 def init_collections(self):
     self.devices = collections.defaultdict(collections.Counter)
@@ -50,12 +51,13 @@ class DataAggregator(BaseDataAggregator):
 
 class StatsProcessor(BaseStatsProcessor):
     def process_stats(self):
-        with open("rendering_stats_by_geo.csv", "w") as text_file:
-            text_file.write("Count;Lat;Lon;Avg Frame Time (ms);Slow Frames Percent;\n")
+        with open("rendering_stats_by_geo.csv", "w") as csvfile:
+            w = csv.writer(csvfile)
+            w.writerow(['Count', 'Lat', 'Lon', 'Avg Frame Time (ms)', 'Slow Frames Percent'])
             for (lat, lon), frame_data in self.aggregator.devices.iteritems():
                 slow_frames_percent = 100.0 * frame_data['slow_frames_count'] / frame_data['frames_count']
-                text_file.write("{0};{1};{2};{3};{4};\n".format(frame_data['counter'],
-                    lat / 100.0, lon / 100.0, frame_data['avg_frame_time_ms'], slow_frames_percent))
+                w.writerow([frame_data['counter'], lat / 100.0, lon / 100.0, 
+                            frame_data['avg_frame_time_ms'], slow_frames_percent])
 
     def gen_stats(self):
         return []
