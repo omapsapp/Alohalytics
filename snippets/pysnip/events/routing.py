@@ -16,18 +16,8 @@ class RouteDictEvent(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
-        self.setup_mode()
-
-    def setup_mode(self):
-
         mode = self.data.get('router', self.data.get('name', None)).lower()
-        if mode in self.mode_alliases:
-            self.mode = self.mode_alliases[mode]
-        else:
-            self.mode = mode
-
-    def process_me(self, processor):
-        processor.process_routing(self)
+        self.mode = self.mode_alliases.get(mode, mode)
 
 
 # ALOHA: Routing_CalculatingRoute [
@@ -64,16 +54,8 @@ class RouteRequest(RouteDictEvent):
         except KeyError:
             self.destination = None
 
-        try:
-            self.status = self.data['result']
-        except KeyError:
-            self.status = None
-
-        try:
-            self.distance = self.data['distance']
-        except KeyError:
-            self.distance = None
-
+        self.status = self.data.get('result')
+        self.distance = self.data.get('distance')
 
 # Event for a start of the route with specific props
 # with no specific fields
@@ -90,9 +72,6 @@ class RouteStart(Event):
         'Routing. Start',
         'Point to point Go',
     )
-
-    def process_me(self, processor):
-        processor.process_routing(self)
 
 
 # ALOHA: RouteTracking_RouteClosing [
@@ -155,8 +134,6 @@ class TaxiRouteRequest(DictEvent):
         self.mode = 'taxi'
         self.provider = self.data.get('provider', 'Unknown')
 
-    def process_me(self, processor):
-        processor.process_routing(self)
 
 # ALOHA: $TrafficChangeState [ state=WaitingData ]
 # Event send, when user turned on/off traffic jams
@@ -171,8 +148,6 @@ class Traffic(DictEvent):
         super(Traffic, self).__init__(*args, **kwargs)
         self.state = self.data.get('state', 'Unknown')
 
-    def process_me(self, processor):
-        processor.process_traffic(self)
 
 # Event send, when user click on bookmark button after build route
 # or after start planning route
@@ -197,8 +172,6 @@ class RoutingBookmarksClick(DictEvent):
         super(RoutingBookmarksClick, self).__init__(*args, **kwargs)
         self.mode = self.data.get('mode')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user added point to route. It can be from placepage
 # or on planning page
@@ -233,8 +206,6 @@ class RoutingPointAdd(DictEvent):
         self.type = self.data.get('type', 'unknown')
         self.value = self.data.get('value', 'unknown')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user click on search button after build route
 # or after start planning route
@@ -258,10 +229,4 @@ class RoutingSearch(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(RoutingSearch, self).__init__(*args, **kwargs)
-        try:
-            self.mode = self.data['mode']
-        except KeyError:
-            self.action = 'onroute'
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
+        self.mode = self.data.get('mode', 'onroute')

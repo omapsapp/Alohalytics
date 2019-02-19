@@ -63,8 +63,6 @@ class Editor(DictEvent):
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user click «Add place (business)» and start choose
 # position of company.
@@ -85,8 +83,6 @@ class EditorAddClick(DictEvent):
 
         self.source = self.data.get('from')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user start write a review
 # ALOHA:
@@ -116,8 +112,6 @@ class UGCReviewStart(DictEvent):
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user successfully finish write a review
 # ALOHA:
@@ -133,8 +127,6 @@ class UGCReviewSuccess(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCReviewSuccess, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when something went wrong with authentication.
 #
@@ -160,8 +152,6 @@ class UGCAuthError(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCAuthError, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when authentication after write review was successful
 #
@@ -184,6 +174,3 @@ class UGCAuthSuccess(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)

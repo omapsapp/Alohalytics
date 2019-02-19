@@ -136,7 +136,7 @@ class DeviceInfo(DictEvent):
         '$iosDeviceInfo',
     )
 
-    androidVersions = {
+    android_versions = {
         '10': '2.3.3-2.3.7',
         '15': '4.0.3-4.0.4',
         '16': '4.1.x',
@@ -168,7 +168,7 @@ class DeviceInfo(DictEvent):
     def os_version(self):
         try:
             if self.key == '$androidDeviceInfo':
-                return self.androidVersions[self.data['build_version_sdk']]
+                return self.android_versions[self.data['build_version_sdk']]
             elif self.key == '$iosDeviceInfo':
                 return self.data['deviceSystemVersion']
         except KeyError:

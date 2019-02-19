@@ -47,7 +47,7 @@ class ObjectSelection(DictEvent):
         try:
             return int(self.data['bookmark'])
         except KeyError:
-            return -1
+            return None
 
     @property
     def object_types(self):
@@ -137,33 +137,21 @@ class ObjectSelectionFromList(DictEvent):
 
     __slots__ = tuple()
 
-    @property
-    def position(self):
-        return self.data['pos']
+    self.position = self.data.get('pos')
+    params = self.data.get('result', '').split('|')
+    try:
+        self.name = params[0]
+    except IndexError:
+        return None
+    try:
+        self.object_type = params[1]
+    except IndexError:
+        return 'Unknown'
+    try:
+        self.fromsuggest = False if params[2] == '0' else True
+    except IndexError:
+        return False
 
-    @property
-    def object_type(self):
-        try:
-            return self.data.get('result', None).split('|')[1]
-        except IndexError:
-            return 'Unknown'
-
-    @property
-    def name(self):
-        try:
-            return self.data.get('result', None).split('|')[0]
-        except IndexError:
-            return None
-
-    @property
-    def fromsuggest(self):
-        try:
-            if self.data.get('result', None).split('|')[2] == '0':
-                return False
-            else:
-                return True
-        except IndexError:
-            return False
 
     def __dumpdict__(self):
         return super(DictEvent, self).__basic_dumpdict__()

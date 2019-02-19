@@ -60,11 +60,7 @@ class SearchResults(DictEvent):
             )
 
         try:
-            self.gps = map(
-                float, (
-                    self.data['posX'], self.data['posY']
-                )
-            )
+            self.gps = (float(self.data['posX']), float(self.data['posY']))
         except (ValueError, KeyError):  # bad float, old type event
             self.gps = None
 
@@ -168,9 +164,6 @@ class Menu(DictEvent):
         if not self.button and self.key == 'Menu':
             self.button = self.data.get('Button')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
 
 # ALOHA:
 # Send, when user click on sponsored icon in placepage
@@ -194,8 +187,6 @@ class SponsoredClicks(DictEvent):
     def __init__(self, *args, **kwargs):
         super(SponsoredClicks, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # ALOHA:
 # ios:
@@ -229,19 +220,6 @@ changed blackberry'
     STATISTICS_STATUS_CHANGED_AMAZON = 'Statistics status changed amazon'
     CHANGE_RECENT_TRACK = 'Change recent track'
 
-    keys = (
-        STATISTICS_STATUS_CHANGED,
-        STATISTICS_STATUS_CHANGED_GOOGLE,
-        STATISTICS_STATUS_CHANGED_NINESTORE,
-        STATISTICS_STATUS_CHANGED_BLACKBERRY,
-        STATISTICS_STATUS_CHANGED_APPCHINA,
-        STATISTICS_STATUS_CHANGED_SAMSUNG,
-        STATISTICS_STATUS_CHANGED_XIAOMI,
-        STATISTICS_STATUS_CHANGED_BAIDU,
-        STATISTICS_STATUS_CHANGED_AMAZON,
-        CHANGE_RECENT_TRACK
-    )
-
     keys_dict = {
         STATISTICS_STATUS_CHANGED: 'default',
         STATISTICS_STATUS_CHANGED_GOOGLE: 'google',
@@ -255,30 +233,25 @@ changed blackberry'
         CHANGE_RECENT_TRACK: 'default'
     }
 
+    keys = key_dict.keys()
+
     def __init__(self, *args, **kwargs):
         super(RecentTrack, self).__init__(*args, **kwargs)
         self.merchant = self.keys_dict[self.key]
         if self.key == 'Change recent track':
             try:
                 self.value = self.data['Value']
-                if self.value == 'Off':
-                    self.enabled = False
-                else:
-                    self.enabled = True
+                self.enabled = False if self.value == 'Off' else True
             except KeyError:
                 self.enabled = None
+                self.value = None
         else:
             try:
                 self.enabled = self.data['Enabled']
-                if self.enabled:
-                    self.value = 'On'
-                else:
-                    self.value = 'Off'
+                self.value = 'On' if self.enabled else 'Off'
             except KeyError:
                 self.enabled = None
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
+                self.value = None
 
 
 # ALOHA:
@@ -301,10 +274,4 @@ class MobileInternet(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(MobileInternet, self).__init__(*args, **kwargs)
-        try:
-            self.value = self.data.get('Value')
-        except KeyError:
-            self.value = None
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
+        self.value = self.data.get('Value')
