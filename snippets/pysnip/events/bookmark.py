@@ -19,6 +19,3 @@ class BookmarkCreated(DictEvent):
     keys = (
         'Bookmark. Bookmark created',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(BookmarkCreated, self).__init__(*args, **kwargs)

@@ -184,9 +184,6 @@ class SponsoredClicks(DictEvent):
         'Placepage_SponsoredActionButton_click',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(SponsoredClicks, self).__init__(*args, **kwargs)
-
 
 # ALOHA:
 # ios:

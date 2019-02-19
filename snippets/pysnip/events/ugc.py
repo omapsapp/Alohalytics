@@ -124,9 +124,6 @@ class UGCReviewSuccess(DictEvent):
         'UGC_Review_success',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(UGCReviewSuccess, self).__init__(*args, **kwargs)
-
 
 # Event send, when something went wrong with authentication.
 #
@@ -149,9 +146,6 @@ class UGCAuthError(DictEvent):
         'UGC_Auth_error',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(UGCAuthError, self).__init__(*args, **kwargs)
-
 
 # Event send, when authentication after write review was successful
 #
@@ -171,6 +165,3 @@ class UGCAuthSuccess(DictEvent):
     keys = (
         'UGC_Auth_external_request_success',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(UGCAuthSuccess, self).__init__(*args, **kwargs)
