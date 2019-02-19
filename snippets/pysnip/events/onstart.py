@@ -175,4 +175,9 @@ class DeviceInfo(DictEvent):
             return None
 
     def __dumpdict__(self):
-        return super(DeviceInfo, self).__basic_dumpdict__()
+        d = super(DeviceInfo, self).__basic_dumpdict__()
+        d.update({
+            'lang': self.lang(),
+            'os_version': self.os_version()
+        })
+        return d

@@ -32,14 +32,14 @@ from pyaloha.event import DictEvent
 # ]
 
 
-class Editor(DictEvent):
+class EditorStart(DictEvent):
     keys = (
         'Editor_Add_start', 'Editor_Add_success',
         'Editor_Edit_start', 'Editor_Edit_success'
     )
 
     def __init__(self, *args, **kwargs):
-        super(Editor, self).__init__(*args, **kwargs)
+        super(EditorStart, self).__init__(*args, **kwargs)
 
         self.auth = self.to_bool(self.data.get('is_authenticated'))
         self.online = self.to_bool(self.data.get('is_online'))
@@ -59,6 +59,8 @@ class Editor(DictEvent):
         elif self.key == 'Editor_Edit_success':
             self.action = 'finish'
             self.mode = 'edit'
+
+        del self.data
 
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False}.get(s)

@@ -139,13 +139,13 @@ class TaxiRouteRequest(DictEvent):
 # Event send, when user turned on/off traffic jams
 
 
-class Traffic(DictEvent):
+class TrafficState(DictEvent):
     keys = (
         '$TrafficChangeState',
     )
 
     def __init__(self, *args, **kwargs):
-        super(Traffic, self).__init__(*args, **kwargs)
+        super(TrafficState, self).__init__(*args, **kwargs)
         self.state = self.data.get('state', 'Unknown')
 
 

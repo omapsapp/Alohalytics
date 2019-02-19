@@ -230,7 +230,7 @@ changed blackberry'
         CHANGE_RECENT_TRACK: 'default'
     }
 
-    keys = key_dict.keys()
+    keys = keys_dict.keys()
 
     def __init__(self, *args, **kwargs):
         super(RecentTrack, self).__init__(*args, **kwargs)

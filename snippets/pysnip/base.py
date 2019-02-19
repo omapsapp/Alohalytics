@@ -20,10 +20,10 @@ from pysnip.events.placepage import (
 )
 from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking, RoutingBookmarksClick,
-    RoutingPointAdd, RoutingSearch, TaxiRouteRequest, Traffic
+    RoutingPointAdd, RoutingSearch, TaxiRouteRequest, TrafficState
 )
 from pysnip.events.ugc import (
-    Editor, EditorAddClick, UGCAuthError,
+    EditorStart, EditorAddClick, UGCAuthError,
     UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
 )
 from pysnip.events.maps import MapActionRequest, MapDownloadFinished
@@ -35,10 +35,10 @@ CUSTOM_EVENTS = (
     TechnicalLaunch, AndroidVisibleLaunch, DeviceInfo,
     SearchResults, GPSTracking,
     RouteRequest, RouteStart, RouteEnd, RouteTracking, TaxiRouteRequest,
-    Traffic, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
+    TrafficState, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
     MapActionRequest, MapDownloadFinished,
     Menu, SponsoredClicks, RecentTrack,
-    Editor, EditorAddClick, UGCReviewStart,
+    EditorStart, EditorAddClick, UGCReviewStart,
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
     BookmarkCreated, MobileInternet
