@@ -26,6 +26,8 @@ from pysnip.events.ugc import (
     Editor, EditorAddClick, UGCAuthError,
     UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
 )
+from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+from pysnip.events.rendering import RenderingStats, GPU
 
 
 CUSTOM_EVENTS = (
@@ -38,6 +40,7 @@ CUSTOM_EVENTS = (
     Menu, SponsoredClicks, RecentTrack,
     Editor, EditorAddClick, UGCReviewStart,
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
+    RenderingStats, GPU,
     BookmarkCreated, MobileInternet
 )
 
