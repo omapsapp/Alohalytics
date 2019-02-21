@@ -236,20 +236,8 @@ changed blackberry'
     def __init__(self, *args, **kwargs):
         super(RecentTrack, self).__init__(*args, **kwargs)
         self.merchant = self.keys_dict[self.key]
-        if self.key == 'Change recent track':
-            try:
-                self.value = self.data['Value']
-                self.enabled = False if self.value == 'Off' else True
-            except KeyError:
-                self.enabled = None
-                self.value = None
-        else:
-            try:
-                self.enabled = self.data['Enabled']
-                self.value = 'On' if self.enabled else 'Off'
-            except KeyError:
-                self.enabled = None
-                self.value = None
+        self.value = self.data.get('Value')
+        self.enabled = self.data.get('Enabled', self.value != 'Off')
 
 
 # ALOHA:
