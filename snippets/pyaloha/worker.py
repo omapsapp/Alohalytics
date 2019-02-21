@@ -4,7 +4,6 @@ import multiprocessing
 import os
 import subprocess
 import sys
-import traceback
 
 from pyaloha.ccode import iterate_events
 
@@ -25,8 +24,8 @@ def load_plugin(plugin_name, plugin_dir):
 
 
 def invoke_cmd_worker(item):
+    logger = multiprocessing.get_logger()
     try:
-        logger = multiprocessing.get_logger()
         pid = multiprocessing.current_process().pid
 
         plugin_dir, plugin, filepath, events_limit = item
@@ -52,7 +51,7 @@ def invoke_cmd_worker(item):
         )
         return filepath, output
     except Exception as e:
-        traceback.print_exc(e)
+        logger.exception('Worker launcher failed:\n %s', e)
 
 
 def worker():
@@ -70,8 +69,8 @@ def worker():
         processor.pre_output()
         sys.stdout.write(processor.dumps_results() + '\n')
         sys.stdout.flush()
-    except Exception:
-        logger.error(traceback.format_exc())
+    except Exception as e:
+        logger.exception('Worker process failed:\n %s', e)
 
 if __name__ == '__main__':
     worker()

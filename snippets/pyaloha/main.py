@@ -1,13 +1,13 @@
 import multiprocessing
 import os
 import sys
-import traceback
 
 from pyaloha.protocol import WorkerResults, str2date
+from pyaloha.settings import DEFAULT_WORKER_NUM, DEFAULT_ALOHA_DATA_DIR
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
 
-def cmd_run(plugin_dir, data_dir='/mnt/disk1/alohalytics/by_date'):
+def cmd_run(plugin_dir, data_dir=DEFAULT_ALOHA_DATA_DIR):
     """
     Main command line interface to pyaloha system
     """
@@ -63,7 +63,7 @@ def aggregate_raw_data(
         data_dir, results_dir, plugin_dir, plugin,
         start_date=None, end_date=None,
         events_limit=0,
-        worker_num=multiprocessing.cpu_count() - 1):
+        worker_num=DEFAULT_WORKER_NUM):
     """
     Workers-aggregator subpipeline:
 0. Load worker, aggregator classes from a specified plugin
@@ -95,14 +95,16 @@ def aggregate_raw_data(
     try:
         engine = pool.imap_unordered
         batch_size = 2 * worker_num
-        for batch in range((len(tasks) / batch_size) + 1):
-            items = tasks[batch * batch_size: (batch + 1) * batch_size]
+        batch_number = len(tasks) / batch_size
+        for batch_no in range(batch_number + 1):
+            batch_start = batch_no * batch_size
+            batch_tasks = tasks[batch_start: batch_start + batch_size]
             logger.info(
                 'Aggregator: batch %d is being aggregated: %s' % (
-                    batch, items
+                    batch_no, batch_tasks
                 )
             )
-            for file_name, results in engine(invoke_cmd_worker, items):
+            for file_name, results in engine(invoke_cmd_worker, batch_tasks):
                 try:
                     results = WorkerResults.loads_object(results)
                     logger.info(
@@ -110,12 +112,9 @@ def aggregate_raw_data(
                     )
                     aggregator.aggregate(results)
                     logger.info('Aggregator: task %s done' % file_name)
-                except Exception:
-                    logger.error(
-                        'Aggregator: task %s failed: %s' % (
-                            file_name,
-                            traceback.format_exc()
-                        )
+                except Exception as e:
+                    logger.exception(
+                        'Aggregator: task %s failed:\n%s', file_name, e
                     )
     finally:
         pool.terminate()
