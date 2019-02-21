@@ -160,9 +160,10 @@ class Menu(DictEvent):
     def __init__(self, *args, **kwargs):
         super(Menu, self).__init__(*args, **kwargs)
 
-        self.button = self.keys_dict.get(self.key)
-        if not self.button and self.key == 'Menu':
+        if self.key == 'Menu':
             self.button = self.data.get('Button')
+        else:
+            self.button = self.keys_dict.get(self.key)
 
 
 # ALOHA:
