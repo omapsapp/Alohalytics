@@ -43,10 +43,14 @@ def invoke_cmd_worker(item):
 
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, shell=True,
-            env=env
+            env=env, close_fds=True
         )
         output = process.communicate()[0]
-        return output
+        logger.info(
+            '%d: Got %0.2f Mbytes result from a job: %s',
+            pid, float(len(output)) / 1024**2, cmd
+        )
+        return filepath, output
     except Exception as e:
         traceback.print_exc(e)
 
@@ -64,7 +68,8 @@ def worker():
         ).DataStreamWorker()
         iterate_events(processor, events_limit=events_limit)
         processor.pre_output()
-        print processor.dumps_results()
+        sys.stdout.write(processor.dumps_results() + '\n')
+        sys.stdout.flush()
     except Exception:
         logger.error(traceback.format_exc())
 
