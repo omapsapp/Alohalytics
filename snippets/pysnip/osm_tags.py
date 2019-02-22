@@ -20,6 +20,16 @@ GROUPS = (
         'tourism-resort',
         'tourism-camp_site'
     ))),
+    ('hotels_all', frozenset((
+        'tourism-apartment',
+        'tourism-camp_site',
+        'tourism-chalet',
+        'tourism-guest_house',
+        'tourism-hostel',
+        'tourism-hotel',
+        'tourism-motel',
+        'tourism-resort',
+    ))),
     ('food', frozenset((
         'amenity-bar',
         'amenity-fast_food',
@@ -133,4 +143,3 @@ def get_group_by_tag(tag):
     for group, tag_set in GROUPS:
         if tag in tag_set:
             return group
-    return None

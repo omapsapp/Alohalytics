@@ -6,17 +6,35 @@ from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 
 from pyaloha.event_factory import EventFactory
 
-from pysnip.events.misc import GPSTracking, SearchResults
+from pysnip.events.bookmark import BookmarkCreated
+
+from pysnip.events.misc import (
+    GPSTracking, Menu, MobileInternet, RecentTrack,
+    SearchResults, SponsoredClicks
+)
+
 from pysnip.events.onstart import (
     AndroidVisibleLaunch, TechnicalLaunch,
     AndroidSessionStart, AndroidSessionEnd,
-    IOSSessionStart, IOSSessionEnd,
+    DeviceInfo,
+    IOSSessionStart, IOSSessionEnd
 )
-from pysnip.events.placepage import ObjectSelection, BookmarkAction
+
+from pysnip.events.placepage import (
+    BookmarkAction,
+    HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare
+)
+
 from pysnip.events.routing import (
-    RouteEnd, RouteRequest, RouteStart, RouteTracking
+    RouteEnd, RouteRequest, RouteStart, RouteTracking, RoutingBookmarksClick,
+    RoutingPointAdd, RoutingSearch, TaxiRouteRequest, TrafficState
+)
+from pysnip.events.ugc import (
+    EditorStart, EditorAddClick, UGCAuthError,
+    UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
 )
 from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+from pysnip.events.rendering import RenderingStats, GPU
 
 
 CUSTOM_EVENTS = (
@@ -24,9 +42,17 @@ CUSTOM_EVENTS = (
     TechnicalLaunch, AndroidVisibleLaunch,
     AndroidSessionStart, AndroidSessionEnd,
     IOSSessionStart, IOSSessionEnd,
+    HotelClick, ObjectSelectionFromList, PlacepageShare,
     SearchResults, GPSTracking,
-    RouteRequest, RouteStart, RouteEnd, RouteTracking,
-    MapActionRequest, MapDownloadFinished
+    DeviceInfo,
+    RouteRequest, RouteStart, RouteEnd, RouteTracking, TaxiRouteRequest,
+    TrafficState, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
+    MapActionRequest, MapDownloadFinished,
+    Menu, SponsoredClicks, RecentTrack,
+    EditorStart, EditorAddClick, UGCReviewStart,
+    UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
+    RenderingStats, GPU,
+    BookmarkCreated, MobileInternet
 )
 
 

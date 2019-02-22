@@ -1,24 +1,23 @@
-from pyaloha.event import Event, DictEvent
+from pyaloha.event import DictEvent, Event
 
 
 class RouteDictEvent(DictEvent):
+    mode_alliases = {
+        'astar-bidirectional-pedestrian': 'pedestrian',
+        'astar-bidirectional-bicycle': 'bicycle',
+        'astar-bidirectional-car': 'vehicle',
+        'pedestrian': 'pedestrian',
+        'bicycle': 'bicycle',
+        'vehicle': 'vehicle',
+        'mixed-car': 'vehicle',
+        'astar-bidirectional-transit': 'transit',
+        'subway': 'transit'
+    }
+
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
-
-        self.setup_mode()
-
-    def setup_mode(self):
-        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle
-        self.mode = self.data.get(
-            'router', self.data.get('name', None)
-        )
-        if self.mode == 'astar-bidirectional-pedestrian':
-            self.mode = 'pedestrian'
-        if self.mode == 'astar-bidirectional-bicycle':
-            self.mode = 'bicycle'
-
-    def process_me(self, processor):
-        processor.process_routing(self)
+        mode = self.data.get('router', self.data.get('name', None)).lower()
+        self.mode = self.mode_alliases.get(mode, mode)
 
 
 # ALOHA: Routing_CalculatingRoute [
@@ -55,27 +54,18 @@ class RouteRequest(RouteDictEvent):
         except KeyError:
             self.destination = None
 
-        try:
-            self.status = self.data['result']
-        except KeyError:
-            self.status = None
-
-        try:
-            self.distance = self.data['distance']
-        except KeyError:
-            self.distance = None
-
+        self.status = self.data.get('result')
+        self.distance = self.data.get('distance')
 
 # Event for a start of the route with specific props
 # with no specific fields
 
+
 class RouteStart(Event):
     keys = (
         'Routing. Start',
+        'Point to point Go',
     )
-
-    def process_me(self, processor):
-        processor.process_routing(self)
 
 
 # ALOHA: RouteTracking_RouteClosing [
@@ -122,3 +112,115 @@ class RouteTracking(RouteDictEvent):
         super(RouteTracking, self).__init__(*args, **kwargs)
 
         self.percent = float(self.data.get('percent', 100))
+
+# ALOHA: Routing_Build_Taxi [ provider=Uber ]
+# Event send, when user calculate route on taxi with specific property
+# provider = {'Uber', 'Yandex'}
+
+
+class TaxiRouteRequest(DictEvent):
+    keys = (
+        'Routing_Build_Taxi',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(TaxiRouteRequest, self).__init__(*args, **kwargs)
+        self.mode = 'taxi'
+        self.provider = self.data.get('provider', 'Unknown')
+
+
+# ALOHA: $TrafficChangeState [ state=WaitingData ]
+# Event send, when user turned on/off traffic jams
+
+
+class TrafficState(DictEvent):
+    keys = (
+        '$TrafficChangeState',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(TrafficState, self).__init__(*args, **kwargs)
+        self.state = self.data.get('state', 'Unknown')
+
+
+# Event send, when user click on bookmark button after build route
+# or after start planning route
+# ALOHA:
+# ios: Routing_Bookmarks_click [
+# Country=IQ
+# Language=ar-IQ
+# Orientation=Portrait
+# mode=planning
+# ]
+# android: Routing_Bookmarks_click [
+# mode=onroute
+# ]
+
+
+class RoutingBookmarksClick(DictEvent):
+    keys = (
+        'Routing_Bookmarks_click',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingBookmarksClick, self).__init__(*args, **kwargs)
+        self.mode = self.data.get('mode')
+
+
+# Event send, when user added point to route. It can be from placepage
+# or on planning page
+# ALOHA:
+# ios: Routing_Point_add [
+# Country=PK
+# Language=en-PK
+# Orientation=Portrait
+# method: {'planning_pp', 'outside_pp'}
+# mode: {'planning', 'onroute', None}
+# type: {'start', 'finish', 'inner'}
+# value: {'gps', 'point'}
+# ]
+#
+# android: Routing_Point_add [
+# method: {'planning_pp', 'outside_pp'}
+# mode: {'planning', 'onroute', None}
+# type: {'start', 'finish', 'inner'}
+# value: {'gps', 'point'}
+# ]
+
+
+class RoutingPointAdd(DictEvent):
+    keys = (
+        'Routing_Point_add',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingPointAdd, self).__init__(*args, **kwargs)
+        self.mode = self.data.get('mode', 'onroute')
+        self.method = self.data.get('method', 'outside_pp')
+        self.type = self.data.get('type', 'unknown')
+        self.value = self.data.get('value', 'unknown')
+
+
+# Event send, when user click on search button after build route
+# or after start planning route
+# ALOHA:
+# ios: Routing_Search_click [
+# Country=PK
+# Language=en-PK
+# Orientation=Portrait
+# mode: {'planning', 'onroute'}
+# ]
+#
+# android: Routing_Search_click [
+# mode: {'planning', 'onroute'}
+# ]
+
+
+class RoutingSearch(DictEvent):
+    keys = (
+        'Routing_Search_click',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingSearch, self).__init__(*args, **kwargs)
+        self.mode = self.data.get('mode', 'onroute')
