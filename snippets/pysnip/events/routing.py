@@ -2,25 +2,20 @@ from pyaloha.event import Event, DictEvent
 
 
 class RouteDictEvent(DictEvent):
-    mode_alliases = {
-        'astar-bidirectional-pedestrian': 'pedestrian',
-        'astar-bidirectional-bicycle': 'bicycle',
-        'astar-bidirectional-car': 'vehicle',
-        'pedestrian': 'pedestrian',
-        'bicycle': 'bicycle',
-        'vehicle': 'vehicle',
-        'mixed-car': 'vehicle'
-    }
-
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
+
         self.setup_mode()
 
     def setup_mode(self):
-        mode = self.data.get(
+        # vehicle, astar-bidirectional-pedestrian, astar-bidirectional-bicycle
+        self.mode = self.data.get(
             'router', self.data.get('name', None)
-        )    
-        self.mode = self.mode_alliases[mode]
+        )
+        if self.mode == 'astar-bidirectional-pedestrian':
+            self.mode = 'pedestrian'
+        if self.mode == 'astar-bidirectional-bicycle':
+            self.mode = 'bicycle'
 
     def process_me(self, processor):
         processor.process_routing(self)
@@ -73,18 +68,10 @@ class RouteRequest(RouteDictEvent):
 
 # Event for a start of the route with specific props
 # with no specific fields
-# Android: Routing. Start []
-# iOS: Point to point Go [
-# Country = 'AR'
-# Language = 'ru-UA'
-# Orientation = 'Portrait'
-# Value: {'From my position', 'Point to point', 'To my position'}
-# ]
 
 class RouteStart(Event):
     keys = (
-        'Routing. Start', 
-        'Point to point Go',
+        'Routing. Start',
     )
 
     def process_me(self, processor):
