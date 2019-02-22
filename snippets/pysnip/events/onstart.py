@@ -14,23 +14,42 @@ class TechnicalLaunch(DictEvent):
         '$launch',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(TechnicalLaunch, self).__init__(*args, **kwargs)
+    __slots__ = tuple()
 
+    @property
+    def connection(self):
         try:
             if self.data['connected'] == 'yes':
                 # wifi or not
-                self.connection = self.data.get('ctype') or 'mobile'
-                self.in_roaming = self.data.get('roaming', 'no') == 'yes'
+                return self.data.get('ctype') or 'mobile'
         except KeyError:
-            self.connection = None
-            self.in_roaming = None
+            pass
+
+        return None
+
+    @property
+    def in_roaming(self):
+        try:
+            if self.data['connected'] == 'yes':
+                return self.data.get('roaming', 'no') == 'yes'
+        except KeyError:
+            pass
+
+        return None
+
+    def __dumpdict__(self):
+        d = super(TechnicalLaunch, self).__basic_dumpdict__()
+        d.update({
+            'connection': self.connection(),
+            'in_roaming': self.in_roaming()
+        })
+        return d
 
 
 # TechnicalLaunch event in iOS is always associated with a UI launch
 
 class IOSVisibleLaunch(TechnicalLaunch):
-    pass
+    __slots__ = tuple()
 
 
 # This event is trusted to be the one associated with an actual UI launch
@@ -40,3 +59,40 @@ class AndroidVisibleLaunch(Event):
     keys = (
         '$onResume',
     )
+
+    __slots__ = tuple()
+
+# SESSIONS
+
+
+class AndroidSessionStart(Event):
+    keys = (
+        '$startSession',
+    )
+
+    __slots__ = tuple()
+
+
+class AndroidSessionEnd(Event):
+    keys = (
+        '$endSession',
+    )
+
+    __slots__ = tuple()
+
+
+class IOSSessionStart(Event):
+    keys = (
+        '$applicationDidBecomeActive',
+    )
+
+    __slots__ = tuple()
+
+
+class IOSSessionEnd(Event):
+    keys = (
+        '$applicationDidEnterBackground',
+        # 'Framework::EnterBackground',
+    )
+
+    __slots__ = tuple()

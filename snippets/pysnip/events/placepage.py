@@ -33,19 +33,70 @@ class ObjectSelection(DictEvent):
         '$SelectMapObject',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(ObjectSelection, self).__init__(*args, **kwargs)
+    __slots__ = tuple()
 
-        self.by_longtap = self.data['longTap'] != 0
+    @property
+    def object_location(self):
+        return (
+            self.user_info.lat,
+            self.user_info.lon
+        )
+
+    @property
+    def by_longtap(self):
+        return self.data['longTap'] != 0
+
+    @property
+    def object_types(self):
         try:
-            self.object_types = self.data.get('types', None).split(' ')
+            return self.data.get('types', None).split(' ')
         except AttributeError:
-            self.object_types = []
+            return []
+
+    @property
+    def title(self):
+        return self.data.get('title', None)
 
     def __dumpdict__(self):
-        d = super(DictEvent, self).__dumpdict__()
+        d = super(DictEvent, self).__basic_dumpdict__()
         d.update({
             'by_longtap': self.by_longtap,
-            'object_types': self.object_types
+            'object_types': self.object_types,
+            'object_location': self.object_location
+        })
+        return d
+
+
+class BookmarkAction(DictEvent):
+    keys = (
+        'Bookmarks_Bookmark_action',
+    )
+
+    __slots__ = tuple()
+
+    @property
+    def action(self):
+        return self.data['action']
+
+    @property
+    def object_types(self):
+        try:
+            return self.data['tags'].split(',')
+        except KeyError:
+            return []
+
+    @property
+    def object_location(self):
+        try:
+            return float(self.data['lat']), float(self.data['lon'])
+        except KeyError:  # old event
+            return None
+
+    def __dumpdict__(self):
+        d = super(DictEvent, self).__basic_dumpdict__()
+        d.update({
+            'action': self.action,
+            'object_types': self.object_types,
+            'object_location': self.object_location
         })
         return d

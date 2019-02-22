@@ -7,8 +7,12 @@ from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 from pyaloha.event_factory import EventFactory
 
 from pysnip.events.misc import GPSTracking, SearchResults
-from pysnip.events.onstart import AndroidVisibleLaunch, TechnicalLaunch
-from pysnip.events.placepage import ObjectSelection
+from pysnip.events.onstart import (
+    AndroidVisibleLaunch, TechnicalLaunch,
+    AndroidSessionStart, AndroidSessionEnd,
+    IOSSessionStart, IOSSessionEnd,
+)
+from pysnip.events.placepage import ObjectSelection, BookmarkAction
 from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking
 )
@@ -16,8 +20,10 @@ from pysnip.events.maps import MapActionRequest, MapDownloadFinished
 
 
 CUSTOM_EVENTS = (
-    ObjectSelection,
+    ObjectSelection, BookmarkAction,
     TechnicalLaunch, AndroidVisibleLaunch,
+    AndroidSessionStart, AndroidSessionEnd,
+    IOSSessionStart, IOSSessionEnd,
     SearchResults, GPSTracking,
     RouteRequest, RouteStart, RouteEnd, RouteTracking,
     MapActionRequest, MapDownloadFinished
