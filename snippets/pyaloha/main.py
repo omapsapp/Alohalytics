@@ -1,13 +1,13 @@
 import multiprocessing
 import os
 import sys
-import traceback
 
-from pyaloha.protocol import str2date, WorkerResults
+from pyaloha.protocol import WorkerResults, str2date
+from pyaloha.settings import DEFAULT_WORKER_NUM, DEFAULT_ALOHA_DATA_DIR
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
 
-def cmd_run(plugin_dir):
+def cmd_run(plugin_dir, data_dir=DEFAULT_ALOHA_DATA_DIR):
     """
     Main command line interface to pyaloha system
     """
@@ -20,17 +20,17 @@ def cmd_run(plugin_dir):
     except IndexError:
         events_limit = 0
 
-    run(
+    main_script(
         plugin_name,
         start_date, end_date,
-        plugin_dir=plugin_dir, events_limit=events_limit
+        plugin_dir=plugin_dir, events_limit=events_limit,
+        data_dir=data_dir
     )
 
 
-def run(plugin_name, start_date, end_date, plugin_dir,
-        data_dir='/mnt/disk1/alohalytics/by_date',
-        results_dir='./stats',
-        events_limit=0):
+def main_script(plugin_name, start_date, end_date, plugin_dir, data_dir,
+                results_dir='./stats',
+                events_limit=0):
     """
     Pyaloha stats processing pipeline:
 0. Load worker, aggregator, processor classes from a specified plugin (script)
@@ -63,7 +63,7 @@ def aggregate_raw_data(
         data_dir, results_dir, plugin_dir, plugin,
         start_date=None, end_date=None,
         events_limit=0,
-        worker_num=3 * multiprocessing.cpu_count() / 4):
+        worker_num=DEFAULT_WORKER_NUM):
     """
     Workers-aggregator subpipeline:
 0. Load worker, aggregator classes from a specified plugin
@@ -74,43 +74,62 @@ def aggregate_raw_data(
     setup_logs()
     logger = multiprocessing.get_logger()
 
-    pool = multiprocessing.Pool(worker_num)
+    files = [
+        os.path.join(data_dir, fname)
+        for fname in sorted(os.listdir(data_dir))
+        if check_fname(fname, start_date, end_date)
+    ]
 
+    tasks = [
+        (plugin_dir, plugin, fpath, events_limit)
+        for fpath in files
+    ]
+
+    aggregator = load_plugin(
+        plugin, plugin_dir=plugin_dir
+    ).DataAggregator(results_dir)
+
+    logger.info('Aggregator: start workers')
+
+    pool = multiprocessing.Pool(worker_num, maxtasksperchild=None)
     try:
-        files = [
-            os.path.join(data_dir, fname)
-            for fname in os.listdir(data_dir)
-            if check_fname(fname, start_date, end_date)
-        ]
-
-        items = (
-            (plugin_dir, plugin, fpath, events_limit)
-            for fpath in files
-        )
-
-        aggregator = load_plugin(
-            plugin, plugin_dir=plugin_dir
-        ).DataAggregator(results_dir)
-
-        logger.info('Aggregator: aggregate')
-        for i, results in enumerate(pool.imap(invoke_cmd_worker, items)):
-            try:
-                aggregator.aggregate(WorkerResults.loads_object(results))
-            except Exception:
-                logger.error(
-                    'Aggregator: processing of %s failed: %s' % (
-                        files[i],
-                        traceback.format_exc()
-                    )
+        engine = pool.imap_unordered
+        batch_size = 2 * worker_num
+        batch_number = len(tasks) / batch_size
+        for batch_no in range(batch_number + 1):
+            batch_start = batch_no * batch_size
+            batch_tasks = tasks[batch_start: batch_start + batch_size]
+            logger.info(
+                'Aggregator: batch %d is being aggregated: %s' % (
+                    batch_no, batch_tasks
                 )
-
-        logger.info('Aggregator: post_aggregate')
-        aggregator.post_aggregate(pool)
-
-        logger.info('Aggregator: done')
+            )
+            for file_name, results in engine(invoke_cmd_worker, batch_tasks):
+                try:
+                    results = WorkerResults.loads_object(results)
+                    logger.info(
+                        'Aggregator: task %s is being aggregated' % file_name
+                    )
+                    aggregator.aggregate(results)
+                    logger.info('Aggregator: task %s done' % file_name)
+                except Exception as e:
+                    logger.exception(
+                        'Aggregator: task %s failed:\n%s', file_name, e
+                    )
     finally:
         pool.terminate()
         pool.join()
+
+    logger.info('Aggregator: post_aggregate')
+    # TODO: wtf you have an ImportError if reuse
+    pool = multiprocessing.Pool(worker_num)
+    try:
+        aggregator.post_aggregate(pool)
+    finally:
+        pool.terminate()
+        pool.join()
+
+    logger.info('Aggregator: done')
 
     return aggregator
 

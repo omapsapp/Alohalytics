@@ -165,7 +165,16 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
 
         UserInfo userInfo;
         userInfo.setOSType(idEvent->id[0]);
-        userInfo.setUid(idEvent->id);
+
+        try
+        {
+          userInfo.setUid(idEvent->id);
+        }
+        catch (const std::logic_error& e)
+        {
+          callback(key, eventTime, userInfo, NULL, 0);
+          return;
+        }
 
         AlohalyticsKeyValueLocationEvent const * kvle = dynamic_cast<AlohalyticsKeyValueLocationEvent const *>(event);
         if (kvle)

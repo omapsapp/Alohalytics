@@ -4,7 +4,6 @@ import multiprocessing
 import os
 import subprocess
 import sys
-import traceback
 
 from pyaloha.ccode import iterate_events
 
@@ -25,8 +24,8 @@ def load_plugin(plugin_name, plugin_dir):
 
 
 def invoke_cmd_worker(item):
+    logger = multiprocessing.get_logger()
     try:
-        logger = multiprocessing.get_logger()
         pid = multiprocessing.current_process().pid
 
         plugin_dir, plugin, filepath, events_limit = item
@@ -43,12 +42,16 @@ def invoke_cmd_worker(item):
 
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, shell=True,
-            env=env
+            env=env, close_fds=True
         )
         output = process.communicate()[0]
-        return output
+        logger.info(
+            '%d: Got %0.2f Mbytes result from a job: %s',
+            pid, float(len(output)) / 1024**2, cmd
+        )
+        return filepath, output
     except Exception as e:
-        traceback.print_exc(e)
+        logger.exception('Worker launcher failed:\n %s', e)
 
 
 def worker():
@@ -64,9 +67,10 @@ def worker():
         ).DataStreamWorker()
         iterate_events(processor, events_limit=events_limit)
         processor.pre_output()
-        print processor.dumps_results()
-    except Exception:
-        logger.error(traceback.format_exc())
+        sys.stdout.write(processor.dumps_results() + '\n')
+        sys.stdout.flush()
+    except Exception as e:
+        logger.exception('Worker process failed:\n %s', e)
 
 if __name__ == '__main__':
     worker()
