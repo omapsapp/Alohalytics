@@ -47,7 +47,7 @@ def invoke_cmd_worker(item):
         output = process.communicate()[0]
         logger.info(
             '%d: Got %0.2f Mbytes result from a job: %s',
-            pid, float(len(output)) / 1024**2, cmd
+            pid, float(len(output)) / 1000**2, cmd
         )
         return filepath, output
     except Exception as e:

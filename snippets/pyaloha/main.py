@@ -1,3 +1,7 @@
+"""Launcher and pipeline implementation module."""
+
+from __future__ import division
+
 import multiprocessing
 import os
 import sys
@@ -7,11 +11,10 @@ from pyaloha.settings import DEFAULT_WORKER_NUM, DEFAULT_ALOHA_DATA_DIR
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
 
-def cmd_run(plugin_dir, data_dir=DEFAULT_ALOHA_DATA_DIR):
-    """
-    Main command line interface to pyaloha system
-    """
-
+def cmd_run(plugin_dir,
+            data_dir=DEFAULT_ALOHA_DATA_DIR,
+            worker_num=DEFAULT_WORKER_NUM):
+    """Main command line interface to pyaloha system."""
     # TODO: argparse
     plugin_name = sys.argv[1]
     start_date, end_date = map(str2date, sys.argv[2:4])
@@ -24,24 +27,27 @@ def cmd_run(plugin_dir, data_dir=DEFAULT_ALOHA_DATA_DIR):
         plugin_name,
         start_date, end_date,
         plugin_dir=plugin_dir, events_limit=events_limit,
-        data_dir=data_dir
+        data_dir=data_dir,
+        worker_num=worker_num
     )
 
 
 def main_script(plugin_name, start_date, end_date, plugin_dir, data_dir,
+                worker_num,
                 results_dir='./stats',
                 events_limit=0):
     """
-    Pyaloha stats processing pipeline:
-0. Load worker, aggregator, processor classes from a specified plugin (script)
-1. Run workers (data preprocessors) on alohalytics files within specified range
-2. Accumulate [and postprocess] worker results with an aggregator instance
-3. Run stats processor and print results to stdout
-    """
+    Running pyAloha stats processing pipeline.
 
+    0. Load worker, aggregator, processor classes from a specified plugin
+    1. Run workers (data preprocessors) on aloha files within specified range
+    2. Accumulate [and postprocess] worker results with an aggregator instance
+    3. Run stats processor and print results to stdout
+    """
     aggregator = aggregate_raw_data(
         data_dir, results_dir, plugin_dir, plugin_name,
-        start_date, end_date, events_limit
+        start_date, end_date, events_limit,
+        worker_num=worker_num
     )
 
     stats = load_plugin(
@@ -64,12 +70,12 @@ def aggregate_raw_data(
         start_date=None, end_date=None,
         events_limit=0,
         worker_num=DEFAULT_WORKER_NUM):
-    """
-    Workers-aggregator subpipeline:
-0. Load worker, aggregator classes from a specified plugin
-1. Run workers in parallel (basing on server stats files)
-2. Accumulate results by an aggregator
-3. Run aggregator post processing
+    """Workers-aggregator subpipeline.
+
+    0. Load worker, aggregator classes from a specified plugin
+    1. Run workers in parallel (basing on server stats files)
+    2. Accumulate results by an aggregator
+    3. Run aggregator post processing
     """
     setup_logs()
     logger = multiprocessing.get_logger()
@@ -91,12 +97,19 @@ def aggregate_raw_data(
 
     logger.info('Aggregator: start workers')
 
-    pool = multiprocessing.Pool(worker_num, maxtasksperchild=None)
+    # Let us create pools before main process will consume more memory
+    # and let workers live forever (default) to exclude spontaneous forking
+    worker_pool = multiprocessing.Pool(worker_num)
+    # Just to be 100% safe we have no leaks, let us use separate pools
+    # for work-aggregate phase and post aggregation.
+    # Also, most of the post aggregation tasks heavily depend on the disk IO
+    # so we do not need so much workers.
+    post_aggregator_pool = multiprocessing.Pool(worker_num // 2)
     try:
-        engine = pool.imap_unordered
+        engine = worker_pool.imap_unordered
         batch_size = 2 * worker_num
-        batch_number = len(tasks) / batch_size
-        for batch_no in range(batch_number + 1):
+        batch_number = len(tasks) // batch_size + 1
+        for batch_no in range(batch_number):
             batch_start = batch_no * batch_size
             batch_tasks = tasks[batch_start: batch_start + batch_size]
             logger.info(
@@ -117,17 +130,16 @@ def aggregate_raw_data(
                         'Aggregator: task %s failed:\n%s', file_name, e
                     )
     finally:
-        pool.terminate()
-        pool.join()
+        worker_pool.terminate()
+        worker_pool.join()
 
     logger.info('Aggregator: post_aggregate')
-    # TODO: wtf you have an ImportError if reuse
-    pool = multiprocessing.Pool(worker_num)
+
     try:
-        aggregator.post_aggregate(pool)
+        aggregator.post_aggregate(pool=post_aggregator_pool)
     finally:
-        pool.terminate()
-        pool.join()
+        post_aggregator_pool.terminate()
+        post_aggregator_pool.join()
 
     logger.info('Aggregator: done')
 
@@ -135,16 +147,16 @@ def aggregate_raw_data(
 
 
 def check_fname(filename, start_date, end_date):
-    """
-    Checking if a server stats file is the one we need to process
-(depending on the server time dates).
+    """Checking if a server stats file is within dates range.
+
+    NOTE: using server dates, not clients.
     """
     if filename[0] == '.':
         return False
-    return check_date(filename, start_date, end_date)
+    return _check_date(filename, start_date, end_date)
 
 
-def check_date(filename, start_date, end_date):
+def _check_date(filename, start_date, end_date):
     try:
         fdate = str2date(filename[-11:-3])
     except (ValueError, IndexError):
