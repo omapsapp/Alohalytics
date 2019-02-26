@@ -170,7 +170,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
         {
           userInfo.setUid(idEvent->id);
         }
-        catch (const std::logic_error& e)
+        catch (std::logic_error const & e)
         {
           callback(key, eventTime, userInfo, NULL, 0);
           return;
