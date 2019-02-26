@@ -147,7 +147,7 @@ def aggregate_raw_data(
 
 
 def check_fname(filename, start_date, end_date):
-    """Checking if a server stats file is withing dates range.
+    """Checking if a server stats file is within dates range.
 
     NOTE: using server dates, not clients.
     """
