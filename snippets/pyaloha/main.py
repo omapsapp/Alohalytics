@@ -1,4 +1,4 @@
-"""Launcher and pipline implementation module."""
+"""Launcher and pipeline implementation module."""
 
 from __future__ import division
 
@@ -98,7 +98,7 @@ def aggregate_raw_data(
     logger.info('Aggregator: start workers')
 
     # Let us create pools before main process will consume more memory
-    # and let workers leave forever (default) to exclude spontaneous forking
+    # and let workers live forever (default) to exclude spontaneous forking
     worker_pool = multiprocessing.Pool(worker_num)
     # Just to be 100% safe we have no leaks, let us use separate pools
     # for work-aggregate phase and post aggregation.
