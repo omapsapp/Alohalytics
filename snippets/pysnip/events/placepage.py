@@ -1,4 +1,5 @@
 from pyaloha.event import DictEvent
+from pysnip.osm_tags import TaggedOSMObject
 
 # Event tracked, when user select object on the map.
 # It can be POI, search result or any another place.
@@ -57,6 +58,13 @@ class ObjectSelection(DictEvent):
             return []
 
     @property
+    def numeric_types(self):
+        try:
+            return TaggedOSMObject(self.data.get('types').split(' '))
+        except KeyError:
+            return None
+
+    @property
     def title(self):
         return self.data.get('title')
 
@@ -66,6 +74,10 @@ class ObjectSelection(DictEvent):
             return int(self.data['bookmark'])
         except KeyError:
             return None
+
+    @property
+    def meters(self):
+        return int(self.data.get('meters', '-1'))
 
     def __dumpdict__(self):
         d = super(DictEvent, self).__basic_dumpdict__()
@@ -94,6 +106,13 @@ class BookmarkAction(DictEvent):
             return self.data['tags'].split(',')
         except KeyError:
             return []
+
+    @property
+    def numeric_types(self):
+        try:
+            return TaggedOSMObject(self.data['tags'].split(','))
+        except KeyError:
+            return None
 
     @property
     def object_location(self):
@@ -164,6 +183,15 @@ class HotelClick(DictEvent):
     def hotel_id(self):
         return self.data.get('hotel')
 
+    def __dumpdict__(self):
+        d = super(DictEvent, self).__basic_dumpdict__()
+        d.update({
+            'action': self.action,
+            'object_types': self.object_types,
+            'object_location': self.object_location
+        })
+        return d
+
 
 # Event tracked, when user select object in list of search results.
 #
@@ -223,6 +251,3 @@ class PlacepageShare(DictEvent):
         'PP. Share',
         'Place page Share',
     )
-
-    def __dumpdict__(self):
-        return super(DictEvent, self).__basic_dumpdict__()
