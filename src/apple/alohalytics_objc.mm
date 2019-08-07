@@ -189,37 +189,46 @@ static void LogSystemInformation(NSString * userAgent) {
 #endif  // TARGET_OS_IPHONE
 
 // Returns path to store statistics files.
-static std::string StoragePath() {
-  // Store files in special directory which is not backed up automatically.
-  NSArray * paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
-  NSString * directory = [[paths firstObject] stringByAppendingString:@"/Alohalytics/"];
-  NSFileManager * fm = [NSFileManager defaultManager];
-  if (![fm fileExistsAtPath:directory]) {
-    if (![fm createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) {
-      // TODO(AlexZ): Probably we need to log this case to the server in the future.
-      NSLog(@"Alohalytics ERROR: Can't create directory %@.", directory);
-    }
+static std::vector<std::string> StoragePath(uint32_t channelsCount) {
+  std::vector<std::string> dirs(channelsCount);
+  for (uint32_t i = 0; i < channelsCount; ++i) {
+    // Store files in special directory which is not backed up automatically.
+    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSString * directory;
+    if (i == 0)
+      directory = [[paths firstObject] stringByAppendingString:@"/Alohalytics/"];
+    else
+      directory = [[paths firstObject] stringByAppendingFormat:@"/Alohalytics%d/", i];
+    NSFileManager * fm = [NSFileManager defaultManager];
+    if (![fm fileExistsAtPath:directory]) {
+      if (![fm createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) {
+        // TODO(AlexZ): Probably we need to log this case to the server in the future.
+        NSLog(@"Alohalytics ERROR: Can't create directory %@.", directory);
+      }
 #if (TARGET_OS_IPHONE > 0)
-    // Disable iCloud backup for storage folder: https://developer.apple.com/library/iOS/qa/qa1719/_index.html
-    const std::string storagePath = [directory UTF8String];
-    CFURLRef url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault,
-                                                           reinterpret_cast<unsigned char const *>(storagePath.c_str()),
-                                                           storagePath.size(),
-                                                           0);
-    CFErrorRef err;
-    signed char valueOfCFBooleanYes = 1;
-    CFNumberRef value = CFNumberCreate(kCFAllocatorDefault, kCFNumberCharType, &valueOfCFBooleanYes);
-    if (!CFURLSetResourcePropertyForKey(url, kCFURLIsExcludedFromBackupKey, value, &err)) {
-      NSLog(@"Alohalytics ERROR while disabling iCloud backup for directory %@", directory);
-    }
-    CFRelease(value);
-    CFRelease(url);
+      // Disable iCloud backup for storage folder: https://developer.apple.com/library/iOS/qa/qa1719/_index.html
+      const std::string storagePath = [directory UTF8String];
+      CFURLRef url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault,
+                                                             reinterpret_cast<unsigned char const *>(storagePath.c_str()),
+                                                             storagePath.size(),
+                                                             0);
+      CFErrorRef err;
+      signed char valueOfCFBooleanYes = 1;
+      CFNumberRef value = CFNumberCreate(kCFAllocatorDefault, kCFNumberCharType, &valueOfCFBooleanYes);
+      if (!CFURLSetResourcePropertyForKey(url, kCFURLIsExcludedFromBackupKey, value, &err)) {
+        NSLog(@"Alohalytics ERROR while disabling iCloud backup for directory %@", directory);
+      }
+      CFRelease(value);
+      CFRelease(url);
 #endif  // TARGET_OS_IPHONE
+    }
+    if (directory) {
+      dirs[i] = [directory UTF8String];
+    } else {
+      dirs[i] = "Alohalytics ERROR: Can't retrieve valid storage path.";
+    }
   }
-  if (directory) {
-    return [directory UTF8String];
-  }
-  return std::string("Alohalytics ERROR: Can't retrieve valid storage path.");
+  return dirs;
 }
 
 #if (TARGET_OS_IPHONE > 0)
@@ -312,21 +321,32 @@ static NSString * gInstallationId = nil;
   Stats::Instance().SetDebugMode(enable);
 }
 
-+ (void)setup:(NSString *)serverUrl withLaunchOptions:(NSDictionary *)options {
++ (void)setup:(NSArray *)serverUrls withLaunchOptions:(NSDictionary *)options {
   const NSBundle * bundle = [NSBundle mainBundle];
   NSString * bundleIdentifier = [bundle bundleIdentifier];
   NSString * version = [[bundle infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-  // Remove trailing slash in the url if it's present.
-  const NSInteger indexOfLastChar = serverUrl.length - 1;
-  if ([serverUrl characterAtIndex:indexOfLastChar] == '/') {
-    serverUrl = [serverUrl substringToIndex:indexOfLastChar];
-  }
-  // Final serverUrl is modified to $(serverUrl)/[ios|mac]/your.bundle.id/app.version
+
+  std::vector<std::string> urls;
+  for (NSString * url in serverUrls) {
+    if (url == nil || [url length] == 0) {
+      urls.emplace_back();
+      continue;
+    }
+    NSMutableString * serverUrl = [NSMutableString stringWithString:url];
+    // Remove trailing slash in the url if it's present.
+    const NSUInteger indexOfLastChar = serverUrl.length - 1;
+    if ([serverUrl characterAtIndex:indexOfLastChar] == '/') {
+      [serverUrl deleteCharactersInRange:{indexOfLastChar, 1}];
+    }
+    // Final serverUrl is modified to $(serverUrl)/[ios|mac]/your.bundle.id/app.version
 #if (TARGET_OS_IPHONE > 0)
-  serverUrl = [serverUrl stringByAppendingFormat:@"/ios/%@/%@", bundleIdentifier, version];
+    [serverUrl appendFormat:@"/ios/%@/%@", bundleIdentifier, version];
 #else
-  serverUrl = [serverUrl stringByAppendingFormat:@"/mac/%@/%@", bundleIdentifier, version];
+    [serverUrl appendFormat:@"/mac/%@/%@", bundleIdentifier, version];
 #endif
+    urls.push_back([serverUrl UTF8String]);
+  }
+
 #if (TARGET_OS_IPHONE > 0)
   NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
   Class cls = [Alohalytics class];
@@ -338,8 +358,9 @@ static NSString * gInstallationId = nil;
 #endif // TARGET_OS_IPHONE
   Stats & instance = Stats::Instance();
   instance.SetClientId([self installationId].UTF8String)
-          .SetServerUrl([serverUrl UTF8String])
-          .SetStoragePath(StoragePath());
+          .SetChannelsCount(urls.size())
+          .SetServerUrls(urls)
+          .SetStoragePaths(StoragePath(static_cast<uint32_t>(urls.size())));
 
   NSUserDefaults * ud = [NSUserDefaults standardUserDefaults];
   if ([ud boolForKey:kIsAlohalyticsDisabledKey]) {

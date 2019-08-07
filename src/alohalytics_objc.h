@@ -44,7 +44,7 @@
 + (void)setDebugMode:(BOOL)enable;
 // Should be called in application:didFinishLaunchingWithOptions: or in application:willFinishLaunchingWithOptions:
 // Final serverUrl is modified to $(serverUrl)/[ios|mac]/your.bundle.id/app.version
-+ (void)setup:(NSString *)serverUrl withLaunchOptions:(NSDictionary *)options;
++ (void)setup:(NSArray *)serverUrls withLaunchOptions:(NSDictionary *)options;
 + (void)forceUpload;
 #if (TARGET_OS_IPHONE > 0)
 // The same as above but with a callback notification when upload ends or fails.

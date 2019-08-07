@@ -61,11 +61,11 @@ int main(int argc, char ** argv) {
   }
 
   if (!FLAGS_server_url.empty()) {
-    stats.SetServerUrl(FLAGS_server_url);
+    stats.SetServerUrls(std::vector<std::string>{FLAGS_server_url});
   }
 
   if (!FLAGS_storage.empty()) {
-    stats.SetStoragePath(FLAGS_storage);
+    stats.SetStoragePaths(std::vector<std::string>{FLAGS_storage});
   }
 
   if (!FLAGS_id.empty()) {

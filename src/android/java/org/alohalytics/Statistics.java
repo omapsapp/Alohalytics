@@ -46,6 +46,9 @@ public class Statistics {
 
   private static final String PREF_IS_ALOHALYTICS_DISABLED_KEY = "AlohalyticsDisabledKey";
 
+  public static final int ONLY_CHANNEL = 1;
+  public static final int ALL_CHANNELS = 0xffffffff;
+
   public static void setDebugMode(boolean enable) {
     sDebugModeEnabled = enable;
     debugCPP(enable);
@@ -113,12 +116,8 @@ public class Statistics {
   }
 
   // Passed serverUrl will be modified to $(serverUrl)/android/packageName/versionCode
-  public static void setup(String serverUrl, final Context context) {
-    final String storagePath = context.getFilesDir().getAbsolutePath() + "/Alohalytics/";
-    // Native code expects valid existing writable dir.
-    (new File(storagePath)).mkdirs();
+  public static void setup(String[] serverUrls, final Context context) {
     final Pair<String, Boolean> id = getInstallationId(context);
-
     String versionName = "0", packageName = "0";
     long installTime = 0, updateTime = 0;
     int versionCode = 0;
@@ -134,10 +133,32 @@ public class Statistics {
     } catch (android.content.pm.PackageManager.NameNotFoundException ex) {
       ex.printStackTrace();
     }
-    // Take into an account trailing slash in the url.
-    serverUrl = serverUrl + (serverUrl.lastIndexOf('/') == serverUrl.length() - 1 ? "" : "/") + "android/" + packageName + "/" + versionCode;
+
+    String[] paths = new String[serverUrls.length];
+    for (int i = 0; i < paths.length; i++) {
+      String storagePath;
+      if (i == 0)
+        storagePath = context.getFilesDir().getAbsolutePath() + "/Alohalytics/";
+      else
+        storagePath = context.getFilesDir().getAbsolutePath() + "/Alohalytics" + i + "/";
+      // Native code expects valid existing writable dir.
+      (new File(storagePath)).mkdirs();
+    }
+
+    String[] urls = new String[serverUrls.length];
+    for (int i = 0; i < urls.length; i++) {
+      if (serverUrls[i] == null || serverUrls[i].isEmpty()) {
+        urls[i] = "";
+      } else {
+        // Take into an account trailing slash in the url.
+        boolean hasTrailing = serverUrls[i].lastIndexOf('/') == serverUrls[i].length() - 1;
+        urls[i] = serverUrls[i] + (hasTrailing ? "" : "/") + "android/" + packageName + "/" + versionCode;
+      }
+    }
+
     // Initialize core C++ module before logging events.
-    setupCPP(HttpTransport.class, serverUrl, storagePath, id.first);
+    setupCPP(HttpTransport.class, urls, paths, id.first);
+
 
     final SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     if (prefs.getBoolean(PREF_IS_ALOHALYTICS_DISABLED_KEY, false)) {
@@ -171,19 +192,37 @@ public class Statistics {
         ? SystemInfo.getConnectionInfo(context) : null, lastKnownLocation);
   }
 
-  public static native void logEvent(String eventName);
+  public static native void logEvent(String eventName, int channelsMask);
+  public static void logEvent(String eventName) {
+    logEvent(eventName, ONLY_CHANNEL);
+  }
 
-  public static native void logEvent(String eventName, String eventValue);
+  public static native void logEvent(String eventName, String eventValue, int channelsMask);
+  public static void logEvent(String eventName, String eventValue) {
+    logEvent(eventName, eventValue, ONLY_CHANNEL);
+  }
 
   // eventDictionary is a key,value,key,value array.
-  public static native void logEvent(String eventName, String[] eventDictionary);
+  public static native void logEvent(String eventName, String[] eventDictionary, int channelsMask);
+  public static void logEvent(String eventName, String[] eventDictionary) {
+    logEvent(eventName, eventDictionary, ONLY_CHANNEL);
+  }
 
   private static native void logEvent(String eventName, String[] eventDictionary, boolean hasLatLon,
                                       long timestamp, double lat, double lon, float accuracy,
                                       boolean hasAltitude, double altitude, boolean hasBearing,
-                                      float bearing, boolean hasSpeed, float speed, byte source);
+                                      float bearing, boolean hasSpeed, float speed, byte source,
+                                      int channelsMask);
+  public static void logEvent(String eventName, String[] eventDictionary, boolean hasLatLon,
+                              long timestamp, double lat, double lon, float accuracy,
+                              boolean hasAltitude, double altitude, boolean hasBearing,
+                              float bearing, boolean hasSpeed, float speed, byte source) {
+    logEvent(eventName, eventDictionary, hasLatLon, timestamp, lat, lon, accuracy, hasAltitude,
+             altitude, hasBearing, bearing, hasSpeed, speed, source, ONLY_CHANNEL);
+  }
 
-  public static void logEvent(String eventName, String[] eventDictionary, Location l) {
+  public static void logEvent(String eventName, String[] eventDictionary, Location l,
+                              int channelsMask) {
     if (l == null) {
       logEvent(eventName, eventDictionary);
     } else {
@@ -202,11 +241,15 @@ public class Statistics {
       }
       logEvent(eventName, eventDictionary, l.hasAccuracy(), l.getTime(), l.getLatitude(), l.getLongitude(),
           l.getAccuracy(), l.hasAltitude(), l.getAltitude(), l.hasBearing(), l.getBearing(),
-          l.hasSpeed(), l.getSpeed(), source);
+          l.hasSpeed(), l.getSpeed(), source, channelsMask);
     }
   }
+  public static void logEvent(String eventName, String[] eventDictionary, Location l) {
+    logEvent(eventName, eventDictionary, l, ONLY_CHANNEL);
+  }
 
-  public static void logEvent(String eventName, Map<String, String> eventDictionary) {
+  public static void logEvent(String eventName, Map<String, String> eventDictionary,
+                              int channelsMask) {
     // For faster native processing pass array of strings instead of a map.
     final String[] array = new String[eventDictionary.size() * 2];
     int index = 0;
@@ -214,7 +257,10 @@ public class Statistics {
       array[index++] = entry.getKey();
       array[index++] = entry.getValue();
     }
-    logEvent(eventName, array);
+    logEvent(eventName, array, channelsMask);
+  }
+  public static void logEvent(String eventName, Map<String, String> eventDictionary) {
+    logEvent(eventName, eventDictionary, ONLY_CHANNEL);
   }
 
   // http://stackoverflow.com/a/7929810
@@ -246,8 +292,8 @@ public class Statistics {
 
   // Initialize internal C++ statistics engine.
   private native static void setupCPP(final Class httpTransportClass,
-                                      final String serverUrl,
-                                      final String storagePath,
+                                      final String[] serverUrls,
+                                      final String[] storagePaths,
                                       final String installationId);
 
   private native static void debugCPP(boolean enable);
