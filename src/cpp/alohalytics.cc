@@ -32,7 +32,6 @@
 #include <cstdio>  // remove
 
 #include "../alohalytics.h"
-#include "../event_base.h"
 #include "../file_manager.h"
 #include "../gzip_wrapper.h"
 #include "../http_client.h"
@@ -55,6 +54,18 @@
 namespace alohalytics {
 
 static constexpr const char * kAlohalyticsHTTPContentType = "application/alohalytics-binary-blob";
+
+uint32_t ChannelsCount(uint32_t channels_mask) {
+  uint32_t channels_count = 0;
+  auto m = channels_mask;
+  while (m != 0)
+  {
+    if (m & 1)
+      channels_count++;
+    m = m >> 1;
+  }
+  return channels_count;
+}
 
 // Use alohalytics::Stats::Instance() to access statistics engine.
 Stats::Stats() {
@@ -165,13 +176,16 @@ Stats & Stats::SetClientId(const std::string & unique_client_id) {
   return *this;
 }
 
-static inline void LogEventImpl(AlohalyticsBaseEvent const & event, THundredKilobytesFileQueue & messages_queue) {
+void Stats::LogEventImpl(AlohalyticsBaseEvent const & event, uint32_t channels_mask) {
   std::ostringstream sstream;
   {
     // unique_ptr is used to correctly serialize polymorphic types.
     cereal::BinaryOutputArchive(sstream) << std::unique_ptr<AlohalyticsBaseEvent const, NoOpDeleter>(&event);
   }
-  messages_queue.PushMessage(sstream.str());
+  for (uint32_t i = 0; i < channels_.size(); ++i) {
+    if (channels_mask & ChannelMask(i))
+      channels_[i]->messages_queue_.PushMessage(sstream.str());
+  }
 }
 
 void Stats::LogEvent(std::string const & event_name, uint32_t channels_mask) {
@@ -179,10 +193,7 @@ void Stats::LogEvent(std::string const & event_name, uint32_t channels_mask) {
   if (enabled_) {
     AlohalyticsKeyEvent event;
     event.key = event_name;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
@@ -192,10 +203,7 @@ void Stats::LogEvent(std::string const & event_name, Location const & location, 
     AlohalyticsKeyLocationEvent event;
     event.key = event_name;
     event.location = location;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
@@ -205,10 +213,7 @@ void Stats::LogEvent(std::string const & event_name, std::string const & event_v
     AlohalyticsKeyValueEvent event;
     event.key = event_name;
     event.value = event_value;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
@@ -220,10 +225,7 @@ void Stats::LogEvent(std::string const & event_name, std::string const & event_v
     event.key = event_name;
     event.value = event_value;
     event.location = location;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
@@ -233,10 +235,7 @@ void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pa
     AlohalyticsKeyPairsEvent event;
     event.key = event_name;
     event.pairs = value_pairs;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
@@ -248,17 +247,14 @@ void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pa
     event.key = event_name;
     event.pairs = value_pairs;
     event.location = location;
-    for (uint32_t i = 0; i < channels_.size(); ++i) {
-      if (channels_mask & ChannelMask(i))
-        LogEventImpl(event, channels_[i]->messages_queue_);
-    }
+    LogEventImpl(event, channels_mask);
   }
 }
 
 void Stats::Upload(const TFileProcessingFinishedCallback & upload_finished_callback) {
   if (enabled_) {
     uint32_t channels_count = 0;
-    for (auto & c : channels_) {
+    for (const auto & c : channels_) {
       if (c->upload_url_.empty()) {
         LOG_IF_DEBUG("Warning: upload server url has not been set, nothing was uploaded.");
         continue;
@@ -268,34 +264,34 @@ void Stats::Upload(const TFileProcessingFinishedCallback & upload_finished_callb
 
     auto upload_counter = std::make_shared<uint32_t>(0);
     auto upload_result = std::make_shared<ProcessingResult>(ProcessingResult::ENothingToProcess);
+    auto cb = [this, channels_count, upload_counter, upload_result, upload_finished_callback](ProcessingResult result) {
+      bool need_notify = false;
+      ProcessingResult r = ProcessingResult::ENothingToProcess;
+      {
+        std::lock_guard<std::mutex> lock(upload_mutex_);
+        (*upload_counter)++;
+        // Error in any upload - error for the whole process.
+        if (result == ProcessingResult::EProcessingError)
+          *upload_result = result;
+        if (*upload_result == ProcessingResult::ENothingToProcess)
+          *upload_result = result;
+
+        if (*upload_counter == channels_count)
+        {
+          need_notify = true;
+          r = *upload_result;
+        }
+      }
+      if (need_notify)
+        upload_finished_callback(r);
+    };
     for (auto & c : channels_) {
       if (c->upload_url_.empty())
         continue;
       LOG_IF_DEBUG("Trying to upload collected statistics to", c->upload_url_);
       c->messages_queue_.ProcessArchivedFiles(
         std::bind(&Stats::UploadFileImpl, this, c->upload_url_, std::placeholders::_1, std::placeholders::_2),
-        true /* delete_after_processing */, [this, channels_count, upload_counter,
-                                             upload_result, upload_finished_callback](ProcessingResult result) {
-        bool need_notify = false;
-        ProcessingResult r = ProcessingResult::ENothingToProcess;
-        {
-          std::lock_guard<std::mutex> lock(upload_mutex_);
-          (*upload_counter)++;
-          // Error in any upload - error for the whole process.
-          if (*upload_result != ProcessingResult::EProcessingError && result == ProcessingResult::EProcessingError)
-            *upload_result = result;
-          if (*upload_result == ProcessingResult::ENothingToProcess && result == ProcessingResult::EProcessedSuccessfully)
-            *upload_result = result;
-
-          if (*upload_counter == channels_count)
-          {
-            need_notify = true;
-            r = *upload_result;
-          }
-        }
-        if (need_notify)
-          upload_finished_callback(r);
-      });
+        true /* delete_after_processing */, cb);
     }
   } else {
     LOG_IF_DEBUG("Statistics is disabled. Nothing was uploaded.");
@@ -364,14 +360,7 @@ void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback resul
       return false;
     };
 
-    uint32_t channels_count = 0;
-    auto m = channels_mask;
-    while (m != 0)
-    {
-      if (m & 1)
-        channels_count++;
-      m = m >> 1;
-    }
+    const auto channels_count = ChannelsCount(channels_mask);
     auto collect_counter = std::make_shared<uint32_t>(0);
     auto finish_callback =
       [this, result, result_callback = std::move(result_callback),

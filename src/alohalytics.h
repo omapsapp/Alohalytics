@@ -25,6 +25,7 @@
 #ifndef ALOHALYTICS_H
 #define ALOHALYTICS_H
 
+#include "event_base.h"
 #include "location.h"
 #include "messages_queue.h"
 
@@ -45,6 +46,7 @@ constexpr uint32_t kAllChannels = ~static_cast<uint32_t>(0);
 constexpr uint32_t ChannelMask(uint32_t index) {
   return 1 << index;
 }
+extern uint32_t ChannelsCount(uint32_t channels_mask);
 
 class Stats final {
   // Is statistics engine enabled or disabled.
@@ -79,6 +81,8 @@ class Stats final {
   // - Saved as out_archive for easier post-processing (e.g. uploading).
   // - Deleted.
   void GzipAndArchiveFileInTheQueue(const std::string & in_file, const std::string & out_archive);
+
+  void LogEventImpl(AlohalyticsBaseEvent const & event, uint32_t channels_mask);
 
  public:
   static Stats & Instance();

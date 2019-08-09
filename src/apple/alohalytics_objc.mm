@@ -189,7 +189,7 @@ static void LogSystemInformation(NSString * userAgent) {
 #endif  // TARGET_OS_IPHONE
 
 // Returns path to store statistics files.
-static std::vector<std::string> StoragePath(uint32_t channelsCount) {
+static std::vector<std::string> StoragePaths(uint32_t channelsCount) {
   std::vector<std::string> dirs(channelsCount);
   for (uint32_t i = 0; i < channelsCount; ++i) {
     // Store files in special directory which is not backed up automatically.
@@ -360,7 +360,7 @@ static NSString * gInstallationId = nil;
   instance.SetClientId([self installationId].UTF8String)
           .SetChannelsCount(urls.size())
           .SetServerUrls(urls)
-          .SetStoragePaths(StoragePath(static_cast<uint32_t>(urls.size())));
+          .SetStoragePaths(StoragePaths(static_cast<uint32_t>(urls.size())));
 
   NSUserDefaults * ud = [NSUserDefaults standardUserDefaults];
   if ([ud boolForKey:kIsAlohalyticsDisabledKey]) {
