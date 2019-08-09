@@ -32,7 +32,6 @@
 #include <cstdio>  // remove
 
 #include "../alohalytics.h"
-#include "../event_base.h"
 #include "../file_manager.h"
 #include "../gzip_wrapper.h"
 #include "../http_client.h"
@@ -56,10 +55,22 @@ namespace alohalytics {
 
 static constexpr const char * kAlohalyticsHTTPContentType = "application/alohalytics-binary-blob";
 
+uint32_t ChannelsCount(uint32_t channels_mask) {
+  uint32_t channels_count = 0;
+  auto m = channels_mask;
+  while (m != 0)
+  {
+    if (m & 1)
+      channels_count++;
+    m = m >> 1;
+  }
+  return channels_count;
+}
+
 // Use alohalytics::Stats::Instance() to access statistics engine.
-Stats::Stats()
-    : messages_queue_(
-          std::bind(&Stats::GzipAndArchiveFileInTheQueue, this, std::placeholders::_1, std::placeholders::_2)) {}
+Stats::Stats() {
+  SetChannelsCount(1);
+}
 
 void Stats::Disable() {
   LOG_IF_DEBUG("Statistics collection disabled.");
@@ -134,15 +145,28 @@ Stats & Stats::SetDebugMode(bool enable) {
   return *this;
 }
 
-Stats & Stats::SetServerUrl(const std::string & url_to_upload_statistics_to) {
-  upload_url_ = url_to_upload_statistics_to;
-  LOG_IF_DEBUG("Set upload url:", url_to_upload_statistics_to);
+Stats & Stats::SetChannelsCount(size_t channels_count) {
+  assert(channels_count >= channels_.size());
+  for (size_t i = channels_.size(); i < channels_count; ++i)
+    channels_.emplace_back(new Channel(std::bind(&Stats::GzipAndArchiveFileInTheQueue, this, std::placeholders::_1, std::placeholders::_2)));
   return *this;
 }
 
-Stats & Stats::SetStoragePath(const std::string & full_path_to_storage_with_a_slash_at_the_end) {
-  LOG_IF_DEBUG("Set storage path:", full_path_to_storage_with_a_slash_at_the_end);
-  messages_queue_.SetStorageDirectory(full_path_to_storage_with_a_slash_at_the_end);
+Stats & Stats::SetServerUrls(const std::vector<std::string> & urls_to_upload_statistics_to) {
+  assert(channels_.size() == urls_to_upload_statistics_to.size());
+  for (size_t i = 0; i < channels_.size(); ++i) {
+    channels_[i]->upload_url_ = urls_to_upload_statistics_to[i];
+    LOG_IF_DEBUG("Set upload url:", channels_[i]->upload_url_, "for channel", i);
+  }
+  return *this;
+}
+
+Stats & Stats::SetStoragePaths(const std::vector<std::string> & full_paths_to_storage_with_a_slash_at_the_end) {
+  assert(channels_.size() == full_paths_to_storage_with_a_slash_at_the_end.size());
+  for (size_t i = 0; i < channels_.size(); ++i) {
+    channels_[i]->messages_queue_.SetStorageDirectory(full_paths_to_storage_with_a_slash_at_the_end[i]);
+    LOG_IF_DEBUG("Set storage path:", full_paths_to_storage_with_a_slash_at_the_end[i], "for channel", i);
+  }
   return *this;
 }
 
@@ -152,95 +176,132 @@ Stats & Stats::SetClientId(const std::string & unique_client_id) {
   return *this;
 }
 
-static inline void LogEventImpl(AlohalyticsBaseEvent const & event, THundredKilobytesFileQueue & messages_queue) {
+void Stats::LogEventImpl(AlohalyticsBaseEvent const & event, uint32_t channels_mask) {
   std::ostringstream sstream;
   {
     // unique_ptr is used to correctly serialize polymorphic types.
     cereal::BinaryOutputArchive(sstream) << std::unique_ptr<AlohalyticsBaseEvent const, NoOpDeleter>(&event);
   }
-  messages_queue.PushMessage(sstream.str());
+  for (uint32_t i = 0; i < channels_.size(); ++i) {
+    if (channels_mask & ChannelMask(i))
+      channels_[i]->messages_queue_.PushMessage(sstream.str());
+  }
 }
 
-void Stats::LogEvent(std::string const & event_name) {
+void Stats::LogEvent(std::string const & event_name, uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name);
   if (enabled_) {
     AlohalyticsKeyEvent event;
     event.key = event_name;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::LogEvent(std::string const & event_name, Location const & location) {
+void Stats::LogEvent(std::string const & event_name, Location const & location, uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name, location.ToDebugString());
   if (enabled_) {
     AlohalyticsKeyLocationEvent event;
     event.key = event_name;
     event.location = location;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::LogEvent(std::string const & event_name, std::string const & event_value) {
+void Stats::LogEvent(std::string const & event_name, std::string const & event_value, uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name, "=", event_value);
   if (enabled_) {
     AlohalyticsKeyValueEvent event;
     event.key = event_name;
     event.value = event_value;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::LogEvent(std::string const & event_name, std::string const & event_value, Location const & location) {
+void Stats::LogEvent(std::string const & event_name, std::string const & event_value, Location const & location,
+                     uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name, "=", event_value, location.ToDebugString());
   if (enabled_) {
     AlohalyticsKeyValueLocationEvent event;
     event.key = event_name;
     event.value = event_value;
     event.location = location;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pairs) {
+void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pairs, uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name, "=", value_pairs);
   if (enabled_) {
     AlohalyticsKeyPairsEvent event;
     event.key = event_name;
     event.pairs = value_pairs;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pairs, Location const & location) {
+void Stats::LogEvent(std::string const & event_name, TStringMap const & value_pairs, Location const & location,
+                     uint32_t channels_mask) {
   LOG_IF_DEBUG("LogEvent:", event_name, "=", value_pairs, location.ToDebugString());
   if (enabled_) {
     AlohalyticsKeyPairsLocationEvent event;
     event.key = event_name;
     event.pairs = value_pairs;
     event.location = location;
-    LogEventImpl(event, messages_queue_);
+    LogEventImpl(event, channels_mask);
   }
 }
 
-void Stats::Upload(TFileProcessingFinishedCallback upload_finished_callback) {
-  if (upload_url_.empty()) {
-    LOG_IF_DEBUG("Warning: upload server url has not been set, nothing was uploaded.");
-    return;
-  }
+void Stats::Upload(const TFileProcessingFinishedCallback & upload_finished_callback) {
   if (enabled_) {
-    LOG_IF_DEBUG("Trying to upload collected statistics to", upload_url_);
-    messages_queue_.ProcessArchivedFiles(
-      std::bind(&Stats::UploadFileImpl, this, std::placeholders::_1, std::placeholders::_2),
-      true /* delete_after_processing */, upload_finished_callback);
+    uint32_t channels_count = 0;
+    for (const auto & c : channels_) {
+      if (c->upload_url_.empty()) {
+        LOG_IF_DEBUG("Warning: upload server url has not been set, nothing was uploaded.");
+        continue;
+      }
+      channels_count++;
+    }
+
+    auto upload_counter = std::make_shared<uint32_t>(0);
+    auto upload_result = std::make_shared<ProcessingResult>(ProcessingResult::ENothingToProcess);
+    auto cb = [this, channels_count, upload_counter, upload_result, upload_finished_callback](ProcessingResult result) {
+      bool need_notify = false;
+      ProcessingResult r = ProcessingResult::ENothingToProcess;
+      {
+        std::lock_guard<std::mutex> lock(upload_mutex_);
+        (*upload_counter)++;
+        // Error in any upload - error for the whole process.
+        if (result == ProcessingResult::EProcessingError)
+          *upload_result = result;
+        if (*upload_result == ProcessingResult::ENothingToProcess)
+          *upload_result = result;
+
+        if (*upload_counter == channels_count)
+        {
+          need_notify = true;
+          r = *upload_result;
+        }
+      }
+      if (need_notify)
+        upload_finished_callback(r);
+    };
+    for (auto & c : channels_) {
+      if (c->upload_url_.empty())
+        continue;
+      LOG_IF_DEBUG("Trying to upload collected statistics to", c->upload_url_);
+      c->messages_queue_.ProcessArchivedFiles(
+        std::bind(&Stats::UploadFileImpl, this, c->upload_url_, std::placeholders::_1, std::placeholders::_2),
+        true /* delete_after_processing */, cb);
+    }
   } else {
     LOG_IF_DEBUG("Statistics is disabled. Nothing was uploaded.");
   }
 }
 
-bool Stats::UploadFileImpl(bool file_name_in_content, const std::string & content) {
+bool Stats::UploadFileImpl(const std::string & upload_url, bool file_name_in_content, const std::string & content) {
   // This code should never be called if upload_url_ was not set.
-  assert(!upload_url_.empty());
-  HTTPClientPlatformWrapper request(upload_url_);
+  assert(!upload_url.empty());
+  HTTPClientPlatformWrapper request(upload_url);
   request.set_debug_mode(debug_mode_);
 
   try {
@@ -259,9 +320,13 @@ bool Stats::UploadFileImpl(bool file_name_in_content, const std::string & conten
   return false;
 }
 
-void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback result_callback)
-{
+void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback result_callback, uint32_t channels_mask) {
   auto result = std::make_shared<std::vector<std::string>>();
+  if (channels_mask == 0) {
+    if (result_callback)
+      result_callback(*result);
+    return;
+  }
   if (enabled_) {
     LOG_IF_DEBUG("Trying to get blobs for collected statistics");
     auto file_processor = [this, result](bool content_is_file_name, const std::string & content) {
@@ -282,8 +347,10 @@ void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback resul
           } catch (const std::exception & ex) {
             LOG_IF_DEBUG(ex.what());
           }
-          result->push_back(buffer);
+          std::lock_guard<std::mutex> lock(collect_mutex_);
+          result->push_back(std::move(buffer));
         } else {
+          std::lock_guard<std::mutex> lock(collect_mutex_);
           result->push_back(alohalytics::Gzip(content));
         }
         return true;
@@ -292,11 +359,27 @@ void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback resul
       }
       return false;
     };
-    auto finish_callback = [result, result_callback](ProcessingResult) {
-      if (result_callback)
+
+    const auto channels_count = ChannelsCount(channels_mask);
+    auto collect_counter = std::make_shared<uint32_t>(0);
+    auto finish_callback =
+      [this, result, result_callback = std::move(result_callback),
+       collect_counter, channels_count](ProcessingResult) {
+      bool need_notify = false;
+      {
+        std::lock_guard<std::mutex> lock(collect_mutex_);
+        (*collect_counter)++;
+        if (*collect_counter == channels_count)
+          need_notify = true;
+      }
+      if (result_callback && need_notify)
         result_callback(*result);
     };
-    messages_queue_.ProcessArchivedFiles(file_processor, delete_files, finish_callback);
+
+    for (uint32_t i = 0; i < channels_.size(); ++i) {
+      if (channels_mask & ChannelMask(i))
+        channels_[i]->messages_queue_.ProcessArchivedFiles(file_processor, delete_files, finish_callback);
+    }
   } else {
     LOG_IF_DEBUG("Statistics is disabled. Nothing was collected.");
   }

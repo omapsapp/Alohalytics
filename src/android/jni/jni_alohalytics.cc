@@ -107,6 +107,23 @@ TStringMap FillMapHelper(JNIEnv * env, jobjectArray keyValuePairs) {
   return map;
 }
 
+std::vector<std::string> FillArrayHelper(JNIEnv * env, jobjectArray array) {
+  std::vector<std::string> result;
+  if (array) {
+    const jsize count = env->GetArrayLength(array);
+    string key;
+    result.reserve(count);
+    for (jsize i = 0; i < count; ++i) {
+      const jstring jni_string = static_cast<jstring>(env->GetObjectArrayElement(array, i));
+      result.emplace_back(MakeString(env, jni_string));
+      if (jni_string) {
+        env->DeleteLocalRef(jni_string);
+      }
+    }
+  }
+  return result;
+}
+
 class ScopedJNIEnv final {
   bool auto_detach_;
   JNIEnv * env_;
@@ -146,23 +163,24 @@ public:
 }  // namespace
 
 extern "C" {
-JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2(JNIEnv * env,
-                                                                                     jclass,
-                                                                                     jstring eventName) {
-  LogEvent(MakeString(env, eventName));
+JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2I(JNIEnv * env,
+                                                                                      jclass,
+                                                                                      jstring eventName,
+                                                                                      jint channelsMask) {
+  LogEvent(MakeString(env, eventName), static_cast<uint32_t>(channelsMask));
 }
 
-JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2Ljava_lang_String_2(
-    JNIEnv * env, jclass, jstring eventName, jstring eventValue) {
-  LogEvent(MakeString(env, eventName), MakeString(env, eventValue));
+JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2Ljava_lang_String_2I(
+    JNIEnv * env, jclass, jstring eventName, jstring eventValue, jint channelsMask) {
+  LogEvent(MakeString(env, eventName), MakeString(env, eventValue), static_cast<uint32_t>(channelsMask));
 }
 
-JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2_3Ljava_lang_String_2(
-    JNIEnv * env, jclass, jstring eventName, jobjectArray keyValuePairs) {
-  LogEvent(MakeString(env, eventName), FillMapHelper(env, keyValuePairs));
+JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2_3Ljava_lang_String_2I(
+    JNIEnv * env, jclass, jstring eventName, jobjectArray keyValuePairs, jint channelsMask) {
+  LogEvent(MakeString(env, eventName), FillMapHelper(env, keyValuePairs), static_cast<uint32_t>(channelsMask));
 }
 
-JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2_3Ljava_lang_String_2ZJDDFZDZFZFB(
+JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_String_2_3Ljava_lang_String_2ZJDDFZDZFZFBI(
     JNIEnv * env,
     jclass,
     jstring eventName,
@@ -178,7 +196,8 @@ JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_Stri
     jfloat bearing,
     jboolean hasSpeed,
     jfloat speed,
-    jbyte source) {
+    jbyte source,
+    jint channelsMask) {
   alohalytics::Location l;
   if (hasLatLon) {
     l.SetLatLon(timestamp, lat, lon, accuracy);
@@ -194,7 +213,8 @@ JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_Stri
     l.SetSpeed(speed);
   }
 
-  LogEvent(MakeString(env, eventName), FillMapHelper(env, keyValuePairs), l);
+  LogEvent(MakeString(env, eventName), FillMapHelper(env, keyValuePairs), l,
+           static_cast<uint32_t>(channelsMask));
 }
 
 #define CLEAR_AND_RETURN_FALSE_ON_EXCEPTION \
@@ -211,7 +231,7 @@ JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_logEvent__Ljava_lang_Stri
   }
 
 JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_setupCPP(
-    JNIEnv * env, jclass, jclass httpTransportClass, jstring serverUrl, jstring storagePath, jstring installationId) {
+    JNIEnv * env, jclass, jclass httpTransportClass, jobjectArray serverUrls, jobjectArray storagePaths, jstring installationId) {
   g_httpTransportClass = static_cast<jclass>(env->NewGlobalRef(httpTransportClass));
   RETURN_ON_EXCEPTION
   g_httpTransportClass_run = env->GetStaticMethodID(
@@ -225,10 +245,12 @@ JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_setupCPP(
   RETURN_ON_EXCEPTION
 
   // Initialize statistics engine at the end of setup function, as it can use globals above.
+  auto urls = FillArrayHelper(env, serverUrls);
   Stats::Instance()
       .SetClientId(MakeString(env, installationId))
-      .SetServerUrl(MakeString(env, serverUrl))
-      .SetStoragePath(MakeString(env, storagePath));
+      .SetChannelsCount(urls.size())
+      .SetServerUrls(urls)
+      .SetStoragePaths(FillArrayHelper(env, storagePaths));
 }
 
 JNIEXPORT void JNICALL Java_org_alohalytics_Statistics_debugCPP(JNIEnv * env, jclass, jboolean enableDebug) {
