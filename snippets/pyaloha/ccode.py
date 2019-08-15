@@ -8,9 +8,10 @@ from pyaloha.protocol import SerializableDatetime
 
 try:
     from ctypes import set_conversion_mode
-    set_conversion_mode('utf8', 'strict')
 except ImportError:
     pass
+else:
+    set_conversion_mode('utf8', 'strict')
 
 
 def c_unicode(c_data):
