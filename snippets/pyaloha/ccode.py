@@ -6,8 +6,11 @@ import sys
 
 from pyaloha.protocol import SerializableDatetime
 
-if sys.version_info < (3, 2):
-    ctypes.set_conversion_mode('utf8', 'strict')
+try:
+    from ctypes import set_conversion_mode
+    set_conversion_mode('utf8', 'strict')
+except ImportError:
+    pass
 
 
 def c_unicode(c_data):
