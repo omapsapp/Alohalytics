@@ -145,6 +145,8 @@ class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if hasattr(obj, '__dumpdict__'):
             return obj.__dumpdict__()
+        if isinstance(obj, bytes):
+            return obj.decode()
         # Let the base class default method raise the TypeError
         return super(CustomEncoder, self).default(obj)
 

@@ -2,11 +2,16 @@ import ctypes
 import datetime
 import itertools
 import os
+import sys
 
 from pyaloha.protocol import SerializableDatetime
 
-
-ctypes.set_conversion_mode('utf8', 'strict')
+try:
+    from ctypes import set_conversion_mode
+except ImportError:
+    pass
+else:
+    set_conversion_mode('utf8', 'strict')
 
 
 def c_unicode(c_data):
@@ -151,10 +156,7 @@ CCALLBACK = ctypes.CFUNCTYPE(
 def iterate_events(stream_processor, events_limit):
     base_path = os.path.dirname(os.path.abspath(__file__))
     c_module = ctypes.cdll.LoadLibrary(
-        os.path.join(
-            base_path, '..',
-            'c_api', 'build', 'iterate_events.so'
-        )
+        os.path.join(base_path, 'iterate_events.so')
     )
     use_keys = tuple(itertools.chain.from_iterable(
         e.keys for e in stream_processor.__events__

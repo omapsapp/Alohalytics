@@ -1,7 +1,7 @@
 .PHONY: all indent clean
 
 ALOHALYTICS_ROOT=../../Alohalytics
-BUILD_DIR=build
+BUILD_DIR=../pyaloha
 
 CPP=g++
 CFLAGS=-Wall -Werror -O3 -fpic
