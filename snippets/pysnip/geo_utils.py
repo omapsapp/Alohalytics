@@ -1,9 +1,23 @@
-from math import asin, cos, pi, radians, sin, sqrt
+from __future__ import division
 
-import quadkey
+from itertools import chain
+from math import asin, cos, radians, sin, sqrt, pi, log
+
+from quadkey import (
+    xyz2quadint, tiles_intersecting_webmercator_box, lonlat2xy,
+    xy2webmercator, tile_children
+)
 
 
+# in meters
 EARTH_RADIUS = 6367000.
+# 1 degree latitude in meters
+LAT_1_DISTANCE = 111136.
+# megapolis zoom level
+QUAD_LEVEL = 9
+# min number of digits in geohash
+GEOHASH_MIN_LEVEL = 17
+TILE_MAX_ZOOM = 20
 
 
 def haversine(point1, point2):
@@ -22,28 +36,26 @@ def haversine(point1, point2):
 
 
 def calc_lat_table():
-    return {
-        lat: haversine((lat, 1), (lat, 2))
-        for lat in range(-90, 90)
-    }
+    table = {}
+    for _lat in range(-900, 901):
+        lat = round(0.1 * _lat, 1)
+        table[lat] = haversine((lat, 1), (lat, 2))
+    return table
+
+_lat_table = calc_lat_table()
 
 
-_lat_table = {}
+def get_small_deltas(point1, delta):
+    global _lat_table
+
+    lat = round(point1[0], 1)
+    lon_1_dist = _lat_table[lat]
+
+    return round(delta / LAT_1_DISTANCE, 7), round(delta / lon_1_dist, 7)
 
 
 def in_close_proximity(point1, point2, delta):
-    global _lat_table
-
-    lat = round(point1[0], 0)
-    lat_1_dist = 111125.
-    try:
-        lon_1_dist = _lat_table[delta][lat]
-    except KeyError:
-        _lat_table[delta] = calc_lat_table()
-        lon_1_dist = _lat_table[delta][lat]
-
-    lon_delta = delta / lon_1_dist
-    lat_delta = delta / lat_1_dist
+    lat_delta, lon_delta = get_small_deltas(point2, delta)
 
     if point1[0] - lat_delta <= point2[0] <= point1[0] + lat_delta and\
             point1[1] - lon_delta <= point2[1] <= point1[1] + lon_delta:
@@ -51,33 +63,89 @@ def in_close_proximity(point1, point2, delta):
     return False
 
 
-def get_point_and_neighbours(lat, lon, distance):
-    lat_delta = (distance / EARTH_RADIUS) * (180 / pi)
-    lon_delta = lat_delta / cos(lat * pi / 180)
+def get_neighbour_bbox(lat, lon, small_distance):
+    lat_delta, lon_delta = get_small_deltas((lat, lon), small_distance)
 
     return (
-        (lat, lon),
-        (lat, lon + lon_delta),
-        (lat, lon - lon_delta),
-        (lat + lat_delta, lon),
-        (lat - lat_delta, lon)
-    )
-
-# megapolis zoom level
-QUAD_LEVEL = 9
-
-
-def get_quadint(lat, lon, level=QUAD_LEVEL):
-    return int(str(quadkey.lonlat2quadint(lon, lat))[:level])
-
-
-def get_quad_and_neighbours(lat, lon, distance):
-    return frozenset(
-        get_quadint(*p)
-        for p in get_point_and_neighbours(lat, lon, distance)
+        lat - lat_delta, lon - lon_delta,
+        lat + lat_delta, lon + lon_delta
     )
 
 
-def split_quad(quadint):
+def get_quadint(lat, lon, zoom=TILE_MAX_ZOOM):
+    fx = (lon + 180.0) / 360.0
+    sinlat = sin(lat * pi / 180.0)
+    fy = 0.5 - log((1 + sinlat) / (1 - sinlat)) / (4 * pi)
+    mapsize = (1 << zoom)
+    x = int(fx * mapsize)
+    y = int(fy * mapsize)
+
+    return xyz2quadint(x, y, zoom)
+
+
+def _flat_quads(quads, target_zoom):
+    for q, z in quads:
+        _quads = [q]
+        while z < target_zoom:
+            _quads = list(chain.from_iterable(map(
+                lambda q: tile_children(q, z),
+                _quads
+            )))
+            z += 1
+        for _q in _quads:
+            yield _q
+
+
+# This function assumes that target_zoom is the most detailed zoom in the input
+def flat_quads(quads, target_zoom):
+    good = [
+        q
+        for q, z in quads
+        if z == target_zoom
+    ]
+    if len(good) == len(quads):
+        return good
+
+    to_split = filter(lambda x: x[1] < target_zoom, quads)
+    return chain(good, _flat_quads(to_split, target_zoom))
+
+
+def get_quads_around(lat, lon, distance, zoom=TILE_MAX_ZOOM):
+    lat_l, lon_l, lat_h, lon_h = get_neighbour_bbox(lat, lon, distance)
+    x_l, y_l = lonlat2xy(lon_l, lat_l)
+    x_h, y_h = lonlat2xy(lon_h, lat_h)
+    lat_l, lon_l = xy2webmercator(x_l, y_l)
+    lat_h, lon_h = xy2webmercator(x_h, y_h)
+    return flat_quads(
+        tiles_intersecting_webmercator_box(zoom, lat_l, lon_l, lat_h, lon_h),
+        target_zoom=zoom
+    )
+
+
+def split_quad(quadint, tail_level=QUAD_LEVEL):
     quad = str(quadint)
-    return quad[:5], quad[5:9], quad[9:]
+    return [quad]
+    # return quad[:4], quad[4:]
+
+
+def get_quad_tail(lat, lon, tail_level):
+    return extract_quad_tail(
+        get_quadint(lat, lon), tail_level
+    )
+
+
+def extract_quad_head(quadint, tail_level=QUAD_LEVEL):
+    return quadint >> 2 * (31 - tail_level)
+
+
+def extract_quad_tail(quadint, tail_level=QUAD_LEVEL):
+    mask = (1 << 2 * (31 - tail_level)) - 1
+    return quadint & mask
+
+
+def split_quad_by_two(quadint, tail_level=QUAD_LEVEL):
+    bits = 2 * (31 - tail_level)
+    return (
+        quadint >> bits,
+        quadint & ((1 << bits) - 1)
+    )

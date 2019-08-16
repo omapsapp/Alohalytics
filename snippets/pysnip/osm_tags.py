@@ -1,5 +1,7 @@
 """Module defines osm tags convert functions and mappings."""
 
+import os
+
 from mapsme_tags import MapsMeTags
 
 # secondary tags that define additional info about object
@@ -233,14 +235,22 @@ SECONDARY_TAGS = (
     'wheelchair-yes'
 )
 
+_base_path = os.path.dirname(os.path.abspath(__file__))
+_classifier_path = os.path.join(
+    _base_path, '..', '..', 'omim', 'data', 'classificator.txt'
+)
+
+_all_tags = MapsMeTags(_classifier_path).tags
 _secondary_set = frozenset(SECONDARY_TAGS)
-_all_tags = MapsMeTags('../../omim/data/classificator.txt').tags
 
 PRIMARY_TAGS = tuple(
     tag
     for tag in _all_tags
     if tag not in _secondary_set
 )
+
+del _secondary_set
+del _all_tags
 
 assert len(PRIMARY_TAGS) < 2 ** 16
 
