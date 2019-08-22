@@ -38,5 +38,5 @@ build:
 build/%: %.cc ${OBJ}
 	${CPP} ${CPPFLAGS} ${OBJ} -o $@ $< ${LDFLAGS}
 
-${OBJ}: ${MORE_SOURCES}
+${OBJ}: build ${MORE_SOURCES}
 	${CPP} ${CPPFLAGS} -c ${MORE_SOURCES} -o $@
