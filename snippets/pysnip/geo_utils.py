@@ -9,10 +9,11 @@ from quadkey import (
 )
 
 
-# in meters
-EARTH_RADIUS = 6367000.
+EARTH_RADIUS_METERS = 6367000.
 # 1 degree latitude in meters
 LAT_1_DISTANCE = 111136.
+
+FLOAT_PRECISION = 7
 # megapolis zoom level
 QUAD_LEVEL = 9
 # min number of digits in geohash
@@ -32,7 +33,7 @@ def haversine(point1, point2):
     dlat = lat2 - lat1
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * asin(sqrt(a))
-    return EARTH_RADIUS * c
+    return EARTH_RADIUS_METERS * c
 
 
 def calc_lat_table():
@@ -51,7 +52,10 @@ def get_small_deltas(point1, delta):
     lat = round(point1[0], 1)
     lon_1_dist = _lat_table[lat]
 
-    return round(delta / LAT_1_DISTANCE, 7), round(delta / lon_1_dist, 7)
+    return (
+        round(delta / LAT_1_DISTANCE, FLOAT_PRECISION),
+        round(delta / lon_1_dist, FLOAT_PRECISION)
+    )
 
 
 def in_close_proximity(point1, point2, delta):
@@ -124,8 +128,9 @@ def get_quads_around(lat, lon, distance, zoom=TILE_MAX_ZOOM):
 
 def split_quad(quadint, tail_level=QUAD_LEVEL):
     quad = str(quadint)
+    if len(quad) > tail_level:
+        return quad[:tail_level], quad[tail_level:]
     return [quad]
-    # return quad[:4], quad[4:]
 
 
 def get_quad_tail(lat, lon, tail_level):

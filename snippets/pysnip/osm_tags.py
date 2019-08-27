@@ -5,6 +5,8 @@ import os
 from mapsme_tags import MapsMeTags
 
 # secondary tags that define additional info about object
+# add to the end of the list to be compatible with already
+# collected data
 SECONDARY_TAGS = (
     'amenity-atm',
     'amenity-bench',
@@ -234,6 +236,9 @@ SECONDARY_TAGS = (
     'wheelchair-no',
     'wheelchair-yes'
 )
+
+
+assert len(SECONDARY_TAGS) < 2 ** 8
 
 _base_path = os.path.dirname(os.path.abspath(__file__))
 _classifier_path = os.path.join(
