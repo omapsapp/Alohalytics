@@ -209,10 +209,10 @@ class IOSSessionStart(Event):
     __slots__ = tuple()
 
 
+# consider 'Framework::EnterBackground'
 class IOSSessionEnd(Event):
     keys = (
         '$applicationDidEnterBackground',
-        # 'Framework::EnterBackground',
     )
 
     __slots__ = tuple()

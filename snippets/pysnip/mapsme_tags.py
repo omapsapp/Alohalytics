@@ -2,7 +2,7 @@
 
 
 class MapsMeTags(object):
-    """/omim/master/data/classificator.txt parser.
+    """/omim/data/classificator.txt parser.
 
     one public property: tags
     """
