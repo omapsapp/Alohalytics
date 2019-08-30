@@ -7,17 +7,24 @@ from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 from pyaloha.event_factory import EventFactory
 
 from pysnip.events.bookmark import BookmarkCreated
-from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+
 from pysnip.events.misc import (
     GPSTracking, Menu, MobileInternet, RecentTrack,
     SearchResults, SponsoredClicks
 )
+
 from pysnip.events.onstart import (
-    AndroidVisibleLaunch, DeviceInfo, TechnicalLaunch
+    AndroidVisibleLaunch, TechnicalLaunch,
+    AndroidSessionStart, AndroidSessionEnd,
+    DeviceInfo,
+    IOSSessionStart, IOSSessionEnd
 )
+
 from pysnip.events.placepage import (
+    BookmarkAction,
     HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare
 )
+
 from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking, RoutingBookmarksClick,
     RoutingPointAdd, RoutingSearch, TaxiRouteRequest, TrafficState
@@ -31,9 +38,13 @@ from pysnip.events.rendering import RenderingStats, GPU
 
 
 CUSTOM_EVENTS = (
-    ObjectSelection, HotelClick, ObjectSelectionFromList, PlacepageShare,
-    TechnicalLaunch, AndroidVisibleLaunch, DeviceInfo,
+    ObjectSelection, BookmarkAction,
+    TechnicalLaunch, AndroidVisibleLaunch,
+    AndroidSessionStart, AndroidSessionEnd,
+    IOSSessionStart, IOSSessionEnd,
+    HotelClick, ObjectSelectionFromList, PlacepageShare,
     SearchResults, GPSTracking,
+    DeviceInfo,
     RouteRequest, RouteStart, RouteEnd, RouteTracking, TaxiRouteRequest,
     TrafficState, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
     MapActionRequest, MapDownloadFinished,

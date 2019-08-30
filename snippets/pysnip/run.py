@@ -23,6 +23,8 @@ PYSCRIPT_PATH = os.path.join(
     base_path, '..', 'pyscripts'
 )
 
+ALOHA_DATA = os.environ['ALOHA_DATA_DIR']
+
 if __name__ == '__main__':
     pyaloha = __import__('pyaloha.main')
-    pyaloha.main.cmd_run(plugin_dir=PYSCRIPT_PATH)
+    pyaloha.main.cmd_run(plugin_dir=PYSCRIPT_PATH, data_dir=ALOHA_DATA)

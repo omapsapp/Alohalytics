@@ -181,3 +181,38 @@ class DeviceInfo(DictEvent):
             'os_version': self.os_version()
         })
         return d
+
+# SESSIONS
+
+
+class AndroidSessionStart(Event):
+    keys = (
+        '$startSession',
+    )
+
+    __slots__ = tuple()
+
+
+class AndroidSessionEnd(Event):
+    keys = (
+        '$endSession',
+    )
+
+    __slots__ = tuple()
+
+
+class IOSSessionStart(Event):
+    keys = (
+        '$applicationDidBecomeActive',
+    )
+
+    __slots__ = tuple()
+
+
+# consider 'Framework::EnterBackground'
+class IOSSessionEnd(Event):
+    keys = (
+        '$applicationDidEnterBackground',
+    )
+
+    __slots__ = tuple()
