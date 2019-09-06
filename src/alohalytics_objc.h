@@ -50,13 +50,24 @@
 // The same as above but with a callback notification when upload ends or fails.
 + (void)forceUpload:(void (^)(UIBackgroundFetchResult))callback;
 #endif // TARGET_OS_IPHONE
++ (void)logEvent:(NSString *)event withChannel:(NSInteger)channelsMask;
++ (void)logEvent:(NSString *)event atLocation:(CLLocation *)location withChannel:(NSInteger)channelsMask;
++ (void)logEvent:(NSString *)event withValue:(NSString *)value withChannel:(NSInteger)channelsMask;
++ (void)logEvent:(NSString *)event withValue:(NSString *)value atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask;
 + (void)logEvent:(NSString *)event;
 + (void)logEvent:(NSString *)event atLocation:(CLLocation *)location;
 + (void)logEvent:(NSString *)event withValue:(NSString *)value;
 + (void)logEvent:(NSString *)event withValue:(NSString *)value atLocation:(CLLocation *)location;
-// Two convenience methods to log [key1,value1,key2,value2,...] arrays.
+// These methods can be used to log [key1,value1,key2,value2,...] arrays.
++ (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array withChannel:(NSInteger)channelsMask;
++ (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask;
 + (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array;
 + (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array atLocation:(CLLocation *)location;
++ (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary withChannel:(NSInteger)channelsMask;
++ (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask;
 + (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary;
 + (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary atLocation:(CLLocation *)location;
 // Returns YES if it is a first session, before app goes into background.

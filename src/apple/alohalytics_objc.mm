@@ -436,6 +436,24 @@ static NSString * gInstallationId = nil;
   });
 }
 #endif // TARGET_OS_IPHONE
++ (void)logEvent:(NSString *)event withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event atLocation:(CLLocation *)location withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ExtractLocation(location), static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event withValue:(NSString *)value withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStdString(value), static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event withValue:(NSString *)value atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStdString(value), ExtractLocation(location),
+                             static_cast<uint32_t>(channelsMask));
+}
+
 + (void)logEvent:(NSString *)event {
   Stats::Instance().LogEvent(ToStdString(event));
 }
@@ -450,6 +468,26 @@ static NSString * gInstallationId = nil;
 
 + (void)logEvent:(NSString *)event withValue:(NSString *)value atLocation:(CLLocation *)location {
   Stats::Instance().LogEvent(ToStdString(event), ToStdString(value), ExtractLocation(location));
+}
+
++ (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStringMap(array), static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStringMap(array), ExtractLocation(location),
+                             static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStringMap(dictionary), static_cast<uint32_t>(channelsMask));
+}
+
++ (void)logEvent:(NSString *)event withDictionary:(NSDictionary *)dictionary atLocation:(CLLocation *)location
+     withChannel:(NSInteger)channelsMask {
+  Stats::Instance().LogEvent(ToStdString(event), ToStringMap(dictionary), ExtractLocation(location),
+                             static_cast<uint32_t>(channelsMask));
 }
 
 + (void)logEvent:(NSString *)event withKeyValueArray:(NSArray *)array {
