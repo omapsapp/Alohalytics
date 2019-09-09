@@ -5,10 +5,9 @@ class Event(object):
         if data_list_len:
             self.data_list = data_list
             self.data_list_len = data_list_len
-        event_time._setup_time()
-        self.event_time = event_time
-        self.user_info = user_info
-        self.user_info.setup()
+
+        self.event_time = event_time.make_object()
+        self.user_info = user_info.make_object()
         self.key = key
 
     def process_me(self, processor):
@@ -21,7 +20,7 @@ class Event(object):
         return {
             'key': self.key,
             'type': self.__class__.__name__,
-            'user_info': self.user_info.stripped(),
+            'user_info': self.user_info,
             'event_time': self.event_time
         }
 

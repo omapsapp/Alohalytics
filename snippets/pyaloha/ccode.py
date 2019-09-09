@@ -28,15 +28,15 @@ class CEVENTTIME(ctypes.Structure):
         ('server_upload', ctypes.c_uint64)
     ]
 
-    __slots__ = (
-        'client_creation', 'server_upload',
-        'dtime', 'is_accurate'
-    )
-
     delta_past = datetime.timedelta(days=6 * 30)
     delta_future = datetime.timedelta(days=1)
 
-    def _setup_time(self):
+    def get_approx_time(self):
+        if not self.dtime:
+            self._setup_time()
+        return self.dtime, self.is_accurate
+
+    def make_object(self):
         client_dtime = SerializableDatetime.utcfromtimestamp(
             self.client_creation / 1000.  # timestamp is in millisecs
         )
@@ -44,17 +44,27 @@ class CEVENTTIME(ctypes.Structure):
             self.server_upload / 1000.  # timestamp is in millisecs
         )
 
-        self.dtime = server_dtime
-        self.is_accurate = False
+        dtime = server_dtime
         if client_dtime >= server_dtime - CEVENTTIME.delta_past and\
                 client_dtime <= server_dtime + CEVENTTIME.delta_future:
-            self.dtime = client_dtime
-            self.is_accurate = True
+            dtime = client_dtime
 
-    def get_approx_time(self):
-        if not self.dtime:
-            self._setup_time()
-        return self.dtime, self.is_accurate
+        pytime = PythonEventTime()
+        pytime.client_creation = client_dtime
+        pytime.server_upload = server_dtime
+        pytime.dtime = dtime
+        return pytime
+
+
+class PythonEventTime(object):
+    __slots__ = (
+        'client_creation', 'server_upload',
+        'dtime', 'is_accurate'
+    )
+
+    @property
+    def is_accurate(self):
+        return self.dtime == self.client_creation
 
     def __dumpdict__(self):
         return {
@@ -71,20 +81,6 @@ class IDInfo(ctypes.Structure):
     _os_valid_range = range(3)
 
     __slots__ = ('os', 'uid')
-
-    def __dumpdict__(self):
-        return {
-            'os': self.os
-        }
-
-    def is_on_android(self):
-        return self.os == 1
-
-    def is_on_ios(self):
-        return self.os == 2
-
-    def is_on_unknown_os(self):
-        return self.os == 0
 
     def validate(self):
         if self.os not in IDInfo._os_valid_range:
@@ -113,13 +109,6 @@ class GeoIDInfo(IDInfo):
             return (self.lat, self.lon)
         return None
 
-    def __dumpdict__(self):
-        dct = super(GeoIDInfo, self).__dumpdict__()
-        if self.has_geo():
-            dct['lat'] = round(self.lat, 6)
-            dct['lon'] = round(self.lon, 6)
-        return dct
-
 
 class CUSERINFO(GeoIDInfo):
     _fields_ = [
@@ -128,19 +117,60 @@ class CUSERINFO(GeoIDInfo):
 
     __slots__ = ('raw_uid',)
 
-    def setup(self):
+    def make_object(self):
         self.validate()
-        setattr(self, 'uid', int(self.raw_uid, 16))
 
-    def stripped(self):
         if self.has_geo():
-            return GeoIDInfo(
-                uid=self.uid, os=self.os,
-                lat=self.lat, lon=self.lon
-            )
-        return IDInfo(
-            uid=self.uid, os=self.os
-        )
+            pyinfo = PythonGeoUserInfo()
+            pyinfo.uid = int(self.raw_uid, 16)
+            pyinfo.os = self.os
+            pyinfo.lat = round(self.lat, 6)
+            pyinfo.lon = round(self.lon, 6)
+            return pyinfo
+
+        pyinfo = PythonUserInfo()
+        pyinfo.uid = int(self.raw_uid, 16)
+        pyinfo.os = self.os
+        return pyinfo
+
+
+class PythonUserInfo(object):
+    __slots__ = ('uid', 'os')
+
+    @property
+    def has_geo(self):
+        return False
+
+    def is_on_android(self):
+        return self.os == 1
+
+    def is_on_ios(self):
+        return self.os == 2
+
+    def is_on_unknown_os(self):
+        return self.os == 0
+
+    def __dumpdict__(self):
+        return {
+            'os': self.os,
+            'uid': self.uid
+        }
+
+
+class PythonGeoUserInfo(PythonUserInfo):
+    __slots__ = ('lat', 'lon')
+
+    @property
+    def has_geo(self):
+        return True
+
+    def __dumpdict__(self):
+        d = super(PythonGeoUserInfo, self).__dumpdict__()
+        d.update({
+            'lat': self.lat,
+            'lon': self.lon
+        })
+        return d
 
 
 CCALLBACK = ctypes.CFUNCTYPE(
