@@ -143,6 +143,7 @@ public class Statistics {
         storagePath = context.getFilesDir().getAbsolutePath() + "/Alohalytics" + i + "/";
       // Native code expects valid existing writable dir.
       (new File(storagePath)).mkdirs();
+      paths[i] = storagePath;
     }
 
     String[] urls = new String[serverUrls.length];

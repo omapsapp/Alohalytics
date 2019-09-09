@@ -80,7 +80,9 @@ class Stats final {
   // - Gzipped.
   // - Saved as out_archive for easier post-processing (e.g. uploading).
   // - Deleted.
-  void GzipAndArchiveFileInTheQueue(const std::string & in_file, const std::string & out_archive);
+  void GzipAndArchiveFileInTheQueue(const std::string & in_file, const std::string & out_archive) const;
+  std::string GzipInMemoryBuffer(const std::string & buffer) const;
+  std::string SerializeUniqueClientId() const;
 
   void LogEventImpl(AlohalyticsBaseEvent const & event, uint32_t channels_mask);
 

@@ -82,7 +82,7 @@ void Stats::Enable() {
   enabled_ = true;
 }
 
-void Stats::GzipAndArchiveFileInTheQueue(const std::string & in_file, const std::string & out_archive) {
+void Stats::GzipAndArchiveFileInTheQueue(const std::string & in_file, const std::string & out_archive) const {
   std::string encoded_unique_client_id;
   if (unique_client_id_.empty()) {
     LOG_IF_DEBUG(
@@ -91,11 +91,7 @@ void Stats::GzipAndArchiveFileInTheQueue(const std::string & in_file, const std:
   } else {
     // Pre-calculation for special ID event.
     // We do it for every archived file to have a fresh timestamp.
-    AlohalyticsIdEvent event;
-    event.id = unique_client_id_;
-    std::ostringstream ostream;
-    { cereal::BinaryOutputArchive(ostream) << std::unique_ptr<AlohalyticsBaseEvent, NoOpDeleter>(&event); }
-    encoded_unique_client_id = ostream.str();
+    encoded_unique_client_id = SerializeUniqueClientId();
   }
   LOG_IF_DEBUG("Archiving", in_file, "to", out_archive);
   // Append unique installation id in the beginning of each archived file.
@@ -131,6 +127,22 @@ void Stats::GzipAndArchiveFileInTheQueue(const std::string & in_file, const std:
   if (0 != result) {
     LOG_IF_DEBUG("CRITICAL ERROR: std::remove", in_file, "has failed with error", result, "and errno", errno);
   }
+}
+  
+std::string Stats::GzipInMemoryBuffer(const std::string & buffer) const {
+  if (unique_client_id_.empty()) {
+    LOG_IF_DEBUG("Warning: unique client id was not set in GzipInMemoryBuffer,"
+                 "statistics will be completely anonymous and hard to process on the server.");
+  }
+  return alohalytics::Gzip(SerializeUniqueClientId() + buffer);
+}
+  
+std::string Stats::SerializeUniqueClientId() const {
+  AlohalyticsIdEvent event;
+  event.id = unique_client_id_;
+  std::ostringstream ostream;
+  { cereal::BinaryOutputArchive(ostream) << std::unique_ptr<AlohalyticsBaseEvent, NoOpDeleter>(&event); }
+  return ostream.str();
 }
 
 Stats & Stats::Instance() {
@@ -282,7 +294,7 @@ void Stats::Upload(const TFileProcessingFinishedCallback & upload_finished_callb
           r = *upload_result;
         }
       }
-      if (need_notify)
+      if (upload_finished_callback && need_notify)
         upload_finished_callback(r);
     };
     for (auto & c : channels_) {
@@ -308,7 +320,7 @@ bool Stats::UploadFileImpl(const std::string & upload_url, bool file_name_in_con
     if (file_name_in_content) {
       request.set_body_file(content, kAlohalyticsHTTPContentType, "POST", "gzip");
     } else {
-      request.set_body_data(alohalytics::Gzip(content), kAlohalyticsHTTPContentType, "POST", "gzip");
+      request.set_body_data(GzipInMemoryBuffer(content), kAlohalyticsHTTPContentType, "POST", "gzip");
     }
     const bool uploadSucceeded = request.RunHTTPRequest() && 200 == request.error_code() && !request.was_redirected();
     LOG_IF_DEBUG("RunHTTPRequest has returned code", request.error_code(),
@@ -351,7 +363,7 @@ void Stats::CollectBlobsToUpload(bool delete_files, TGetBlobResultCallback resul
           result->push_back(std::move(buffer));
         } else {
           std::lock_guard<std::mutex> lock(collect_mutex_);
-          result->push_back(alohalytics::Gzip(content));
+          result->push_back(GzipInMemoryBuffer(content));
         }
         return true;
       } catch (const std::exception & ex) {
