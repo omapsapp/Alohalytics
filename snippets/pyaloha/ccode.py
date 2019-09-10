@@ -40,7 +40,7 @@ class PythonEventTime(object):
     delta_past = 6 * 30 * msec_in_a_day
     delta_future = 1 * msec_in_a_day
 
-    def __init__(self, client_dtime, server_dtime):
+    def __init__(self, server_dtime, client_dtime):
         if client_dtime < server_dtime - self.delta_past or\
                 client_dtime > server_dtime + self.delta_future:
             dtime = server_dtime
