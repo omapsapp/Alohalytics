@@ -2,7 +2,6 @@ import ctypes
 import datetime
 import itertools
 import os
-import sys
 
 from pyaloha.protocol import SerializableDatetime
 
@@ -28,39 +27,32 @@ class CEVENTTIME(ctypes.Structure):
         ('server_upload', ctypes.c_uint64)
     ]
 
-    delta_past = datetime.timedelta(days=6 * 30)
-    delta_future = datetime.timedelta(days=1)
-
-    def get_approx_time(self):
-        if not self.dtime:
-            self._setup_time()
-        return self.dtime, self.is_accurate
-
     def make_object(self):
-        client_dtime = SerializableDatetime.utcfromtimestamp(
-            self.client_creation / 1000.  # timestamp is in millisecs
-        )
-        server_dtime = SerializableDatetime.utcfromtimestamp(
-            self.server_upload / 1000.  # timestamp is in millisecs
-        )
-
-        dtime = server_dtime
-        if client_dtime >= server_dtime - CEVENTTIME.delta_past and\
-                client_dtime <= server_dtime + CEVENTTIME.delta_future:
-            dtime = client_dtime
-
-        pytime = PythonEventTime()
-        pytime.client_creation = client_dtime
-        pytime.server_upload = server_dtime
-        pytime.dtime = dtime
-        return pytime
+        return PythonEventTime(self.server_upload, self.client_creation)
 
 
 class PythonEventTime(object):
     __slots__ = (
         'client_creation', 'server_upload',
-        'dtime', 'is_accurate'
+        'dtime'
     )
+
+    msec_in_a_day = 24 * 3600 * 1000
+    delta_past = 6 * 30 * msec_in_a_day
+    delta_future = 1 * msec_in_a_day
+
+    def __init__(self, client_dtime, server_dtime):
+        if client_dtime < server_dtime - self.delta_past or\
+                client_dtime > server_dtime + self.delta_future:
+            dtime = server_dtime
+        else:
+            dtime = client_dtime
+
+        self.client_creation = client_dtime
+        self.server_upload = server_dtime
+        self.dtime = SerializableDatetime.utcfromtimestamp(
+            dtime / 1000.  # timestamp is in millisecs
+        )
 
     @property
     def is_accurate(self):
@@ -73,69 +65,40 @@ class PythonEventTime(object):
         }
 
 
-class IDInfo(ctypes.Structure):
+class CUSERINFO(ctypes.Structure):
     _fields_ = [
         ('os', ctypes.c_byte),
+        ('lat', ctypes.c_float),
+        ('lon', ctypes.c_float),
+        ('raw_uid', (ctypes.c_char * 32)),
     ]
 
     _os_valid_range = range(3)
 
-    __slots__ = ('os', 'uid')
-
-    def validate(self):
-        if self.os not in IDInfo._os_valid_range:
+    def make_object(self):
+        if self.os not in self._os_valid_range:
             raise ValueError('Incorrect os value: %s' % self.os)
 
+        lat = round(self.lat, 6)
+        lon = round(self.lon, 6)
+        if not lat and not lon:
+            return PythonUserInfo(
+                int(self.raw_uid, 16), self.os
+            )
 
-class GeoIDInfo(IDInfo):
-    _fields_ = [
-        ('lat', ctypes.c_float),
-        ('lon', ctypes.c_float)
-    ]
-
-    __slots__ = ('lat', 'lon')
-
-    def has_geo(self):
-        # TODO: if client will send actual (0, 0) we will
-        # intepretate them as a geo info absence.
-        # For now it is acceptable though.
-        return (
-            round(self.lat, 2) != 0.0 or
-            round(self.lon, 2) != 0.0
+        return PythonGeoUserInfo(
+            int(self.raw_uid, 16),
+            self.os,
+            lat, lon
         )
-
-    def get_location(self):
-        if self.has_geo():
-            return (self.lat, self.lon)
-        return None
-
-
-class CUSERINFO(GeoIDInfo):
-    _fields_ = [
-        ('raw_uid', (ctypes.c_char * 32)),
-    ]
-
-    __slots__ = ('raw_uid',)
-
-    def make_object(self):
-        self.validate()
-
-        if self.has_geo():
-            pyinfo = PythonGeoUserInfo()
-            pyinfo.uid = int(self.raw_uid, 16)
-            pyinfo.os = self.os
-            pyinfo.lat = round(self.lat, 6)
-            pyinfo.lon = round(self.lon, 6)
-            return pyinfo
-
-        pyinfo = PythonUserInfo()
-        pyinfo.uid = int(self.raw_uid, 16)
-        pyinfo.os = self.os
-        return pyinfo
 
 
 class PythonUserInfo(object):
     __slots__ = ('uid', 'os')
+
+    def __init__(self, uid, os):
+        self.uid = uid
+        self.os = os
 
     @property
     def has_geo(self):
@@ -160,17 +123,23 @@ class PythonUserInfo(object):
 class PythonGeoUserInfo(PythonUserInfo):
     __slots__ = ('lat', 'lon')
 
+    def __init__(self, uid, os, lat, lon):
+        self.uid = uid
+        self.os = os
+        self.lat = lat
+        self.lon = lon
+
     @property
     def has_geo(self):
         return True
 
     def __dumpdict__(self):
-        d = super(PythonGeoUserInfo, self).__dumpdict__()
-        d.update({
+        return {
+            'os': self.os,
+            'uid': self.uid,
             'lat': self.lat,
             'lon': self.lon
-        })
-        return d
+        }
 
 
 CCALLBACK = ctypes.CFUNCTYPE(
@@ -192,7 +161,9 @@ def iterate_events(stream_processor, events_limit):
         e.keys for e in stream_processor.__events__
     ))
     keylist_type = ctypes.c_char_p * len(use_keys)
-    c_module.Iterate.argtypes = [CCALLBACK, keylist_type, ctypes.c_int]
+    c_module.Iterate.argtypes = [
+        CCALLBACK, keylist_type, ctypes.c_int, ctypes.c_int
+    ]
     c_module.Iterate(
         CCALLBACK(
             stream_processor.process_event
