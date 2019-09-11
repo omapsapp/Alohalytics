@@ -1,11 +1,30 @@
-class Event(object):
-    def __init__(self,
-                 key, event_time, user_info,
-                 data_list=None, data_list_len=0):
-        if data_list_len:
-            self.data_list = data_list
-            self.data_list_len = data_list_len
+"""Base event classes are defined in this module."""
 
+
+def get_event(key, event_time, user_info,
+              data_list=None, data_list_len=0):
+    """Event factory function."""
+    if data_list_len > 1:
+        return DictEvent(
+            key, event_time, user_info,
+            data_list, data_list_len
+        )
+    elif data_list_len > 0:
+        return ValueEvent(key, event_time, user_info, data_list[0])
+    return Event(key, event_time, user_info)
+
+
+class Event(object):
+    """
+    Base event class.
+
+    Have only basic event info.
+    """
+
+    __slots__ = ('key', 'event_time', 'user_info')
+
+    def __init__(self, key, event_time, user_info):
+        """Copy ctypes structures into a pure Python ones."""
         self.event_time = event_time.make_object()
         self.user_info = user_info.make_object()
         self.key = key
@@ -25,39 +44,51 @@ class Event(object):
         }
 
 
+class ValueEvent(Event):
+    """Add a single value to a base event."""
+
+    __slots__ = ('key', 'event_time', 'user_info', 'value')
+
+    def __init__(self, key, event_time, user_info, value):
+        """Add self.value property to a base event info."""
+        # No super constructor is used for performance reasons.
+        self.event_time = event_time.make_object()
+        self.user_info = user_info.make_object()
+        self.key = key
+        self.value = value
+
+    def __dumpdict__(self):
+        d = super(ValueEvent, self).__dumpdict__()
+        d['value'] = self.value
+        return d
+
+
 class DictEvent(Event):
     """
-    This is a simplified form of any Alohalytics pairs event
-when all event params (except datetime and user/device identification)
-are accumulated into a dict.
-    You can try to convert Event instance to it with a @method from_event.
+    This is a simplified form of any Alohalytics pairs event.
+
+    All event params (except datetime and user/device identification)
+    are accumulated into a dict.
     """
-    __slots__ = ('data', 'event_time', 'key', 'user_info')
+
+    __slots__ = ('data',)
 
     def __init__(self,
                  key, event_time, user_info,
                  data_list, data_list_len):
-        super(DictEvent, self).__init__(
-            key, event_time, user_info
-        )
+        """Add event pairs to a dict self.data."""
+        # No super constructor is used for performance reasons.
+        self.event_time = event_time.make_object()
+        self.user_info = user_info.make_object()
+        self.key = key
 
-        if data_list_len % 2 != 0:
-            raise ValueError(
-                "Event can't be casted to a dict without additional knowledge"
-            )
-
-        self.data = {
-            data_list[i]: data_list[i + 1]
-            for i in range(0, data_list_len, +2)
-        }
-
-    @classmethod
-    def from_event(cls, event):
-        return DictEvent(
-            event.key,
-            event.event_time, event.user_info,
-            event.data_list, event.data_list_len
-        )
+        try:
+            self.data = {
+                data_list[i]: data_list[i + 1]
+                for i in range(0, data_list_len, +2)
+            }
+        except IndexError:
+            raise ValueError('Incorrect data_list')
 
     def __basic_dumpdict__(self):
         return super(DictEvent, self).__dumpdict__()

@@ -1,7 +1,7 @@
 import itertools
 import traceback
 
-from pyaloha.event import Event
+from pyaloha.event import get_event
 
 
 class EventFactory(object):
@@ -16,7 +16,7 @@ class EventFactory(object):
 
     def make_event(self, key, *args, **kwargs):
         try:
-            return self.registered.get(key, Event)(key, *args, **kwargs)
+            return self.registered.get(key, get_event)(key, *args, **kwargs)
         except Exception as exc:
             raise Exception(
                 'Event "%s" creation failed: %s' % (
