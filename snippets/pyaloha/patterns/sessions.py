@@ -9,7 +9,7 @@ from pyaloha.patterns.daily_over_fs import (
 
 
 class Session(dict):
-    def __init__(self, start, mode, is_broken=False):
+    def __init__(self, start, mode=None, is_broken=False):
         self.update({
             'mode': mode,
             'is_broken': is_broken,
@@ -28,6 +28,11 @@ class SessionWorkerMixin(DailyWorkerMixin):
 
         self._users2modes = {}
 
+    def iterate_session_lists(self):
+        for day, uids in self.data_per_days.iteritems():
+            for uid, sessions in uids.iteritems():
+                yield sessions
+
     def get_session_history(self, dtime, uid):
         return self.data_per_days[day_serialize(dtime)].setdefault(uid, [])
 
@@ -40,6 +45,20 @@ class SessionWorkerMixin(DailyWorkerMixin):
             prev_dt = day_serialize(dtime - datetime.timedelta(days=1))
             try:
                 return self.data_per_days[prev_dt][uid][-1]
+            except (KeyError, IndexError) as no_prev_day_sessions:
+                # we assume we have no sessions
+                # with more than a 24-hour duration
+                return
+
+    def drop_last_open_session(self, dtime, uid):
+        dt = day_serialize(dtime)
+        try:
+            del self.data_per_days[dt][uid][-1]
+        except (KeyError, IndexError) as no_sessions:
+            # session may break at midnight as we're looking on daily basis
+            prev_dt = day_serialize(dtime - datetime.timedelta(days=1))
+            try:
+                del self.data_per_days[prev_dt][uid][-1]
             except (KeyError, IndexError) as no_prev_day_sessions:
                 # we assume we have no sessions
                 # with more than a 24-hour duration
