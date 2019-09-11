@@ -132,7 +132,8 @@ processed on the Python side as lists of pairs while converting them to dicts.
 */
 std::vector<char const *> getPairs(std::map<std::string, std::string> const & eventPairs)
 {
-  std::vector<char const *> pairs(eventPairs.size() * 2);
+  std::vector<char const *> pairs;
+  pairs.reserve(eventPairs.size() * 2);
 
   for (auto const & kp : eventPairs)
   {
