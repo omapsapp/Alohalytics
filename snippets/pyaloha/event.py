@@ -38,7 +38,6 @@ class Event(object):
     def __dumpdict__(self):
         return {
             'key': self.key,
-            'type': self.__class__.__name__,
             'user_info': self.user_info,
             'event_time': self.event_time
         }
