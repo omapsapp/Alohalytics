@@ -11,7 +11,6 @@ from itertools import groupby
 from operator import itemgetter
 
 from pysnip.fs_utils import gen_quad_dir
-from pysnip.osm_tags import TaggedOSMObject
 
 from pysnip.geo_utils import (
     get_quads_around, in_close_proximity,
@@ -30,17 +29,13 @@ def _quad_search(item):
 
 
 def _aggregate_by_quads(tasks, pool):
-    quads = collections.defaultdict(list)
-    calculated = pool.map(_quad_calc_worker, tasks,
-                          chunksize=(len(tasks) // pool._processes))
-    for results in calculated:
-        for qhead, point, settings in results:
-            quads[qhead].append(point)
+    return aggregate_by_quads_impl(tasks, pool, _quad_calc_worker)
 
-    return [
-        (qhead, points, settings)
-        for qhead, points in quads.iteritems()
-    ]
+
+def _quad_calc_worker(item):
+    i, ((lat, lon, tag), settings) = item
+    tags = None if tag is None else [tag]
+    return quad_calc_worker_impl(i, (lat, lon), tags, settings)
 
 
 VERY_LARGE_NUMBER = 10 ** 6
@@ -193,17 +188,32 @@ def _reduce_lists(acc, next_list):
         return next_list
 
 
-def _quad_calc_worker(item):
+def aggregate_by_quads_impl(points, pool, worker_func):
+    """Aggregate points by the quad prefix."""
+    quads = collections.defaultdict(list)
+    calculated = pool.map(worker_func, points,
+                          chunksize=(len(points) // pool._processes))
+    for results in calculated:
+        for qhead, point, settings in results:
+            quads[qhead].append(point)
+
+    return [
+        (qhead, _points, settings)
+        for qhead, _points in quads.iteritems()
+    ]
+
+
+def quad_calc_worker_impl(result_index, point, tags, settings):
+    """Multiproc worker for a quad calculation for a point."""
     try:
-        i, ((lat, lon, tag), settings) = item
         root_dir, proximity_delta_meters, quad_dir_level = settings
-        tags = None if tag is None else TaggedOSMObject([tag])
-        quads_of_interest = get_quads_around(lat, lon, proximity_delta_meters)
+        quads_of_interest = get_quads_around(*point,
+                                             distance=proximity_delta_meters)
         results = []
         for quad in quads_of_interest:
             quad_head, quad_tail = split_quad_by_two(quad, quad_dir_level)
             results.append(
-                (quad_head, (quad_tail, i, tags, (lat, lon)), settings)
+                (quad_head, (quad_tail, result_index, tags, point), settings)
             )
         return results
     except Exception:
