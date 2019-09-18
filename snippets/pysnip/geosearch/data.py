@@ -29,7 +29,7 @@ class BaseBinaryEventsStorage(object):
             )
         )
 
-    def open_file(self, fpath):
+    def open_events_file_readonly(self, fpath):
         """Storage file open wrapper."""
         return open(fpath, 'rb')
 

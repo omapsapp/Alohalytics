@@ -23,7 +23,7 @@ from pydataproc.procs.intensive_pool import Pool
 
 def _quad_search(item):
     quad, points, settings = item
-    (quad_root_dir, proximity_delta_meters, quad_dir_level) = settings
+    quad_root_dir, proximity_delta_meters, quad_dir_level = settings
 
     proc = DataProcessor(quad_root_dir, proximity_delta_meters)
     return proc.quad_search(quad, points)
@@ -43,11 +43,14 @@ def _aggregate_by_quads(tasks, pool):
     ]
 
 
+VERY_LARGE_NUMBER = 10 ** 6
+
+
 class BaseSearcher(Pool):
     """Multiproc geo search class."""
 
     def __init__(self, root_dir, quad_dir_level,
-                 batch_size=10 ** 6,
+                 batch_size=VERY_LARGE_NUMBER,
                  quad_search=_quad_search, quad_aggregate=_aggregate_by_quads):
         """Constructor. Starts multiple processes."""
         self.root_dir = root_dir
@@ -153,7 +156,7 @@ class DataProcessor(object):
 
         quads_to_lines = self.events_storage.load_geo_index(index_fpath)
 
-        with self.events_storage.open_file(month_file) as fin:
+        with self.events_storage.open_events_file_readonly(month_file) as fin:
             # use that events in this file are sorted by their quads
             grouped = groupby(sorted_indexed_points, key=itemgetter(0))
             for quad, points in grouped:
@@ -193,7 +196,7 @@ def _reduce_lists(acc, next_list):
 def _quad_calc_worker(item):
     try:
         i, ((lat, lon, tag), settings) = item
-        (root_dir, proximity_delta_meters, quad_dir_level) = settings
+        root_dir, proximity_delta_meters, quad_dir_level = settings
         tags = None if tag is None else TaggedOSMObject([tag])
         quads_of_interest = get_quads_around(lat, lon, proximity_delta_meters)
         results = []
