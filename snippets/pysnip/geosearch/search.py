@@ -6,7 +6,7 @@ import collections
 import multiprocessing
 import os
 
-from itertools import groupby
+from itertools import groupby, chain
 
 from operator import itemgetter
 
@@ -83,7 +83,7 @@ class EventsFilter(object):
     def is_close_enough(self, event, point):
         """Define close proximity."""
         return in_close_proximity(
-            (event.lat, event.lon), point,
+            event.point, point,
             delta=self.proximity_delta_meters
         )
 
@@ -126,21 +126,24 @@ class DataProcessor(object):
         # use only files without extention
         mfiles = [f for f in _mfiles if len(f.rsplit('.', 1)) == 1]
 
-        candidates = []
-        for month_file in mfiles:
+        def process_file(month_file):
             month_file = os.path.join(quad_dir, month_file)
             _candidates = self._process_month_file(
                 month_file, sorted_indexed_points
             )
             stats['record_count'] += len(sorted_indexed_points)
-            candidates.extend(_candidates)
+            return _candidates
 
-        candidates.sort()
+        candidates = chain.from_iterable(
+            process_file(month_file)
+            for month_file in mfiles
+        )
+
+        candidates = sorted(candidates)
         candidates = [
-            (index, reduce(
-                _reduce_lists,
-                (events for _, events in grouped)
-            ))
+            (index, list(chain.from_iterable(
+                events for _, events in grouped
+            )))
             for index, grouped in groupby(candidates, key=itemgetter(0))
         ]
 
@@ -170,22 +173,14 @@ class DataProcessor(object):
 
                 for _, index, tags, osm_point in points:
                     # filter events by tag and more accurate geo
-                    results = [
+                    results = (
                         e
                         for e in events
                         if self.events_filter_check(e, osm_point, tags)
-                    ]
+                    )
 
                     if results:
                         yield index, results
-
-
-def _reduce_lists(acc, next_list):
-    try:
-        acc.extend(next_list)
-        return acc
-    except AttributeError:
-        return next_list
 
 
 def aggregate_by_quads_impl(points, pool, worker_func):
