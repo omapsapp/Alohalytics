@@ -13,7 +13,6 @@ EARTH_RADIUS_METERS = 6367000.
 # 1 degree latitude in meters
 LAT_1_DISTANCE = 111136.
 
-FLOAT_PRECISION = 7
 # megapolis zoom level
 QUAD_LEVEL = 9
 # min number of digits in geohash
@@ -36,25 +35,23 @@ def haversine(point1, point2):
     return EARTH_RADIUS_METERS * c
 
 
+LAT_TABLE_OFFSET = 900
+
+
 def calc_lat_table():
-    table = {}
-    for _lat in range(-900, 901):
+    table = [None] * (LAT_TABLE_OFFSET * 2 + 1)
+    for _lat in range(-LAT_TABLE_OFFSET, LAT_TABLE_OFFSET + 1):
         lat = round(0.1 * _lat, 1)
-        table[lat] = haversine((lat, 1), (lat, 2))
+        table[_lat + LAT_TABLE_OFFSET] = haversine((lat, 1), (lat, 2))
     return table
 
 _lat_table = calc_lat_table()
 
 
 def get_small_deltas(point1, delta):
-    global _lat_table
-
-    lat = round(point1[0], 1)
-    lon_1_dist = _lat_table[lat]
-
     return (
-        round(delta / LAT_1_DISTANCE, FLOAT_PRECISION),
-        round(delta / lon_1_dist, FLOAT_PRECISION)
+        delta / LAT_1_DISTANCE,
+        delta / _lat_table[int(point1[0] * 10) + LAT_TABLE_OFFSET]
     )
 
 
