@@ -63,11 +63,11 @@ class Stats final {
 
     explicit Channel(TFileArchiver const & file_archiver) : messages_queue_(file_archiver) {}
   };
-  std::vector<std::unique_ptr<Channel>> channels_;
-  bool debug_mode_ = false;
-
   std::mutex upload_mutex_;
   std::mutex collect_mutex_;
+  bool debug_mode_ = false;
+  // The order of fields is important. Mutexes must be destroyed after threads (inside channels) in which they are used.
+  std::vector<std::unique_ptr<Channel>> channels_;
 
   // Use alohalytics::Stats::Instance() to access statistics engine.
   Stats();
