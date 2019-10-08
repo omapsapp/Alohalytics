@@ -37,7 +37,7 @@
 
 
 const size_t kCompressedUidLength = 32;
-const size_t kUidLength = 36;
+const size_t kUidLength = 38;
 
 // Public struct used in Python.
 struct UserInfo

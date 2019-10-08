@@ -69,7 +69,7 @@ class CUSERINFO(ctypes.Structure):
         ('os', ctypes.c_byte),
         ('lat', ctypes.c_float),
         ('lon', ctypes.c_float),
-        ('raw_uid', (ctypes.c_char * 36))
+        ('raw_uid', (ctypes.c_char * 38))
     ]
 
     _os_valid_range = range(3)
