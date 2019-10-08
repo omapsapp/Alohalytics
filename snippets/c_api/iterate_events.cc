@@ -36,7 +36,8 @@
 #include "../../src/processor.h"
 
 
-const size_t kUidLength = 32;
+const size_t kCompressedUidLength = 32;
+const size_t kUidLength = 36;
 
 // Public struct used in Python.
 struct UserInfo
@@ -84,7 +85,7 @@ struct UserInfo
     // TODO: think about just using fixed positions instead of more general attempt with searching.
     uid.erase(std::remove(uid.begin(), uid.end(), '-'), uid.end());
 
-    if (uid.size() != kUidLength)
+    if (uid.size() != kCompressedUidLength)
     {
       throw std::logic_error("Unidentified UID format");
     }
@@ -94,9 +95,13 @@ struct UserInfo
 
 
   // Throw away useless characters and convert to char array (fixed size - no null-termination needed).
-  void setUid(std::string const & uid) noexcept(false)
+  void setUid(std::string const & uid, bool compress) noexcept(false)
   {
-      std::string cUid = this->compressUid(uid);
+      std::string cUid = uid;
+      if(compress)
+      {
+        cUid = this->compressUid(uid);
+      }
       std::memcpy(this->raw_uid, cUid.c_str(), sizeof(char) * cUid.size());
   }
 
@@ -150,12 +155,12 @@ NOTE: We need a C interface, so prepare yourself for C-style structures in the p
 this function (called from a Python code with a ctypes wrapper) and
 callback function (actual Python function - also a ctypes wrapper).
 */
-EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int eventsLimit)
+EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int eventsLimit, bool compress_uid)
 {
   std::set<std::string> processKeys(eventNames, eventNames + numEventNames);
 
   alohalytics::Processor(
-      [&callback, &processKeys](AlohalyticsIdServerEvent const * idEvent, AlohalyticsKeyEvent const * event)
+      [&callback, &processKeys, &compress_uid](AlohalyticsIdServerEvent const * idEvent, AlohalyticsKeyEvent const * event)
       {
         if (!processKeys.empty() && !processKeys.count(event->key))
           return;
@@ -169,7 +174,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
 
         try
         {
-          userInfo.setUid(idEvent->id);
+          userInfo.setUid(idEvent->id, compress_uid);
         }
         catch (std::logic_error const & e)
         {

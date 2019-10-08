@@ -69,7 +69,7 @@ class CUSERINFO(ctypes.Structure):
         ('os', ctypes.c_byte),
         ('lat', ctypes.c_float),
         ('lon', ctypes.c_float),
-        ('raw_uid', (ctypes.c_char * 32)),
+        ('raw_uid', (ctypes.c_char * 36))
     ]
 
     _os_valid_range = range(3)
@@ -81,15 +81,20 @@ class CUSERINFO(ctypes.Structure):
         lat = round(self.lat, 6)
         lon = round(self.lon, 6)
         if not lat and not lon:
-            return PythonUserInfo(
-                int(self.raw_uid, 16), self.os
-            )
+            return PythonUserInfo(self.raw_uid, self.os)
 
         return PythonGeoUserInfo(
-            int(self.raw_uid, 16),
+            self.raw_uid,
             self.os,
             lat, lon
         )
+
+
+class COMPRESSED_UID_CUSERINFO(CUSERINFO):
+    def make_object(self):
+        obj = CUSERINFO.make_object(self)
+        obj.uid = int(self.raw_uid, 16)
+        return obj
 
 
 class PythonUserInfo(object):
@@ -151,7 +156,17 @@ CCALLBACK = ctypes.CFUNCTYPE(
 )  # key, event_time, user_info, data, data_len
 
 
-def iterate_events(stream_processor, events_limit):
+COMPRESSED_UID_CCALLBACK = ctypes.CFUNCTYPE(
+    None,
+    ctypes.c_char_p,
+    ctypes.POINTER(CEVENTTIME),
+    ctypes.POINTER(COMPRESSED_UID_CUSERINFO),
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.c_int
+)  # key, event_time, user_info, data, data_len
+
+
+def iterate_events(stream_processor, events_limit, compress_uid=True):
     base_path = os.path.dirname(os.path.abspath(__file__))
     c_module = ctypes.cdll.LoadLibrary(
         os.path.join(base_path, 'iterate_events.so')
@@ -160,14 +175,20 @@ def iterate_events(stream_processor, events_limit):
         e.keys for e in stream_processor.__events__
     ))
     keylist_type = ctypes.c_char_p * len(use_keys)
+
+    callback = CCALLBACK
+    if compress_uid is True:
+        callback = COMPRESSED_UID_CCALLBACK
+
     c_module.Iterate.argtypes = [
-        CCALLBACK, keylist_type, ctypes.c_int, ctypes.c_int
+        callback, keylist_type, ctypes.c_int, ctypes.c_int, ctypes.c_bool
     ]
     c_module.Iterate(
-        CCALLBACK(
+        callback(
             stream_processor.process_event
         ),
         keylist_type(*use_keys),
         len(use_keys),
-        events_limit
+        events_limit,
+        compress_uid
     )
