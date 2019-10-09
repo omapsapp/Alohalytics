@@ -3,7 +3,20 @@ import datetime
 import inspect
 import json
 import multiprocessing
+import sys
 import traceback
+
+
+if sys.version_info[0] == 3:
+    def decode_keys_for_json(dct):
+        return {
+            (k.decode() if isinstance(k, bytes) else k): v
+            for k, v in dct.items()
+        }
+else:
+    def decode_keys_for_json(dct):
+        return dct
+
 
 DAY_FORMAT = '%Y%m%d'
 UNIQ_DAY_FORMAT = 'dt' + DAY_FORMAT
@@ -143,11 +156,17 @@ def custom_loads(dct):
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
-        if hasattr(obj, '__dumpdict__'):
-            return obj.__dumpdict__()
         if not isinstance(obj, str) and isinstance(obj, bytes):
             # in python 2.7 str is bytes; don't decode it
             return obj.decode()
+
+        if hasattr(obj, '__dumpdict__'):
+            obj = obj.__dumpdict__()
+
+        if isinstance(obj, dict):
+            # process json unprocessable dict keys
+            return decode_keys_for_json(obj)
+
         # Let the base class default method raise the TypeError
         return super(CustomEncoder, self).default(obj)
 
