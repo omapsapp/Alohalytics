@@ -39,6 +39,12 @@
 const size_t kCompressedUidLength = 32;
 const size_t kUidLength = 38;
 
+
+enum UidFormat
+{
+  RAW, PYLONG
+};
+
 // Public struct used in Python.
 struct UserInfo
 {
@@ -95,13 +101,23 @@ struct UserInfo
 
 
   // Throw away useless characters and convert to char array (fixed size - no null-termination needed).
-  void setUid(std::string const & uid, bool compress) noexcept(false)
+  void setUid(std::string const & uid, uint8_t format) noexcept(false)
   {
-      std::string cUid = uid;
-      if(compress)
+      std::string cUid;
+      switch (format)
       {
-        cUid = this->compressUid(uid);
-      }
+        case RAW: 
+        {
+          cUid = uid;
+          break;
+        }
+        case PYLONG:
+        {
+          cUid = this->compressUid(uid);
+          break;
+        }
+      };
+
       std::memcpy(this->raw_uid, cUid.c_str(), sizeof(char) * cUid.size());
   }
 
@@ -155,12 +171,12 @@ NOTE: We need a C interface, so prepare yourself for C-style structures in the p
 this function (called from a Python code with a ctypes wrapper) and
 callback function (actual Python function - also a ctypes wrapper).
 */
-EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int eventsLimit, bool compress_uid)
+EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNames, int eventsLimit, uint8_t uid_format)
 {
   std::set<std::string> processKeys(eventNames, eventNames + numEventNames);
 
   alohalytics::Processor(
-      [&callback, &processKeys, &compress_uid](AlohalyticsIdServerEvent const * idEvent, AlohalyticsKeyEvent const * event)
+      [&callback, &processKeys, &uid_format](AlohalyticsIdServerEvent const * idEvent, AlohalyticsKeyEvent const * event)
       {
         if (!processKeys.empty() && !processKeys.count(event->key))
           return;
@@ -174,7 +190,7 @@ EXPORT void Iterate(TCallback callback, char const ** eventNames, int numEventNa
 
         try
         {
-          userInfo.setUid(idEvent->id, compress_uid);
+          userInfo.setUid(idEvent->id, uid_format);
         }
         catch (std::logic_error const & e)
         {

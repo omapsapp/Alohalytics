@@ -166,7 +166,13 @@ COMPRESSED_UID_CCALLBACK = ctypes.CFUNCTYPE(
 )  # key, event_time, user_info, data, data_len
 
 
-def iterate_events(stream_processor, events_limit, compress_uid=True):
+class UidFormat(object):
+    RAW = 0
+    PYLONG = 1
+
+
+def iterate_events(stream_processor, events_limit,
+                   uid_format=UidFormat.PYLONG):
     base_path = os.path.dirname(os.path.abspath(__file__))
     c_module = ctypes.cdll.LoadLibrary(
         os.path.join(base_path, 'iterate_events.so')
@@ -177,11 +183,11 @@ def iterate_events(stream_processor, events_limit, compress_uid=True):
     keylist_type = ctypes.c_char_p * len(use_keys)
 
     callback = CCALLBACK
-    if compress_uid is True:
+    if uid_format is UidFormat.PYLONG:
         callback = COMPRESSED_UID_CCALLBACK
 
     c_module.Iterate.argtypes = [
-        callback, keylist_type, ctypes.c_int, ctypes.c_int, ctypes.c_bool
+        callback, keylist_type, ctypes.c_int, ctypes.c_int, ctypes.c_byte
     ]
     c_module.Iterate(
         callback(
@@ -190,5 +196,5 @@ def iterate_events(stream_processor, events_limit, compress_uid=True):
         keylist_type(*use_keys),
         len(use_keys),
         events_limit,
-        compress_uid
+        uid_format
     )
