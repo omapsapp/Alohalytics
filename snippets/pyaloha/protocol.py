@@ -156,16 +156,16 @@ def custom_loads(dct):
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
-        if not isinstance(obj, str) and isinstance(obj, bytes):
-            # in python 2.7 str is bytes; don't decode it
-            return obj.decode()
-
         if hasattr(obj, '__dumpdict__'):
             obj = obj.__dumpdict__()
 
         if isinstance(obj, dict):
             # process json unprocessable dict keys
             return decode_keys_for_json(obj)
+
+        if not isinstance(obj, str) and isinstance(obj, bytes):
+            # in python 2.7 str is bytes; don't decode it
+            return obj.decode()
 
         # Let the base class default method raise the TypeError
         return super(CustomEncoder, self).default(obj)
