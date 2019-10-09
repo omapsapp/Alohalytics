@@ -146,7 +146,7 @@ class PythonGeoUserInfo(PythonUserInfo):
         }
 
 
-CCALLBACK = ctypes.CFUNCTYPE(
+RAW_UID_CCALLBACK = ctypes.CFUNCTYPE(
     None,
     ctypes.c_char_p,
     ctypes.POINTER(CEVENTTIME),
@@ -182,7 +182,7 @@ def iterate_events(stream_processor, events_limit,
     ))
     keylist_type = ctypes.c_char_p * len(use_keys)
 
-    callback = CCALLBACK
+    callback = RAW_UID_CCALLBACK
     if uid_format is UidFormat.PYLONG:
         callback = COMPRESSED_UID_CCALLBACK
 
