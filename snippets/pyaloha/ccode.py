@@ -55,7 +55,10 @@ class PythonEventTime(object):
 
     @property
     def is_accurate(self):
-        return self.dtime == self.client_creation
+        client_dtime = SerializableDatetime.utcfromtimestamp(
+            self.client_creation / 1000.  # timestamp is in millisecs
+        )
+        return self.dtime == client_dtime
 
     def __dumpdict__(self):
         return {
