@@ -41,24 +41,24 @@ class PythonEventTime(object):
     delta_future = 1 * msec_in_a_day
 
     def __init__(self, server_dtime, client_dtime):
-        if client_dtime < server_dtime - self.delta_past or\
-                client_dtime > server_dtime + self.delta_future:
-            dtime = server_dtime
-        else:
-            dtime = client_dtime
-
         self.client_creation = client_dtime
         self.server_upload = server_dtime
+
+        if self.is_accurate:
+            dtime = client_dtime
+        else:
+            dtime = server_dtime
+
         self.dtime = SerializableDatetime.utcfromtimestamp(
             dtime / 1000.  # timestamp is in millisecs
         )
 
     @property
     def is_accurate(self):
-        client_dtime = SerializableDatetime.utcfromtimestamp(
-            self.client_creation / 1000.  # timestamp is in millisecs
-        )
-        return self.dtime == client_dtime
+        if self.client_creation > self.server_upload - self.delta_past and\
+                self.client_creation < self.server_upload + self.delta_future:
+            return True
+        return False
 
     def __dumpdict__(self):
         return {
