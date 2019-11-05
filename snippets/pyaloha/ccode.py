@@ -62,8 +62,7 @@ class PythonEventTime(object):
 
     def __dumpdict__(self):
         return {
-            'dtime': self.dtime,
-            'is_accurate': self.is_accurate
+            'dtime': self.dtime
         }
 
 
