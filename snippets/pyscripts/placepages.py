@@ -7,7 +7,7 @@ from pyaloha.base import StatsProcessor as BaseStatsProcessor
 from pyaloha.protocol import SerializableSet
 
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
-from pysnip.osm_tags import get_groups_by_tag
+from pysnip.osm_tags import get_group_by_tag
 
 import pysnip.events as events
 
@@ -43,14 +43,14 @@ class DataStreamWorker(BaseDataStreamWorker):
             month = '%s-%s' % (dte.year, dte.month)
             set_groups = []
             for tag in event.object_types:
-                for group in get_groups_by_tag(tag):
-                    if group not in set_groups:
-                        set_groups.append(group)
+                group = get_group_by_tag(tag)
+                if group not in set_groups:
+                    set_groups.append(group)
 
-                        self.monthly_users_per_type[month][group].add(
-                            event.user_info.uid
-                        )
-                        self.monthly_hits_per_type[month][group] += 1
+                    self.monthly_users_per_type[month][group].add(
+                        event.user_info.uid
+                    )
+                    self.monthly_hits_per_type[month][group] += 1
 
                 self.monthly_users_per_type[month][tag].add(
                     event.user_info.uid

@@ -1,8 +1,6 @@
 import collections
 
 from pyaloha.event import DictEvent
-from pyaloha.event import Event
-from pyaloha.protocol import AutoSerialized
 
 # ALOHA: RenderingStats [
 # version=8.5.0
@@ -21,6 +19,7 @@ from pyaloha.protocol import AutoSerialized
 # viewportMaxLat=55.7587
 # viewportMaxLon=37.6481
 # ]
+
 
 class RenderingStats(DictEvent):
     keys = (
@@ -63,7 +62,7 @@ class RenderingStats(DictEvent):
             self.viewport_max_lat_lon = None
 
 
-class GPU(Event):
+class GPU(DictEvent):
     keys = (
         'GPU',
     )
@@ -71,7 +70,4 @@ class GPU(Event):
     def __init__(self, *args, **kwargs):
         super(GPU, self).__init__(*args, **kwargs)
 
-        if self.data_list_len > 0:
-            self.gpu = self.data_list[0]
-        else:
-            self.gpu = 'Unknown'
+        self.gpu = self.data.keys()[0]
