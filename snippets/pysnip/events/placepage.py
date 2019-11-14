@@ -1,5 +1,4 @@
 from pyaloha.event import DictEvent
-from pysnip.osm_tags import TaggedOSMObject
 
 # Event tracked, when user select object on the map.
 # It can be POI, search result or any another place.
@@ -40,33 +39,8 @@ class ObjectSelection(DictEvent):
     __slots__ = tuple()
 
     @property
-    def object_location(self):
-        return (
-            self.user_info.lat,
-            self.user_info.lon
-        )
-
-    @property
     def by_longtap(self):
         return self.data['longTap'] != 0
-
-    @property
-    def object_types(self):
-        try:
-            return self.data.get('types').split(' ')
-        except AttributeError:
-            return []
-
-    @property
-    def numeric_types(self):
-        try:
-            return TaggedOSMObject(self.data.get('types').split(' '))
-        except KeyError:
-            return None
-
-    @property
-    def title(self):
-        return self.data.get('title')
 
     @property
     def bookmark(self):
@@ -76,57 +50,21 @@ class ObjectSelection(DictEvent):
             return None
 
     @property
-    def meters(self):
-        return int(self.data.get('meters', '-1'))
+    def object_types(self):
+        try:
+            return self.data.get('types', None).split(' ')
+        except AttributeError:
+            return []
+
+    @property
+    def title(self):
+        return self.data.get('title', '')
 
     def __dumpdict__(self):
         d = super(DictEvent, self).__basic_dumpdict__()
         d.update({
             'by_longtap': self.by_longtap,
-            'object_types': self.object_types,
-            'object_location': self.object_location
-        })
-        return d
-
-
-class BookmarkAction(DictEvent):
-    keys = (
-        'Bookmarks_Bookmark_action',
-    )
-
-    __slots__ = tuple()
-
-    @property
-    def action(self):
-        return self.data['action']
-
-    @property
-    def object_types(self):
-        try:
-            return self.data['tags'].split(',')
-        except KeyError:
-            return []
-
-    @property
-    def numeric_types(self):
-        try:
-            return TaggedOSMObject(self.data['tags'].split(','))
-        except KeyError:
-            return None
-
-    @property
-    def object_location(self):
-        try:
-            return float(self.data['lat']), float(self.data['lon'])
-        except KeyError:  # old event
-            return None
-
-    def __dumpdict__(self):
-        d = super(DictEvent, self).__basic_dumpdict__()
-        d.update({
-            'action': self.action,
-            'object_types': self.object_types,
-            'object_location': self.object_location
+            'object_types': self.object_types
         })
         return d
 
@@ -150,11 +88,70 @@ class BookmarkAction(DictEvent):
 # hotel_lon=-6.921042106457378
 # provider=Booking.Com
 # ]
+"""
+--------------------------------------------------
+Android:
+PlacePage_Hotel_Description_land [ 
+Country=CR
+Language=fr-FR
+Orientation=Portrait
+Provider=Booking.com
+hotel=1044517
+hotel_location=10.72905106990975,-85.39610017386154
+]
+iOS:
+PlacePage_Hotel_Description_land [
+Country=DE
+Language=de-DE
+Orientation=Portrait
+Provider=Booking.com
+hotel=2200450
+hotel_location=-8.688940482406514,115.4304094272138
+]
+--------------------------------------------------
+Android:
+PlacePage_Hotel_Reviews_land [
+hotel=187228
+hotel_lat=36.59969926594239
+hotel_lon=30.55733062742152
+provider=Booking.Com
+]
+iOS:
+PlacePage_Hotel_Reviews_land [ 
+Country=ES
+Language=es-ES
+Orientation=Portrait
+Provider=Booking.com
+hotel=3074769
+hotel_location=31.64389096667804,-7.990801062426357
+]
+--------------------------------------------------
+Android:
+Placepage_Hotel_details [ 
+hotel=2185285
+hotel_lat=37.17760891671737
+hotel_lon=-3.5973210900822323
+provider=Booking.Com
+]
+iOS:
+Placepage_Hotel_details [ 
+Country=US
+Language=en-US
+Orientation=Landscape
+Provider=Booking.com
+hotel=4393391
+hotel_location=51.50200373094615,-0.1254938552192755
+]
+"""
 
 
 class HotelClick(DictEvent):
     keys = (
         'Placepage_Hotel_book',
+        'PlacePage_Hotel_Description_land',
+        'PlacePage_Hotel_Reviews_land',
+        'Search.Booking.Com',
+        'Placepage_Hotel_details'
     )
 
     __slots__ = tuple()
@@ -183,15 +180,6 @@ class HotelClick(DictEvent):
     def hotel_id(self):
         return self.data.get('hotel')
 
-    def __dumpdict__(self):
-        d = super(DictEvent, self).__basic_dumpdict__()
-        d.update({
-            'action': self.action,
-            'object_types': self.object_types,
-            'object_location': self.object_location
-        })
-        return d
-
 
 # Event tracked, when user select object in list of search results.
 #
@@ -210,6 +198,8 @@ class ObjectSelectionFromList(DictEvent):
         'searchShowResult',
     )
 
+    __slots__ = tuple()
+
     def __init__(self, *args, **kwargs):
         super(ObjectSelectionFromList, self).__init__(*args, **kwargs)
 
@@ -217,22 +207,16 @@ class ObjectSelectionFromList(DictEvent):
         params = self.data.get('result', '').split('|')
         try:
             self.name = params[0]
+        except IndexError:
+            self.name = None
+        try:
             self.object_type = params[1]
+        except IndexError:
+            self.object_type = 'Unknown'
+        try:
             self.fromsuggest = False if params[2] == '0' else True
         except IndexError:
-            raise ValueError('Corrupt search result click event')
-
-        del self.data
-
-    def __dumpdict__(self):
-        d = super(DictEvent, self).__basic_dumpdict__()
-        d.update({
-            'position': self.position,
-            'name': self.name,
-            'object_type': self.object_type,
-            'fromsuggest': self.fromsuggest
-        })
-        return d
+            self.fromsuggest = False
 
 # Click on share button in placepage. There is no have any special properties.
 # ALOHA:
@@ -251,3 +235,6 @@ class PlacepageShare(DictEvent):
         'PP. Share',
         'Place page Share',
     )
+
+    def __dumpdict__(self):
+        return super(DictEvent, self).__basic_dumpdict__()

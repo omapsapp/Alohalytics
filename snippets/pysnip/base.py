@@ -21,7 +21,7 @@ from pysnip.events.onstart import (
 )
 
 from pysnip.events.placepage import (
-    BookmarkAction,
+    #BookmarkAction,
     HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare
 )
 
@@ -38,7 +38,7 @@ from pysnip.events.rendering import RenderingStats, GPU
 
 
 CUSTOM_EVENTS = (
-    ObjectSelection, BookmarkAction,
+    ObjectSelection,# BookmarkAction,
     TechnicalLaunch, AndroidVisibleLaunch,
     AndroidSessionStart, AndroidSessionEnd,
     IOSSessionStart, IOSSessionEnd,
