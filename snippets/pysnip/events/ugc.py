@@ -63,7 +63,8 @@ class EditorStart(DictEvent):
         del self.data
 
     def to_bool(self, s):
-        return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
+        return {'1': True, 'true': True, '0': False, 'false': False, 'Yes': True, 'No': False}.get(s)
+
 
 
 # Event send, when user click «Add place (business)» and start choose
@@ -167,3 +168,7 @@ class UGCAuthSuccess(DictEvent):
     keys = (
         'UGC_Auth_external_request_success',
     )
+
+
+# TODO:
+# 'UGC_Auth_shown', 'UGC_Auth_declined'
