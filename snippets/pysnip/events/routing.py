@@ -2,6 +2,7 @@ from pyaloha.event import DictEvent, Event
 
 
 class RouteDictEvent(DictEvent):
+
     mode_alliases = {
         'astar-bidirectional-pedestrian': 'pedestrian',
         'astar-bidirectional-bicycle': 'bicycle',
@@ -57,15 +58,63 @@ class RouteRequest(RouteDictEvent):
         self.status = self.data.get('result')
         self.distance = self.data.get('distance')
 
+
 # Event for a start of the route with specific props
 # with no specific fields
+# Android: Routing. Start []
+# iOS: Point to point Go [
+# Country = 'AR'
+# Language = 'ru-UA'
+# Orientation = 'Portrait'
+# Value: {'From my position', 'Point to point', 'To my position'}
+# ]
+"""
+--------------------------------------------------
+Android:
+Point to point Go [
+Value=From my position 
+]
+iOS:
+Point to point Go [
+Country=CU
+Language=es-ES
+Orientation=Portrait
+Value=From my position 
+]
+--------------------------------------------------
+Android:
+Routing_Route_start [ 
+mode=vehicle
+traffic=0
+]
+iOS:
+Routing_Route_start [ 
+Country=RU
+Language=ru-RU
+Orientation=Portrait
+Traffic=0
+mode=vehicle
+]
+--------------------------------------------------
+"""
 
 
 class RouteStart(Event):
     keys = (
         'Routing. Start',
         'Point to point Go',
+        'Routing_Route_start',
     )
+
+    def __init__(self, *args, **kwargs):
+        super(RouteStart, self).__init__(*args, **kwargs)
+
+        try:
+            self.traffic = self.data.get('traffic', self.data.get('Traffic', None))
+            self.mode = self.data.get('mode', None)
+        except AttributeError:
+            self.traffic = None
+            self.mode = None
 
 
 # ALOHA: RouteTracking_RouteClosing [
@@ -129,18 +178,61 @@ class TaxiRouteRequest(DictEvent):
         self.provider = self.data.get('provider', 'Unknown')
 
 
-# ALOHA: $TrafficChangeState [ state=WaitingData ]
-# Event send, when user turned on/off traffic jams
+# ALOHA:
+# Old event, change state of traffic. Not UI change.
+# UI change included, but event can be send, without users actions.
+# $TrafficChangeState [ state=WaitingData ]
+#
+# New event, change state of any layers in application (now traffic and subway)
+# Not UI change.
+# UI change included, but event can be send, without users actions.
+# Map_Layers_activate
+# [
+# Name=subway
+# status=success
+# ]
+"""
+--------------------------------------------------
+Android:
+Map_Layers_activate
+[
+Name=traffic
+status=DISABLED
+]
+--------------------------------------------------
+iOS:
+Map_Layers_activate [ 
+Country=DE
+Language=de-DE
+Orientation=Portrait
+name=traffic
+status=success
+]
+--------------------------------------------------
+"""
 
 
-class TrafficState(DictEvent):
+class MapLayersActivate(DictEvent):
     keys = (
         '$TrafficChangeState',
+        'Map_Layers_activate'
     )
 
+    state_alliases = {
+        'success': 'enabled'
+    }
+
     def __init__(self, *args, **kwargs):
-        super(TrafficState, self).__init__(*args, **kwargs)
-        self.state = self.data.get('state', 'Unknown')
+        super(MapLayersActivate, self).__init__(*args, **kwargs)
+        if self.key == '$TrafficChangeState':
+            self.action = self.data.get('state', 'unknown').lower()
+            self.name = 'traffic'
+        elif self.key == 'Map_Layers_activate':
+            self.name = self.data.get('Name', self.data.get('name', None))
+            self.action = self.data.get('status', 'unknown').lower()
+
+            if self.action in self.state_alliases:
+                self.action = self.state_alliases[self.action]
 
 
 # Event send, when user click on bookmark button after build route
@@ -224,3 +316,92 @@ class RoutingSearch(DictEvent):
     def __init__(self, *args, **kwargs):
         super(RoutingSearch, self).__init__(*args, **kwargs)
         self.mode = self.data.get('mode', 'onroute')
+
+
+# User clicked on button "order taxi" in placepage.
+# If he has a taxi application, Routing_Taxi_order will be send,
+# if he hasn't, Routing_Taxi_install will be send
+# ALOHA:
+# android:
+# Routing_Taxi_order
+# [
+# from_lat=-11.989991400000001
+# from_lon=-77.0691169
+# provider=Uber
+# to_lat=-12.054727786240294
+# to_lon=-77.12083299028994
+# ]
+# <utc=1514758162000,lat=-11.9897872,lon=-77.0688617,acc=53.09,spd=0.00,src=Unk>
+#
+# Routing_Taxi_install
+# [
+# from_lat=25.129832000000004
+# from_lon=55.194609
+# provider=Uber
+# to_lat=25.118169236941394
+# to_lon=55.20048286915184
+# ]
+# <utc=1514758496000,lat=25.1330818,lon=55.1935794,acc=41.00,spd=0.00,src=GPS>
+# ios:
+# Routing_Taxi_order
+# [
+# Country=ME
+# Language=en-ME
+# Orientation=Portrait
+# Provider=Uber
+# from_location=-22.91784411764045,-43.18100036125927
+# to_location=-22.98487999999999,-43.198601
+# ]
+# <utc=1514758289528,lat=-22.9179772,lon=-43.1809275,acc=65.00,alt=82.03,vac=10.00>
+#
+# Routing_Taxi_install
+# [
+# Country=PL
+# Language=ru-BY
+# Orientation=Portrait
+# Provider=Uber
+# from_location=52.22150277351236,21.01252097638418
+# to_location=52.24291852638538,21.00276292117509
+# ]
+# <utc=1514759092002,lat=52.2215027,lon=21.0125208,acc=10.00,alt=110.92,vac=6.00,bea=0.0000000,spd=0.00>
+
+class RoutingTaxiOrder(DictEvent):
+    keys = (
+        'Routing_Taxi_order',
+        'Routing_Taxi_install'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingTaxiOrder, self).__init__(*args, **kwargs)
+
+        if self.key == 'Routing_Taxi_order':
+            self.action = 'order'
+        else:
+            self.action = 'install'
+        self.provider = self.data.get(
+            'provider',
+            self.data.get('Provider', None)
+        )
+        self.from_location = self.data.get('from_location', None)
+        if self.from_location:
+            self.from_location = tuple(
+                float(item)
+                for item in self.from_location.split(',')
+            )
+        else:
+            self.from_location = (
+                float(self.data.get('from_lat', 0)),
+                float(self.data.get('from_lon', 0))
+            )
+
+        self.to_location = self.data.get('to_location', None)
+        if self.to_location:
+            self.to_location = tuple(
+                float(item)
+                for item in self.to_location.split(',')
+            )
+        else:
+            self.to_location = (
+                float(self.data.get('to_lat', 0)),
+                float(self.data.get('to_lon', 0))
+            )
