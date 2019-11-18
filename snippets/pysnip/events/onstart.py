@@ -38,6 +38,7 @@ class TechnicalLaunch(DictEvent):
 
 
 # TechnicalLaunch event in iOS is always associated with a UI launch
+# TODO: why are `keys` missing?
 
 class IOSVisibleLaunch(TechnicalLaunch):
     __slots__ = tuple()
@@ -279,8 +280,7 @@ class IOSSessionStart(Event):
 
     __slots__ = tuple()
 
-
-# Hide aplication
+# Hide application
 # Framework::EnterBackground
 # [
 # foregroundSeconds=414
@@ -302,6 +302,7 @@ class EnterBackground(DictEvent):
 class IOSSessionEnd(Event):
     keys = (
         '$applicationDidEnterBackground',
+        '$applicationWillEnterForeground',
     )
 
     __slots__ = tuple()
