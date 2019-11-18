@@ -17,7 +17,7 @@ from pysnip.events.onstart import (
     AndroidVisibleLaunch, TechnicalLaunch,
     AndroidSessionStart, AndroidSessionEnd,
     DeviceInfo,
-    IOSSessionStart, IOSSessionEnd
+    IOSSessionStart, IOSSessionEnd, ColdStartupInfo, EnterBackground
 )
 
 from pysnip.events.placepage import (
@@ -54,7 +54,8 @@ CUSTOM_EVENTS = (
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
     BookmarkCreated, MobileInternet,
-    RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader
+    RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader,
+    ColdStartupInfo, EnterBackground
 )
 
 

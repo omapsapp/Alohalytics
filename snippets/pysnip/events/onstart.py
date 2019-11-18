@@ -182,8 +182,6 @@ class DeviceInfo(DictEvent):
         })
         return d
 
-# SESSIONS
-
 
 class AndroidSessionStart(Event):
     keys = (
@@ -201,6 +199,79 @@ class AndroidSessionEnd(Event):
     __slots__ = tuple()
 
 
+
+# App launch event. Cold start of application
+# ios:
+# Application_ColdStartup_info
+# [
+# Country=DE
+# Language=de-DE
+# Orientation=Portrait
+# battery=92
+# charging=Off
+# network=wifi
+# ]
+# android:
+# Application_ColdStartup_info
+# [
+# battery=79
+# charging=off
+# network=mobile
+# ]
+# Its properties are:
+# battery: number: 0-100
+# charging: {
+#   ios: {Off, On, unknown}
+#   android: {off, on, unknown}
+# }
+# network: {
+#   ios: {offline, wifi, mobile, none}
+#   android: {off, wifi, mobile, roaming}
+# }
+
+class ColdStartupInfo(DictEvent):
+    keys = (
+        'Application_ColdStartup_info',
+    )
+
+    __slots__ = tuple()
+
+    @property
+    def battery(self):
+        return int(self.data['battery'])
+
+    @property
+    def charging(self):
+        return self.data['charging'].lower()
+
+    @property
+    def connection(self):
+        if self.data['network'].lower() == 'off':
+            return 'offline'
+        elif self.data['network'] == 'roaming':
+            return 'mobile'
+        else:
+            return self.data['network']
+
+    @property
+    def in_roaming(self):
+        if self.data['network'] == 'roaming':
+            return 'yes'
+        elif self.user_info.os == 2:
+            return None
+        else:
+            return 'no'
+
+    def __dumpdict__(self):
+        d = super(ColdStartupInfo, self).__basic_dumpdict__()
+        d.update({
+            'battery': self.battery(),
+            'charging': self.charging(),
+            'connection': self.connection(),
+            'in_roaming': self.in_roaming()
+        })
+        return d
+
 class IOSSessionStart(Event):
     keys = (
         '$applicationDidBecomeActive',
@@ -208,6 +279,24 @@ class IOSSessionStart(Event):
 
     __slots__ = tuple()
 
+
+# Hide aplication
+# Framework::EnterBackground
+# [
+# foregroundSeconds=414
+# zoom=12
+# ]
+# <utc=0,lat=34.7544645,lon=33.2958196,acc=1.00>
+class EnterBackground(DictEvent):
+    keys = (
+        'Framework::EnterBackground',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(EnterBackground, self).__init__(*args, **kwargs)
+
+        self.foregroundSeconds = self.data['foregroundSeconds']
+        self.zoom = self.data.get('zoom')
 
 # consider 'Framework::EnterBackground'
 class IOSSessionEnd(Event):
