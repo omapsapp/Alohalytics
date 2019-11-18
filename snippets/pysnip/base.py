@@ -34,7 +34,7 @@ from pysnip.events.ugc import (
     EditorStart, EditorAddClick, UGCAuthError,
     UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
 )
-from pysnip.events.maps import MapActionRequest, MapDownloadFinished
+from pysnip.events.maps import MapActionRequest, MapDownloadFinished, StartScreenDownloader
 from pysnip.events.rendering import RenderingStats, GPU, VulkanForbidden
 
 
@@ -54,7 +54,7 @@ CUSTOM_EVENTS = (
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
     BookmarkCreated, MobileInternet,
-    RoutingTaxiOrder, VulkanForbidden
+    RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader
 )
 
 

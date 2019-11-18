@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from pyaloha.event import DictEvent
 
 
@@ -30,6 +29,13 @@ class MapActionRequest(DictEvent):
     keys = (
         'Downloader_Map_action',
     )
+    is_auto = {
+        'Yes': True,
+        'No': False,
+        'false': False,
+        'true': True,
+        'unknown': 'unknown'
+    }
 
     def __init__(self, *args, **kwargs):
         super(MapActionRequest, self).__init__(*args, **kwargs)
@@ -37,6 +43,7 @@ class MapActionRequest(DictEvent):
         self.action = self.data['action']
         self.scenario = self.data.get('scenario', None)
         self.init_from = self.data['from']
+        self.is_auto = self.is_auto.get(self.data.get('is_auto', 'unknown'))
 
 
 # ALOHA:
@@ -56,3 +63,31 @@ class MapDownloadFinished(DictEvent):
 
         self.name = self.data['name']
         self.version = int(self.data['version'])
+
+
+# ALOHA: Downloader_OnStartScreen_auto_download
+# Send, when maps updates automatically on start screen
+# [
+# map_data_size:=5.0
+# ]
+# ALOHA: Downloader_OnStartScreen_manual_download
+# Send, when maps updates manually on start screen
+# [
+# map_data_size:=77.0
+# ]
+
+class StartScreenDownloader(DictEvent):
+    keys = (
+        'Downloader_OnStartScreen_auto_download',
+        'Downloader_OnStartScreen_manual_download'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(StartScreenDownloader, self).__init__(*args, **kwargs)
+
+        if self.key == 'Downloader_OnStartScreen_auto_download':
+            self.is_auto = True
+        else:
+            self.is_auto = False
+
+        self.map_data_size = int(self.data.get('map_data_size', 0))
