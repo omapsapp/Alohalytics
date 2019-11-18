@@ -35,6 +35,7 @@ from pysnip.events.ugc import (
     UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
 )
 from pysnip.events.maps import MapActionRequest, MapDownloadFinished, StartScreenDownloader
+from pysnip.events.search import SearchFilterOpen, SearchFilterClick, SearchFilterApply
 from pysnip.events.rendering import RenderingStats, GPU, VulkanForbidden
 
 
@@ -55,7 +56,8 @@ CUSTOM_EVENTS = (
     RenderingStats, GPU,
     BookmarkCreated, BookmarkAction, MobileInternet,
     RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader,
-    ColdStartupInfo, EnterBackground
+    ColdStartupInfo, EnterBackground,
+    SearchFilterOpen, SearchFilterClick, SearchFilterApply
 )
 
 
