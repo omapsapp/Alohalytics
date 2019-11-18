@@ -38,7 +38,7 @@ class SearchResults(DictEvent):
 
         try:
             raw_query = self.data['query']
-        except KeyError: # as is old type event:
+        except KeyError:
             # TODO: investigate bug in c_api
             for raw_query, self.result_num in self.data.items():
                 if raw_query:
@@ -48,13 +48,16 @@ class SearchResults(DictEvent):
             self.result_num = int(results[0])
             self.results = results[1:]
 
-        self.invalid_query = True  # empty-like queries are set as invalid
         query = raw_query.decode('utf8').encode('utf8')
-        if query:
-            self.query = query.strip()
+        if not query:
+            raise Exception('%s: Empty search query: %s' % (self.key, raw_query))
 
-            if self.query:
-                self.invalid_query = False
+        self.query = query.strip()
+
+        if not self.query:
+            raise Exception(
+                '%s: Trash query: %s' % (self.key, repr(raw_query))
+            )
 
         try:
             self.gps = (float(self.data['posX']), float(self.data['posY']))
@@ -75,8 +78,6 @@ class SearchResults(DictEvent):
 
         del self.data
 
-    def process_me(self, processor):
-        processor.process_search_results(self)
 
     def __dumpdict__(self):
         d = super(SearchResults, self).__basic_dumpdict__()
@@ -99,8 +100,6 @@ class GPSTracking(Event):
 
         self.data_list = None
 
-    def process_me(self, processor):
-        processor.process_gps_tracking(self)
 
 # ALOHA (Android): Menu. SettingsAndMore[]
 # Menu. Point to point[]
@@ -126,6 +125,46 @@ class GPSTracking(Event):
 # Device type = 'iPhone' or 'iPad'
 # Traffic = 'On' or 'Off'
 # TTS = 'On' or 'Off'
+'''
+----------------------------------------
+iOS:
+Toolbar_click [ 
+Country=RU
+Language=ru-RU
+Orientation=Portrait
+button=point_to_point
+]
+Android:
+Toolbar_click [ 
+button=menu
+]
+----------------------------------------
+iOS:
+Toolbar_Menu_click [ 
+Country=RU
+Language=ru-RU
+Orientation=Portrait
+item=download_maps
+]
+Android:
+Toolbar_Menu_click [ 
+button=download_guides
+]
+----------------------------------------
+old discovery button event
+ios:
+DiscoveryButton_Open [
+Country=SA
+Language=en-SA
+Orientation=Portrait
+network=none
+]
+android:
+DiscoveryButton_Open [
+network=wifi
+]
+----------------------------------------
+'''
 
 
 class Menu(DictEvent):
@@ -140,27 +179,53 @@ class Menu(DictEvent):
         'Toolbar. Search',
         'Toolbar. Bookmarks',
         'Toolbar. Menu',
+        'Toolbar_click',
+        'Toolbar_Menu_click',
+        'DiscoveryButton_Open'
     )
-
+    
     keys_dict = {
-        'Menu. SettingsAndMore': 'Settings',
+        'Menu. SettingsAndMore':'Settings',
         'Menu. Point to point': 'Point to point',
-        'Menu. Downloader': 'Download maps',
-        'Menu. Share': 'Share',
-        'Menu. Add place.': 'Add place',
-        'Toolbar. MyPosition': 'Location',
-        'Toolbar. Search': 'search',
-        'Toolbar. Bookmarks': 'Bookmarks',
-        'Toolbar. Menu': 'Expand or Collapse'
+        'Menu. Downloader':     'Download maps',
+        'Menu. Share':          'Share',
+        'Menu. Add place.':     'Add place',
+        'Toolbar. MyPosition':  'Location',
+        'Toolbar. Search':      'search',
+        'Toolbar. Bookmarks':   'Bookmarks',
+        'Toolbar. Menu':        'Expand or Collapse',
+        'DiscoveryButton_Open': 'discovery'
+    }
+    buttons_dict = {
+        'menu':                 'Expand',
+        'point_to_point':       'Point to point',
+        'bookmarks':            'Bookmarks',
+        'add_place':            'Add place',
+        'download_maps':        'Download maps',
+        'settings':             'Settings',
+        'share_my_location':    'Share'
     }
 
     def __init__(self, *args, **kwargs):
         super(Menu, self).__init__(*args, **kwargs)
-
-        if self.key == 'Menu':
-            self.button = self.data.get('Button')
+        if self.key in self.keys_dict:
+            self.button = self.keys_dict[self.key]
+        elif self.key == 'Menu':
+            self.button = self.data.get('Button', None)
+        elif self.key == 'Toolbar_click':
+            self.button = self.buttons_dict.get(
+                self.data.get('button', None),
+                self.data.get('button', None)
+            )
+        elif self.key == 'Toolbar_Menu_click':
+            self.button = self.buttons_dict.get(
+                self.data.get('button', self.data.get('item', None)),
+                self.data.get('button', self.data.get('item', None))
+            )
         else:
-            self.button = self.keys_dict.get(self.key)
+            self.button = None
+        if self.button is not None:
+            self.button = self.button.decode('utf-8').replace(u'\u0131', u'i').encode('utf-8')
 
 
 # ALOHA:
@@ -258,3 +323,98 @@ class MobileInternet(DictEvent):
     def __init__(self, *args, **kwargs):
         super(MobileInternet, self).__init__(*args, **kwargs)
         self.value = self.data.get('Value')
+
+
+# ALOHA:
+# ios only event, GDPR consent has been shown
+# OnStart_MapsMeConsent_shown
+# [
+# Country=US
+# Language=en-US
+# Orientation=Portrait
+# ]
+
+class MapsMeConsentShown(DictEvent):
+    keys = (
+        'OnStart_MapsMeConsent_shown',
+    )
+
+
+# ALOHA:
+# ios only event, GDPR consent has been accepted
+# OnStart_MapsMeConsent_accepted
+# [
+# Country=BE
+# Language=nl-BE
+# Orientation=Landscape
+# ]
+
+class MapsMeConsentAccept(DictEvent):
+    keys = (
+        'OnStart_MapsMeConsent_accepted',
+    )
+
+
+# ALOHA:
+# application has been installed
+# android:
+# $install
+# [
+# millisEpochInstalled=1230739200000
+# package=com.mapswithme.maps.pro
+# version=4.4.6-Preinstall
+# versionCode=446
+# ]
+# ios:
+# $install
+# [
+# CFBundleShortVersionString=8.6.0
+# buildTimestampMillis=1545350812000
+# installTimestampMillis=1546291840609
+# updateTimestampMillis=0
+# ]
+
+class Install(DictEvent):
+    keys = (
+        '$install',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(Install, self).__init__(*args, **kwargs)
+        self.version = self.data.get(
+            'CFBundleShortVersionString',
+            self.data.get('version', u'0')
+        )
+        self.install_time = self.data.get(
+            'installTimestampMillis',
+            self.data.get('millisEpochInstalled', u'0')
+        )
+
+
+# ALOHA:
+# sponsored category has been selected
+# ios:
+# Search_SponsoredCategory_selected
+# [
+# Country=RU
+# Language=ru-RU
+# Orientation=Portrait
+# Provider=LuggageHero
+# ]
+# android:
+# Search_SponsoredCategory_selected
+# [
+# provider=FIFA2018
+# ]
+
+class SponsoredCategoryClick(DictEvent):
+    keys = (
+        'Search_SponsoredCategory_selected',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(SponsoredCategoryClick, self).__init__(*args, **kwargs)
+        self.provider = self.data.get(
+            'provider',
+            self.data.get('Provider')
+        ).lower()

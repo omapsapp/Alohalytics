@@ -10,7 +10,8 @@ from pysnip.events.bookmark import BookmarkCreated, BookmarkAction
 
 from pysnip.events.misc import (
     GPSTracking, Menu, MobileInternet, RecentTrack,
-    SearchResults, SponsoredClicks
+    SearchResults, SponsoredClicks,
+    MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
 )
 
 from pysnip.events.onstart import (
@@ -57,7 +58,8 @@ CUSTOM_EVENTS = (
     BookmarkCreated, BookmarkAction, MobileInternet,
     RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader,
     ColdStartupInfo, EnterBackground,
-    SearchFilterOpen, SearchFilterClick, SearchFilterApply
+    SearchFilterOpen, SearchFilterClick, SearchFilterApply,
+    MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
 )
 
 
