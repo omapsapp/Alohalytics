@@ -40,9 +40,9 @@ class MapActionRequest(DictEvent):
     def __init__(self, *args, **kwargs):
         super(MapActionRequest, self).__init__(*args, **kwargs)
 
-        self.action = self.data['action']
+        self.action = self.data.get('action', None)
         self.scenario = self.data.get('scenario', None)
-        self.init_from = self.data['from']
+        self.init_from = self.data.get('from', None)
         self.is_auto = self.is_auto.get(self.data.get('is_auto', 'unknown'))
 
 
@@ -63,6 +63,7 @@ class MapDownloadFinished(DictEvent):
 
         self.name = self.data['name']
         self.version = int(self.data['version'])
+        self.status = self.data.get('status')
 
 
 # ALOHA: Downloader_OnStartScreen_auto_download
@@ -91,3 +92,59 @@ class StartScreenDownloader(DictEvent):
             self.is_auto = False
 
         self.map_data_size = int(self.data.get('map_data_size', 0))
+
+# ALOHA: Downloader_Map_list [
+# AvailableStorageSpace=763142144
+# DownloadedMaps=Bolivia_North:180126;World:180126;WorldCoasts:180126;
+# ]
+# Regular event with actual map on users device
+# Its properties are:
+# AvailableStorageSpace: bytes
+# DownloadedMaps: map:version
+
+class MapList(DictEvent):
+    keys = (
+        'Downloader_Map_list',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(MapList, self).__init__(*args, **kwargs)
+
+        self.storage = int(self.data.get('AvailableStorageSpace', 0))
+        downloaded_maps = self.data.get('DownloadedMaps', '')
+        if len(downloaded_maps) > 0:
+            self.maps = dict(map(
+                lambda a: a.split(":"),
+                downloaded_maps.strip(";").split(";")
+            ))
+        else:
+            self.maps = {}
+
+
+# ALOHA: Downloader_Banner_show
+# Banner in downloader
+# ios:
+# [
+# Country=DK
+# Language=da-DK
+# Orientation=Landscape
+# Provider=MapsMeGuides
+# from=map
+# ]
+# android:
+# [
+# from=map
+# provider=Megafon
+# ]
+
+
+class DownloaderBannerShow(DictEvent):
+    keys = (
+        'Downloader_Banner_show',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DownloaderBannerShow, self).__init__(*args, **kwargs)
+
+        self.provider = self.data.get('Provider', self.data.get('provider'))
+        self.place = self.data.get('from', None)
