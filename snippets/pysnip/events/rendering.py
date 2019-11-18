@@ -71,3 +71,22 @@ class GPU(DictEvent):
         super(GPU, self).__init__(*args, **kwargs)
 
         self.gpu = self.data.keys()[0]
+
+
+
+# VulkanForbidden
+# [
+# Driver=API:1.1.66/Driver:512.330.0
+# GPU=Adreno (TM) 506
+# ]
+
+class VulkanForbidden(DictEvent):
+    keys = (
+        'VulkanForbidden',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(VulkanForbidden, self).__init__(*args, **kwargs)
+
+        self.driver = self.data.get('Driver')
+        self.gpu = self.data.get('GPU')
