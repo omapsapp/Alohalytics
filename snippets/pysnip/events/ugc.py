@@ -18,6 +18,80 @@ from pyaloha.event import DictEvent
 # mwm_name=Iran_North
 # mwm_version=170119.0
 # ]
+#
+
+class EditorAdd(DictEvent):
+    keys = (
+        'Editor_Add_start', 'Editor_Add_success'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(EditorAdd, self).__init__(*args, **kwargs)
+
+        try:
+            self.auth = bool(self.data['is_authenticated'])
+        except KeyError:
+            self.auth = None
+
+        try:
+            self.online = bool(self.data['is_online'])
+        except KeyError:
+            self.online = None
+
+        try:
+            self.mwm_name = self.data['mwm_name']
+        except KeyError:
+            self.mwm_name = None
+
+        try:
+            self.mwm_version = self.data['mwm_version']
+        except KeyError:
+            self.mwm_version = None
+
+        if self.key == 'Editor_Add_start':
+            self.action = 'start'
+        elif self.key == 'Editor_Add_success':
+            self.action = 'finish'
+
+        self.mode = 'add'
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+# ALOHA:
+# Editor_Add_click [
+# from=main_menu
+# ]
+# ALOHA:
+# Editor_Add_click [
+# from=main_menu
+# ]
+
+
+class EditorAddClick(DictEvent):
+    keys = (
+        'Editor_Add_click',
+    )
+    aliases = {
+        'Menu': 'main_menu',
+        'Place page': 'placepage'
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(EditorAddClick, self).__init__(*args, **kwargs)
+
+        self.source = self.data.get('Value', None)
+        if not self.source:
+            self.source = self.data.get('from', None)
+        if self.source in self.aliases:
+            self.source = self.aliases[self.source]
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+# ALOHA:
 # Editor_Edit_start [
 # is_authenticated=false
 # is_online=false
@@ -31,60 +105,46 @@ from pyaloha.event import DictEvent
 # mwm_version=171020.0
 # ]
 
-
-class EditorStart(DictEvent):
+class EditorEdit(DictEvent):
     keys = (
-        'Editor_Add_start', 'Editor_Add_success',
         'Editor_Edit_start', 'Editor_Edit_success'
     )
 
     def __init__(self, *args, **kwargs):
-        super(EditorStart, self).__init__(*args, **kwargs)
+        super(EditorEdit, self).__init__(*args, **kwargs)
 
-        self.auth = self.to_bool(self.data.get('is_authenticated'))
-        self.online = self.to_bool(self.data.get('is_online'))
+        # TODO: not sure if try/except is better than dict.get()
+        try:
+            self.auth = bool(self.data['is_authenticated'])
+        except KeyError:
+            self.auth = None
 
-        self.mwm_name = self.data.get('mwm_name')
-        self.mwm_version = self.data.get('mwm_version')
+        try:
+            self.online = bool(self.data['is_online'])
+        except KeyError:
+            self.online = None
 
-        if self.key == 'Editor_Add_start':
+        try:
+            self.mwm_name = self.data['mwm_name']
+        except KeyError:
+            self.mwm_name = None
+
+        try:
+            self.mwm_version = self.data['mwm_version']
+        except KeyError:
+            self.mwm_version = None
+
+        if self.key == 'Editor_Edit_start':
             self.action = 'start'
-            self.mode = 'add'
-        elif self.key == 'Editor_Add_success':
-            self.action = 'finish'
-            self.mode = 'add'
-        elif self.key == 'Editor_Edit_start':
-            self.action = 'start'
-            self.mode = 'edit'
         elif self.key == 'Editor_Edit_success':
             self.action = 'finish'
-            self.mode = 'edit'
+        self.mode = 'edit'
 
-        del self.data
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False, 'Yes': True, 'No': False}.get(s)
-
-
-
-# Event send, when user click «Add place (business)» and start choose
-# position of company.
-# When user tap «Done» — send event 'Editor_Add_start'
-# ALOHA:
-# Editor_Add_click [
-# from=main_menu
-# ]
-
-
-class EditorAddClick(DictEvent):
-    keys = (
-        'Editor_Add_click',
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(EditorAddClick, self).__init__(*args, **kwargs)
-
-        self.source = self.data.get('from')
 
 
 # Event send, when user start write a review
@@ -107,14 +167,32 @@ class UGCReviewStart(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCReviewStart, self).__init__(*args, **kwargs)
 
-        self.auth = self.to_bool(self.data.get('is_authenticated'))
-        self.online = self.to_bool(self.data.get('is_online'))
-        self.source = self.data.get('from')
-        self.mode = self.data.get('mode')
+        # TODO: not sure if try/except is better than dict.get()
+        try:        
+            self.auth = self.to_bool(self.data['is_authenticated'])
+        except KeyError:
+            self.auth = None
+        
+        try:
+            self.online = self.to_bool(self.data['is_online'])
+        except KeyError:    
+            self.online = None
+
+        try:
+            self.source = self.data['from']
+        except KeyError:
+            self.source = None
+
+        try:
+            self.mode = self.data['mode']
+        except KeyError:
+            self.mode = None
 
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 # Event send, when user successfully finish write a review
 # ALOHA:
@@ -127,6 +205,11 @@ class UGCReviewSuccess(DictEvent):
         'UGC_Review_success',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(UGCReviewSuccess, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 # Event send, when something went wrong with authentication.
 #
@@ -149,6 +232,12 @@ class UGCAuthError(DictEvent):
         'UGC_Auth_error',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(UGCAuthError, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
 
 # Event send, when authentication after write review was successful
 #
@@ -169,6 +258,39 @@ class UGCAuthSuccess(DictEvent):
         'UGC_Auth_external_request_success',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(UGCAuthSuccess, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+# ALOHA: 
+
+
+class UGCPushShown(DictEvent):
+    keys = (
+        'UGC_ReviewNotification_shown',
+    )
 
 # TODO:
+    def __init__(self, *args, **kwargs):
+        super(UGCPushShown, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+# ALOHA: 
+
+
+class UGCPushClick(DictEvent):
+    keys = (
+        'UGC_ReviewNotification_clicked',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(UGCPushClick, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
 # 'UGC_Auth_shown', 'UGC_Auth_declined'

@@ -32,8 +32,9 @@ from pysnip.events.routing import (
     RoutingTaxiOrder
 )
 from pysnip.events.ugc import (
-    EditorStart, EditorAddClick, UGCAuthError,
-    UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess
+    EditorEdit, EditorAddClick, UGCAuthError,
+    UGCAuthSuccess, UGCReviewStart, UGCReviewSuccess,
+    EditorAdd, UGCPushShown, UGCPushClick,
 )
 from pysnip.events.maps import (
     MapActionRequest, MapDownloadFinished, StartScreenDownloader,
@@ -55,7 +56,7 @@ CUSTOM_EVENTS = (
     MapLayersActivate, RoutingBookmarksClick, RoutingPointAdd, RoutingSearch,
     MapActionRequest, MapDownloadFinished,
     Menu, SponsoredClicks, RecentTrack,
-    EditorStart, EditorAddClick, UGCReviewStart,
+    EditorEdit, EditorAddClick, UGCReviewStart,
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
     BookmarkCreated, BookmarkAction, MobileInternet,
@@ -63,7 +64,8 @@ CUSTOM_EVENTS = (
     ColdStartupInfo, EnterBackground,
     SearchFilterOpen, SearchFilterClick, SearchFilterApply,
     MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
-    MapList, DownloaderBannerShow
+    MapList, DownloaderBannerShow,
+    EditorAdd, UGCPushShown, UGCPushClick,
 )
 
 
