@@ -24,10 +24,23 @@ class EventFactory(object):
                 )
             )
 
+    @staticmethod
+    def get_duplicates(list_to_check):
+        seen = {}
+        dupes = []
+        for x in list_to_check:
+            if x not in seen:
+                seen[x] = 1
+            else:
+                if seen[x] == 1:
+                    dupes.append(x)
+                seen[x] += 1
+        return dupes
+
     @classmethod
     def check_events(cls, custom_events):
         event_keys = list(itertools.chain.from_iterable(
             event_cls.keys for event_cls in custom_events
         ))
         if len(frozenset(event_keys)) != len(event_keys):
-            raise ImportError('Keys intersection in events')
+            raise ImportError('Keys intersection in events: {}'.format(cls.get_duplicates(event_keys)))
