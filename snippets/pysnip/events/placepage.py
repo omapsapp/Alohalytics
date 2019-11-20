@@ -47,7 +47,7 @@ class ObjectSelection(DictEvent):
         try:
             return int(self.data['bookmark'])
         except KeyError:
-            return None
+            return -1
 
     @property
     def object_types(self):
@@ -59,6 +59,10 @@ class ObjectSelection(DictEvent):
     @property
     def title(self):
         return self.data.get('title', '')
+
+    @property
+    def meters(self):
+        return self.data.get('meters', '')
 
     def __dumpdict__(self):
         d = super(DictEvent, self).__basic_dumpdict__()
@@ -203,20 +207,36 @@ class ObjectSelectionFromList(DictEvent):
     def __init__(self, *args, **kwargs):
         super(ObjectSelectionFromList, self).__init__(*args, **kwargs)
 
-        self.position = self.data.get('pos')
-        params = self.data.get('result', '').split('|')
+    @property
+    def position(self):
+        return self.data['pos']
+
+    @property
+    def object_type(self):
         try:
-            self.name = params[0]
+            return self.data.get('result', 'Unknown|Unknown').split('|')[1]
         except IndexError:
-            self.name = None
+            return 'Unknown'
+
+    @property
+    def name(self):
         try:
-            self.object_type = params[1]
+            return self.data.get('result', None).split('|')[0]
         except IndexError:
-            self.object_type = 'Unknown'
+            return None
+
+    @property
+    def fromsuggest(self):
         try:
-            self.fromsuggest = False if params[2] == '0' else True
+            if self.data.get('result', None).split('|')[2] == '0':
+                return False
+            else:
+                return True
         except IndexError:
-            self.fromsuggest = False
+            return False
+
+    def __dumpdict__(self):
+        return super(DictEvent, self).__basic_dumpdict__()
 
 # Click on share button in placepage. There is no have any special properties.
 # ALOHA:
@@ -235,6 +255,89 @@ class PlacepageShare(DictEvent):
         'PP. Share',
         'Place page Share',
     )
+
+    def __dumpdict__(self):
+        return super(DictEvent, self).__basic_dumpdict__()
+
+class PlacepageFullOpen(DictEvent):
+    keys = (
+        'PP. Open',
+    )
+
+    def __dumpdict__(self):
+        return super(DictEvent, self).__basic_dumpdict__()
+
+
+# Show and select items in sponsored galleries inside discovery block and placepages
+# ALOHA:
+# iOS:
+# Placepage_SponsoredGallery_shown [
+# Country=US
+# Language=en-US
+# Orientation=Portrait
+# Provider=MapsMeGuides
+# placement=placepage
+# state=online
+# ]
+# Android:
+# Placepage_SponsoredGallery_shown [
+# placement=DISCOVERY
+# provider=Booking.Com
+# state=OFFLINE
+# ]
+
+# iOS:
+# Placepage_SponsoredGallery_ProductItem_selected [
+# destination=ROUTING
+# item=1 - number of item position (start from 0)
+# placement=DISCOVERY
+# provider=Search.Attractions
+# ]
+# Android
+# Placepage_SponsoredGallery_ProductItem_selected [
+# Country=AR
+# Destination=placepage
+# Language=es-AR
+# Orientation=Landscape
+# Provider=Search.Attractions
+# item=3
+# placement=discovery
+# ]
+
+
+class SponsoredGallery(DictEvent):
+    keys = (
+        'Placepage_SponsoredGallery_ProductItem_selected',
+        'Placepage_SponsoredGallery_shown',
+        'Placepage_SponsoredGallery_MoreItem_selected',
+        'Placepage_SponsoredGallery_LogoItem_selected'
+    )
+
+    @property
+    def placement(self):
+        return self.data.get('placement', '')
+
+    @property
+    def provider(self):
+        return self.data.get('provider', self.data.get('Provider', ''))
+
+    def __init__(self, *args, **kwargs):
+        super(SponsoredGallery, self).__init__(*args, **kwargs)
+
+        if self.key == 'Placepage_SponsoredGallery_shown':
+            self.action = 'show'
+            self.count = int(self.data.get('count', 0))
+        elif self.key == 'Placepage_SponsoredGallery_ProductItem_selected':
+            self.action = 'click'
+            self.action_type = 'item'
+            self.count = int(self.data.get('item', 0))
+        elif self.key == 'Placepage_SponsoredGallery_MoreItem_selected':
+            self.action = 'click'
+            self.action_type = 'more'
+            self.count = int(self.data.get('item', 0))
+        elif self.key == 'Placepage_SponsoredGallery_LogoItem_selected':
+            self.action = 'click'
+            self.action_type = 'logo'
 
     def __dumpdict__(self):
         return super(DictEvent, self).__basic_dumpdict__()

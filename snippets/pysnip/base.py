@@ -22,7 +22,8 @@ from pysnip.events.onstart import (
 )
 
 from pysnip.events.placepage import (
-    HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare
+    HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare,
+    PlacepageFullOpen, SponsoredGallery
 )
 
 from pysnip.events.routing import (
@@ -48,7 +49,7 @@ CUSTOM_EVENTS = (
     TechnicalLaunch, AndroidVisibleLaunch,
     AndroidSessionStart, AndroidSessionEnd,
     IOSSessionStart, IOSSessionEnd,
-    HotelClick, ObjectSelectionFromList, PlacepageShare,
+    HotelClick, ObjectSelectionFromList, PlacepageShare, PlacepageFullOpen, SponsoredGallery,
     SearchResults, GPSTracking,
     DeviceInfo,
     RouteRequest, RouteStart, RouteEnd, RouteTracking, TaxiRouteRequest,
