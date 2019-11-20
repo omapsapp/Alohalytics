@@ -6,7 +6,7 @@ from pyaloha.base import DataStreamWorker as BaseDataStreamWorker
 
 from pyaloha.event_factory import EventFactory
 
-from pysnip.events.bookmark import BookmarkCreated, BookmarkAction
+from pysnip.events.bookmark import BookmarkCreated, BookmarkAction, BookmarksDownloadedCatalogueOpen
 
 from pysnip.events.misc import (
     GPSTracking, Menu, MobileInternet, RecentTrack,
@@ -22,7 +22,6 @@ from pysnip.events.onstart import (
 )
 
 from pysnip.events.placepage import (
-    #BookmarkAction,
     HotelClick, ObjectSelection, ObjectSelectionFromList, PlacepageShare
 )
 
@@ -45,7 +44,7 @@ from pysnip.events.rendering import RenderingStats, GPU, VulkanForbidden
 
 
 CUSTOM_EVENTS = (
-    ObjectSelection,# BookmarkAction,
+    ObjectSelection,
     TechnicalLaunch, AndroidVisibleLaunch,
     AndroidSessionStart, AndroidSessionEnd,
     IOSSessionStart, IOSSessionEnd,
@@ -59,7 +58,7 @@ CUSTOM_EVENTS = (
     EditorEdit, EditorAddClick, UGCReviewStart,
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
-    BookmarkCreated, BookmarkAction, MobileInternet,
+    BookmarkCreated, BookmarkAction, BookmarksDownloadedCatalogueOpen, MobileInternet,
     RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader,
     ColdStartupInfo, EnterBackground,
     SearchFilterOpen, SearchFilterClick, SearchFilterApply,
