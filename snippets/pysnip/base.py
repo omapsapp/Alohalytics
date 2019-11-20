@@ -11,7 +11,9 @@ from pysnip.events.bookmark import BookmarkCreated, BookmarkAction, BookmarksDow
 from pysnip.events.misc import (
     GPSTracking, Menu, MobileInternet, RecentTrack,
     SearchResults, SponsoredClicks,
-    MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
+    MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick, PlacepageBannerClose,
+    InAppPurchasePreview, InAppPurchaseStoreEvents, ApplicationImport,
+    CategoryClick, Map_SponsoredButton
 )
 
 from pysnip.events.onstart import (
@@ -65,7 +67,8 @@ CUSTOM_EVENTS = (
     SearchFilterOpen, SearchFilterClick, SearchFilterApply,
     MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
     MapList, DownloaderBannerShow,
-    EditorAdd, UGCPushShown, UGCPushClick,
+    EditorAdd, UGCPushShown, UGCPushClick, PlacepageBannerClose, InAppPurchasePreview, InAppPurchaseStoreEvents,
+    ApplicationImport, CategoryClick, Map_SponsoredButton
 )
 
 

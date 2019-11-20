@@ -78,6 +78,8 @@ class SearchResults(DictEvent):
 
         del self.data
 
+    def process_me(self, processor):
+        processor.process_search_results(self)
 
     def __dumpdict__(self):
         d = super(SearchResults, self).__basic_dumpdict__()
@@ -100,6 +102,8 @@ class GPSTracking(Event):
 
         self.data_list = None
 
+    def process_me(self, processor):
+        processor.process_gps_tracking(self)
 
 # ALOHA (Android): Menu. SettingsAndMore[]
 # Menu. Point to point[]
@@ -227,6 +231,9 @@ class Menu(DictEvent):
         if self.button is not None:
             self.button = self.button.decode('utf-8').replace(u'\u0131', u'i').encode('utf-8')
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
 
 # ALOHA:
 # Send, when user click on sponsored icon in placepage
@@ -247,6 +254,11 @@ class SponsoredClicks(DictEvent):
         'Placepage_SponsoredActionButton_click',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(SponsoredClicks, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 # ALOHA:
 # ios:
@@ -300,6 +312,27 @@ changed blackberry'
         self.merchant = self.keys_dict[self.key]
         self.value = self.data.get('Value')
         self.enabled = self.data.get('Enabled', self.value != 'Off')
+        if self.key == self.CHANGE_RECENT_TRACK:
+            try:
+                self.value = self.data['Value']
+                if self.value == 'Off':
+                    self.enabled = False
+                else:
+                    self.enabled = True
+            except KeyError:
+                self.enabled = None
+        else:
+            try:
+                self.enabled = self.data['Enabled']
+                if self.enabled:
+                    self.value = 'On'
+                else: 
+                    self.value = 'Off'
+            except KeyError:
+                self.enabled = None
+
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 
 # ALOHA:
@@ -324,6 +357,8 @@ class MobileInternet(DictEvent):
         super(MobileInternet, self).__init__(*args, **kwargs)
         self.value = self.data.get('Value')
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 # ALOHA:
 # ios only event, GDPR consent has been shown
@@ -332,6 +367,7 @@ class MobileInternet(DictEvent):
 # Country=US
 # Language=en-US
 # Orientation=Portrait
+# network=none
 # ]
 
 class MapsMeConsentShown(DictEvent):
@@ -339,6 +375,8 @@ class MapsMeConsentShown(DictEvent):
         'OnStart_MapsMeConsent_shown',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(MapsMeConsentShown, self).__init__(*args, **kwargs)
 
 # ALOHA:
 # ios only event, GDPR consent has been accepted
@@ -354,6 +392,8 @@ class MapsMeConsentAccept(DictEvent):
         'OnStart_MapsMeConsent_accepted',
     )
 
+    def __init__(self, *args, **kwargs):
+        super(MapsMeConsentAccept, self).__init__(*args, **kwargs)
 
 # ALOHA:
 # application has been installed
@@ -389,6 +429,148 @@ class Install(DictEvent):
             'installTimestampMillis',
             self.data.get('millisEpochInstalled', u'0')
         )
+'''
+----------------------------------------
+iOS:
+Placepage_Banner_close [ 
+Country=BE
+Language=fr-BE
+Orientation=Portrait
+banner=1
+button=0
+]
+----------------------------------------
+Android:
+Placepage_Banner_close [
+banner=1
+button=0
+]
+----------------------------------------
+'''
+
+class PlacepageBannerClose(DictEvent):
+    keys = (
+        'Placepage_Banner_close',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(PlacepageBannerClose, self).__init__(*args, **kwargs)
+
+        self.banner = 'pp' if self.data.get('banner') == '1' else 'ppp'
+        self.button = 'remove_ads' if self.data.get('button') == '1' else 'cross'
+
+'''
+----------------------------------------
+iOS:
+InAppPurchase_Preview_show [ 
+Country=AL
+Language=en-AL
+Orientation=Portrait
+product=ads.removaldisc3.yearly.prod
+purchase=remove.ads.subscription.prod
+vendor=ad_remover
+]
+
+InAppPurchase_Preview_select [ 
+Country=RU
+Language=ru-RU
+Orientation=Portrait
+product=bookmarks.guide.medium.default.prod
+purchase=7d3369c4-624a-4bf1-bf53-d49d75b31170
+]
+----------------------------------------
+Android:
+InAppPurchase_Preview_show [
+product=ads.removaldisc3.yearly.prod
+purchase=remove.ads.subscription.prod
+vendor=ad_remover
+]
+
+InAppPurchase_Preview_select [
+product=ads.removaldisc3.yearly.prod
+purchase=remove.ads.subscription.prod
+]
+----------------------------------------
+'''
+
+class InAppPurchasePreview(DictEvent):
+    keys = (
+        'InAppPurchase_Preview_show',
+        'InAppPurchase_Preview_select'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(InAppPurchasePreview, self).__init__(*args, **kwargs)
+
+        self.product = self.data.get('product')
+        self.purchase = self.data.get('purchase')
+        self.type = 'show' if self.key == 'InAppPurchase_Preview_show' else 'select'
+        self.source = self.data.get('from', 'unknown')
+        self.vendor = self.data.get('vendor')
+
+'''
+----------------------------------------
+iOS:
+InAppPurchase_Preview_pay [
+Country=HK
+Language=zh-Hans-CN
+Orientation=Portrait
+purchase=remove.ads.subscription.prod
+]
+
+InAppPurchase_Preview_cancel [
+Country=FR
+Language=fr-FR
+Orientation=Portrait
+purchase=remove.ads.subscription.prod
+]
+
+InAppPurchase_Store_success [
+Country=UA
+Language=uk-UA
+Orientation=Portrait
+purchase=70f7e327-62c1-4619-8a41-931009481a58
+]
+
+# Didn't find it on Android
+InAppPurchase_Store_error [
+Country=NL
+Language=nl-NL
+Orientation=Portrait
+error=Verbinding met iTunes Store mislukt
+purchase=remove.ads.subscription.prod
+]
+----------------------------------------
+Android:
+InAppPurchase_Preview_pay [
+purchase=remove.ads.subscription.prod
+]
+
+InAppPurchase_Preview_cancel [
+purchase=remove.ads.subscription.prod
+]
+
+InAppPurchase_Store_success [
+purchase=66faf5dc-6a5a-45bd-8583-1827966eef4f
+]
+----------------------------------------
+'''
+class InAppPurchaseStoreEvents(DictEvent):
+
+    event_alliases = {
+        'InAppPurchase_Preview_pay': 'pay',
+        'InAppPurchase_Preview_cancel': 'cancel',
+        'InAppPurchase_Store_success': 'success',
+        'InAppPurchase_Store_error': 'error',
+    }
+
+    keys = event_alliases.keys()
+
+    def __init__(self, *args, **kwargs):
+        super(InAppPurchaseStoreEvents, self).__init__(*args, **kwargs)
+
+        self.purchase = self.data.get('purchase')
+        self.type = self.event_alliases.get(self.key)
 
 
 # ALOHA:
@@ -418,3 +600,67 @@ class SponsoredCategoryClick(DictEvent):
             'provider',
             self.data.get('Provider')
         ).lower()
+
+
+
+
+# ALOHA:
+# ios:
+# Application Import[
+# Country=BY
+# Language=ru-RU
+# Orientation=Portrait
+# Value=ge0
+# ]
+# android:
+# Bookmarks_GuideDownloadToast_shown
+
+class ApplicationImport(DictEvent):
+    keys = (
+        'Application Import',
+        'Bookmarks_GuideDownloadToast_shown'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(ApplicationImport, self).__init__(*args, **kwargs)
+        self.type = self.data.get('Value', 'KML')
+
+# ALOHA:
+# android:
+# Search. Category clicked [
+# category=atm
+# ]
+
+class CategoryClick(DictEvent):
+    keys = (
+        'Search. Category clicked',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(CategoryClick, self).__init__(*args, **kwargs)
+        self.category = self.data.get('category')
+
+'''
+----------------------------------------
+Map_SponsoredButton_show [
+target=GuidesSubscription
+]
+
+Map_SponsoredButton_click [
+target=GuidesSubscription
+]
+----------------------------------------
+'''
+class Map_SponsoredButton(DictEvent):
+    keys = (
+        'Map_SponsoredButton_show',
+        'Map_SponsoredButton_click',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(Map_SponsoredButton, self).__init__(*args, **kwargs)
+        if self.key == 'Map_SponsoredButton_show':
+            self.action = 'show'
+        elif self.key == 'Map_SponsoredButton_click':
+            self.action = 'click'
+        self.target = self.data.get('target')
