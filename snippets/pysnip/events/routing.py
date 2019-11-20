@@ -17,8 +17,20 @@ class RouteDictEvent(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(RouteDictEvent, self).__init__(*args, **kwargs)
-        mode = self.data.get('router', self.data.get('name', None)).lower()
-        self.mode = self.mode_alliases.get(mode, mode)
+        self.setup_mode()
+
+    def setup_mode(self):
+
+        mode = self.data.get(
+            'router', self.data.get('name', '')
+        ).lower()
+        if mode in self.mode_alliases:
+            self.mode = self.mode_alliases[mode]
+        else: 
+            self.mode = mode
+
+    def process_me(self, processor):
+        processor.process_routing(self)
 
 
 # ALOHA: Routing_CalculatingRoute [
@@ -44,19 +56,30 @@ class RouteRequest(RouteDictEvent):
     def __init__(self, *args, **kwargs):
         super(RouteRequest, self).__init__(*args, **kwargs)
 
-        self.start = self.user_info.get_location() or (
-            self.data['startLat'], self.data['startLon']
-        )
+        # TODO: not sure if try/except is better than dict.get()
+        try:
+            self.start = (
+                float(self.data['startLat']), float(self.data['startLon'])
+            )
+        except KeyError:
+            self.start = self.user_info.get_location()
 
         try:
             self.destination = (
-                self.data['finalLat'], self.data['finalLon']
+                float(self.data['finalLat']), float(self.data['finalLon'])
             )
         except KeyError:
             self.destination = None
 
-        self.status = self.data.get('result')
-        self.distance = self.data.get('distance')
+        try:
+            self.status = self.data['result']
+        except KeyError:
+            self.status = None
+
+        try:
+            self.distance = self.data['distance']
+        except KeyError:
+            self.distance = None
 
 
 # Event for a start of the route with specific props
@@ -115,6 +138,9 @@ class RouteStart(Event):
         except AttributeError:
             self.traffic = None
             self.mode = None
+
+    def process_me(self, processor):
+        processor.process_routing(self)
 
 
 # ALOHA: RouteTracking_RouteClosing [
@@ -175,8 +201,13 @@ class TaxiRouteRequest(DictEvent):
     def __init__(self, *args, **kwargs):
         super(TaxiRouteRequest, self).__init__(*args, **kwargs)
         self.mode = 'taxi'
-        self.provider = self.data.get('provider', 'Unknown')
+        try:
+            self.provider = self.data['provider']
+        except KeyError:
+            self.provider = 'Unknown'
 
+    def process_me(self, processor):
+        processor.process_routing(self)
 
 # ALOHA:
 # Old event, change state of traffic. Not UI change.
@@ -259,6 +290,9 @@ class RoutingBookmarksClick(DictEvent):
         self.mode = self.data.get('mode')
 
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
 # Event send, when user added point to route. It can be from placepage
 # or on planning page
 # ALOHA:
@@ -293,6 +327,9 @@ class RoutingPointAdd(DictEvent):
         self.value = self.data.get('value', 'unknown')
 
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
 # Event send, when user click on search button after build route
 # or after start planning route
 # ALOHA:
@@ -317,11 +354,14 @@ class RoutingSearch(DictEvent):
         super(RoutingSearch, self).__init__(*args, **kwargs)
         self.mode = self.data.get('mode', 'onroute')
 
+    def process_me(self, processor):
+        processor.process_unspecified(self)
 
 # User clicked on button "order taxi" in placepage.
 # If he has a taxi application, Routing_Taxi_order will be send,
 # if he hasn't, Routing_Taxi_install will be send
 # ALOHA:
+# ----------------------------------------
 # android:
 # Routing_Taxi_order
 # [
@@ -331,6 +371,18 @@ class RoutingSearch(DictEvent):
 # to_lat=-12.054727786240294
 # to_lon=-77.12083299028994
 # ]
+# ----------------------------------------
+# iOS:
+# Routing_Taxi_order [
+# Country=RU
+#Language=ru-RU
+#Orientation=Portrait
+#Provider=Uber
+#from_location=38.76902613113875,-9.128432964183331
+#to_location=38.70397092919239,-9.183689275262424
+#]
+# <utc=1570315025249,lat=38.7689933,lon=-9.1284489,acc=65.00,alt=97.76,vac=10.00>
+# ----------------------------------------
 # <utc=1514758162000,lat=-11.9897872,lon=-77.0688617,acc=53.09,spd=0.00,src=Unk>
 #
 # Routing_Taxi_install
@@ -368,40 +420,98 @@ class RoutingSearch(DictEvent):
 class RoutingTaxiOrder(DictEvent):
     keys = (
         'Routing_Taxi_order',
-        'Routing_Taxi_install'
     )
 
     def __init__(self, *args, **kwargs):
         super(RoutingTaxiOrder, self).__init__(*args, **kwargs)
 
-        if self.key == 'Routing_Taxi_order':
-            self.action = 'order'
-        else:
-            self.action = 'install'
-        self.provider = self.data.get(
-            'provider',
-            self.data.get('Provider', None)
-        )
+        self.provider = self.data.get('provider', None)
+        if self.provider is None:
+            self.provider = self.data.get('Provider', None)
+
         self.from_location = self.data.get('from_location', None)
-        if self.from_location:
-            self.from_location = tuple(
-                float(item)
-                for item in self.from_location.split(',')
-            )
+        if self.from_location is None:
+            self.from_location = (float(self.data.get('from_lat', None)), float(self.data.get('from_lon', None)))
         else:
-            self.from_location = (
-                float(self.data.get('from_lat', 0)),
-                float(self.data.get('from_lon', 0))
-            )
+            self.from_location = tuple(float(item) for item in self.from_location.split(','))
 
         self.to_location = self.data.get('to_location', None)
-        if self.to_location:
-            self.to_location = tuple(
-                float(item)
-                for item in self.to_location.split(',')
-            )
+        if self.to_location is None:
+            self.to_location = (float(self.data.get('to_lat', None)), float(self.data.get('to_lon', None)))
         else:
-            self.to_location = (
-                float(self.data.get('to_lat', 0)),
-                float(self.data.get('to_lon', 0))
-            )
+            self.to_location = tuple(float(item) for item in self.to_location.split(','))
+            
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+'''
+ALOHA:
+----------------------------------------
+Android
+Routing_Taxi_install [
+from_lat=25.129832000000004
+from_lon=55.194609
+provider=Uber
+to_lat=25.118169236941394
+to_lon=55.20048286915184
+]
+<utc=1570313390000,lat=55.9240682,lon=37.7227406,acc=41.01,bea=194.1323698,spd=0.28,src=Unk>
+----------------------------------------
+iOS:
+Routing_Taxi_install [
+Country=RU
+Language=en-RU
+Orientation=Portrait
+Provider=Maxim
+from_location=41.70279812560331,44.79204432960243
+to_location=41.74415752670366,44.77275956252782
+]
+<utc=1570313490116,lat=41.7028373,lon=44.7921091,acc=65.00,alt=439.38,vac=10.00>
+----------------------------------------
+'''
+class RoutingTaxiInstall(DictEvent):
+    keys = (
+        'Routing_Taxi_install',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingTaxiInstall, self).__init__(*args, **kwargs)
+        
+        self.provider = self.data.get('provider', None)
+        if self.provider is None:
+            self.provider = self.data.get('Provider', None)
+
+        self.from_location = self.data.get('from_location', None)
+        if self.from_location is None:
+            self.from_location = (float(self.data.get('from_lat', None)), float(self.data.get('from_lon', None)))
+        else:
+            self.from_location = tuple(float(item) for item in self.from_location.split(','))
+
+        self.to_location = self.data.get('to_location', None)
+        if self.to_location is None:
+            self.to_location = (float(self.data.get('to_lat', None)), float(self.data.get('to_lon', None)))
+        else:
+            self.to_location = tuple(float(item) for item in self.to_location.split(','))
+            
+    def process_me(self, processor):
+        processor.process_unspecified(self)
+
+
+# ALOHA:
+# ios: Routing_RouteManager_open [
+# Country=PK
+# Language=en-PK
+# Orientation=Portrait
+# ]
+
+class RoutingManagerOpen(DictEvent):
+    keys = (
+        'Routing_RouteManager_open',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(RoutingManagerOpen, self).__init__(*args, **kwargs)
+
+    def process_me(self, processor):
+        processor.process_routing(self)

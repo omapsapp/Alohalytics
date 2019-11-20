@@ -28,7 +28,7 @@ from pysnip.events.placepage import (
 from pysnip.events.routing import (
     RouteEnd, RouteRequest, RouteStart, RouteTracking, RoutingBookmarksClick,
     RoutingPointAdd, RoutingSearch, TaxiRouteRequest, MapLayersActivate,
-    RoutingTaxiOrder
+    RoutingTaxiOrder, RoutingTaxiInstall, RoutingManagerOpen,
 )
 from pysnip.events.ugc import (
     EditorEdit, EditorAddClick, UGCAuthError,
@@ -59,7 +59,7 @@ CUSTOM_EVENTS = (
     UGCReviewSuccess, UGCAuthError, UGCAuthSuccess,
     RenderingStats, GPU,
     BookmarkCreated, BookmarkAction, BookmarksDownloadedCatalogueOpen, MobileInternet,
-    RoutingTaxiOrder, VulkanForbidden, StartScreenDownloader,
+    RoutingTaxiOrder, RoutingTaxiInstall, RoutingManagerOpen, VulkanForbidden, StartScreenDownloader,
     ColdStartupInfo, EnterBackground,
     SearchFilterOpen, SearchFilterClick, SearchFilterApply,
     MapsMeConsentShown, MapsMeConsentAccept, Install, SponsoredCategoryClick,
