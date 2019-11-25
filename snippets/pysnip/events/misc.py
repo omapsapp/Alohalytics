@@ -38,7 +38,7 @@ class SearchResults(DictEvent):
 
         try:
             raw_query = self.data['query']
-        except KeyError:
+        except KeyError: # as is old type event:
             # TODO: investigate bug in c_api
             for raw_query, self.result_num in self.data.items():
                 if raw_query:
@@ -48,16 +48,15 @@ class SearchResults(DictEvent):
             self.result_num = int(results[0])
             self.results = results[1:]
 
+        self.invalid_query = True  # empty-like queries are set as invalid
         query = raw_query.decode('utf8').encode('utf8')
-        if not query:
-            raise Exception('%s: Empty search query: %s' % (self.key, raw_query))
+        if query:
+            self.query = query.strip()
 
-        self.query = query.strip()
-
-        if not self.query:
-            raise Exception(
-                '%s: Trash query: %s' % (self.key, repr(raw_query))
-            )
+            if self.query:
+                self.invalid_query = False
+        else:
+            self.query = query
 
         try:
             self.gps = (float(self.data['posX']), float(self.data['posY']))

@@ -47,6 +47,7 @@ class IOSVisibleLaunch(TechnicalLaunch):
 # This event is trusted to be the one associated with an actual UI launch
 # in Android
 
+# TODO: Broken when __init__()
 class AndroidVisibleLaunch(Event):
     keys = (
         '$onResume',
@@ -184,6 +185,7 @@ class DeviceInfo(DictEvent):
         return d
 
 
+# TODO: Broken when __init__()
 class AndroidSessionStart(Event):
     keys = (
         '$startSession',
@@ -192,6 +194,7 @@ class AndroidSessionStart(Event):
     __slots__ = tuple()
 
 
+# TODO: Broken when __init__()
 class AndroidSessionEnd(Event):
     keys = (
         '$endSession',
@@ -273,6 +276,7 @@ class ColdStartupInfo(DictEvent):
         })
         return d
 
+# TODO: Broken when __init__()
 class IOSSessionStart(Event):
     keys = (
         '$applicationDidBecomeActive',
@@ -299,6 +303,7 @@ class EnterBackground(DictEvent):
         self.zoom = self.data.get('zoom')
 
 # consider 'Framework::EnterBackground'
+# TODO: Broken when __init__()
 class IOSSessionEnd(Event):
     keys = (
         '$applicationDidEnterBackground',

@@ -28,6 +28,7 @@ class EditorAdd(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorAdd, self).__init__(*args, **kwargs)
 
+        # TODO: rewrite it without try/except
         try:
             self.auth = bool(self.data['is_authenticated'])
         except KeyError:
@@ -232,6 +233,8 @@ class UGCAuthError(DictEvent):
         'UGC_Auth_error',
     )
 
+    # TODO: has 'error' parameter, but it is not handled here
+
     def __init__(self, *args, **kwargs):
         super(UGCAuthError, self).__init__(*args, **kwargs)
 
@@ -257,6 +260,9 @@ class UGCAuthSuccess(DictEvent):
     keys = (
         'UGC_Auth_external_request_success',
     )
+
+    # TODO: has 'provider', 'Provider' properties but they are
+    # not handled here
 
     def __init__(self, *args, **kwargs):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
