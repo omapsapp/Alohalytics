@@ -27,10 +27,6 @@ class SearchFilterOpen(DictEvent):
 
         self.category = self.data.get('category')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
 
 # ALOHA: 
 # Android: [ 
@@ -75,11 +71,6 @@ class SearchFilterClick(DictEvent):
                 self.value = self.data.get(filter_type)
                 break
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
-
 
 # ALOHA: 
 # Android: 
@@ -104,7 +95,3 @@ class SearchFilterApply(DictEvent):
         super(SearchFilterApply, self).__init__(*args, **kwargs)
 
         self.category = self.data.get('category')
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-

@@ -1,4 +1,5 @@
 from pyaloha.event import DictEvent
+from pysnip.osm_tags import TaggedOSMObject
 
 # Event tracked, when user select object on the map.
 # It can be POI, search result or any another place.
@@ -39,15 +40,44 @@ class ObjectSelection(DictEvent):
     __slots__ = tuple()
 
     @property
+    def object_location(self):
+        return (
+            self.user_info.lat,
+            self.user_info.lon
+        )
+
+    @property
     def by_longtap(self):
         return self.data['longTap'] != 0
+
+    @property
+    def object_types(self):
+        try:
+            return self.data.get('types').split(' ')
+        except AttributeError:
+            return []
+
+    @property
+    def numeric_types(self):
+        try:
+            return TaggedOSMObject(self.data.get('types').split(' '))
+        except KeyError:
+            return None
+
+    @property
+    def title(self):
+        return self.data.get('title')
 
     @property
     def bookmark(self):
         try:
             return int(self.data['bookmark'])
         except KeyError:
-            return -1
+            return None
+
+    @property
+    def meters(self):
+        return int(self.data.get('meters', '-1'))
 
     @property
     def object_types(self):
@@ -68,7 +98,8 @@ class ObjectSelection(DictEvent):
         d = super(DictEvent, self).__basic_dumpdict__()
         d.update({
             'by_longtap': self.by_longtap,
-            'object_types': self.object_types
+            'object_types': self.object_types,
+            'object_location': self.object_location
         })
         return d
 
@@ -202,41 +233,29 @@ class ObjectSelectionFromList(DictEvent):
         'searchShowResult',
     )
 
-    __slots__ = tuple()
-
     def __init__(self, *args, **kwargs):
         super(ObjectSelectionFromList, self).__init__(*args, **kwargs)
 
-    @property
-    def position(self):
-        return self.data['pos']
-
-    @property
-    def object_type(self):
+        self.position = self.data.get('pos')
+        params = self.data.get('result', '').split('|')
         try:
-            return self.data.get('result', 'Unknown|Unknown').split('|')[1]
+            self.name = params[0]
+            self.object_type = params[1]
+            self.fromsuggest = False if params[2] == '0' else True
         except IndexError:
-            return 'Unknown'
+            raise ValueError('Corrupt search result click event')
 
-    @property
-    def name(self):
-        try:
-            return self.data.get('result', None).split('|')[0]
-        except IndexError:
-            return None
-
-    @property
-    def fromsuggest(self):
-        try:
-            if self.data.get('result', None).split('|')[2] == '0':
-                return False
-            else:
-                return True
-        except IndexError:
-            return False
+        del self.data
 
     def __dumpdict__(self):
-        return super(DictEvent, self).__basic_dumpdict__()
+        d = super(DictEvent, self).__basic_dumpdict__()
+        d.update({
+            'position': self.position,
+            'name': self.name,
+            'object_type': self.object_type,
+            'fromsuggest': self.fromsuggest
+        })
+        return d
 
 # Click on share button in placepage. There is no have any special properties.
 # ALOHA:

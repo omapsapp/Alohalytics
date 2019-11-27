@@ -29,25 +29,10 @@ class EditorAdd(DictEvent):
         super(EditorAdd, self).__init__(*args, **kwargs)
 
         # TODO: rewrite it without try/except
-        try:
-            self.auth = bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
-
-        try:
-            self.online = bool(self.data['is_online'])
-        except KeyError:
-            self.online = None
-
-        try:
-            self.mwm_name = self.data['mwm_name']
-        except KeyError:
-            self.mwm_name = None
-
-        try:
-            self.mwm_version = self.data['mwm_version']
-        except KeyError:
-            self.mwm_version = None
+        self.auth = bool(self.data.get('is_authenticated', None))
+        self.online = bool(self.data.get('is_online', None))
+        self.mwm_name = self.data.get('mwm_name')
+        self.mwm_version = self.data.get('mwm_version')
 
         if self.key == 'Editor_Add_start':
             self.action = 'start'
@@ -55,10 +40,6 @@ class EditorAdd(DictEvent):
             self.action = 'finish'
 
         self.mode = 'add'
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
 
 # ALOHA:
 # Editor_Add_click [
@@ -88,10 +69,6 @@ class EditorAddClick(DictEvent):
         if self.source in self.aliases:
             self.source = self.aliases[self.source]
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
 # ALOHA:
 # Editor_Edit_start [
 # is_authenticated=false
@@ -114,35 +91,16 @@ class EditorEdit(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorEdit, self).__init__(*args, **kwargs)
 
-        # TODO: not sure if try/except is better than dict.get()
-        try:
-            self.auth = bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
-
-        try:
-            self.online = bool(self.data['is_online'])
-        except KeyError:
-            self.online = None
-
-        try:
-            self.mwm_name = self.data['mwm_name']
-        except KeyError:
-            self.mwm_name = None
-
-        try:
-            self.mwm_version = self.data['mwm_version']
-        except KeyError:
-            self.mwm_version = None
+        self.auth = self.to_bool(self.data.get('is_authenticated'))
+        self.online = self.to_bool(self.data.get('is_online'))
+        self.mwm_name = self.data.get('mwm_name')
+        self.mwm_version = self.data.get('mwm_version')
 
         if self.key == 'Editor_Edit_start':
             self.action = 'start'
         elif self.key == 'Editor_Edit_success':
             self.action = 'finish'
         self.mode = 'edit'
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False, 'Yes': True, 'No': False}.get(s)
@@ -168,32 +126,13 @@ class UGCReviewStart(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCReviewStart, self).__init__(*args, **kwargs)
 
-        # TODO: not sure if try/except is better than dict.get()
-        try:        
-            self.auth = self.to_bool(self.data['is_authenticated'])
-        except KeyError:
-            self.auth = None
-        
-        try:
-            self.online = self.to_bool(self.data['is_online'])
-        except KeyError:    
-            self.online = None
-
-        try:
-            self.source = self.data['from']
-        except KeyError:
-            self.source = None
-
-        try:
-            self.mode = self.data['mode']
-        except KeyError:
-            self.mode = None
+        self.auth = self.to_bool(self.data.get('is_authenticated'))
+        self.online = self.to_bool(self.data.get('is_online'))
+        self.source = self.data.get('from')
+        self.mode = self.data.get('mode')
 
     def to_bool(self, s):
         return {'1': True, 'true': True, '0': False, 'false': False}.get(s)
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when user successfully finish write a review
 # ALOHA:
@@ -208,9 +147,6 @@ class UGCReviewSuccess(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(UGCReviewSuccess, self).__init__(*args, **kwargs)
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # Event send, when something went wrong with authentication.
 #
@@ -238,10 +174,6 @@ class UGCAuthError(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCAuthError, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
 # Event send, when authentication after write review was successful
 #
 # ALOHA:
@@ -267,10 +199,7 @@ class UGCAuthSuccess(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-# ALOHA: 
+# ALOHA:
 
 
 class UGCPushShown(DictEvent):
@@ -282,10 +211,7 @@ class UGCPushShown(DictEvent):
     def __init__(self, *args, **kwargs):
         super(UGCPushShown, self).__init__(*args, **kwargs)
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-# ALOHA: 
+# ALOHA:
 
 
 class UGCPushClick(DictEvent):
@@ -295,8 +221,5 @@ class UGCPushClick(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(UGCPushClick, self).__init__(*args, **kwargs)
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # 'UGC_Auth_shown', 'UGC_Auth_declined'

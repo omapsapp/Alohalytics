@@ -77,9 +77,6 @@ class SearchResults(DictEvent):
 
         del self.data
 
-    def process_me(self, processor):
-        processor.process_search_results(self)
-
     def __dumpdict__(self):
         d = super(SearchResults, self).__basic_dumpdict__()
         d.update({
@@ -230,10 +227,6 @@ class Menu(DictEvent):
         if self.button is not None:
             self.button = self.button.decode('utf-8').replace(u'\u0131', u'i').encode('utf-8')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
-
 # ALOHA:
 # Send, when user click on sponsored icon in placepage
 #
@@ -255,9 +248,6 @@ class SponsoredClicks(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(SponsoredClicks, self).__init__(*args, **kwargs)
-
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # ALOHA:
 # ios:
@@ -330,9 +320,6 @@ changed blackberry'
             except KeyError:
                 self.enabled = None
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
-
 
 # ALOHA:
 # Сhoice of value for mobile internet in setting and in pop-up,
@@ -356,8 +343,6 @@ class MobileInternet(DictEvent):
         super(MobileInternet, self).__init__(*args, **kwargs)
         self.value = self.data.get('Value')
 
-    def process_me(self, processor):
-        processor.process_unspecified(self)
 
 # ALOHA:
 # ios only event, GDPR consent has been shown
@@ -531,7 +516,14 @@ Orientation=Portrait
 purchase=70f7e327-62c1-4619-8a41-931009481a58
 ]
 
-# Didn't find it on Android
+----------------------------------------
+Android:
+InAppPurchase_Store_error [
+error=Billing error: 6 
+purchase=0a6bd557-0523-49e0-8c3a-02cf3ee82fc7
+]
+
+iOS:
 InAppPurchase_Store_error [
 Country=NL
 Language=nl-NL

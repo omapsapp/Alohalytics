@@ -147,4 +147,4 @@ class DownloaderBannerShow(DictEvent):
         super(DownloaderBannerShow, self).__init__(*args, **kwargs)
 
         self.provider = self.data.get('Provider', self.data.get('provider'))
-        self.place = self.data.get('from', None)
+        self.place = self.data.get('from')
