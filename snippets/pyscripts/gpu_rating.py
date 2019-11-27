@@ -11,13 +11,14 @@ def init_collections(self):
 
 class DataStreamWorker(BaseDataStreamWorker):
     __events__ = (
-        events.rendering.GPU,
+        events.onstart.IOSSessionEnd,
     )
 
     setup_shareable_data = init_collections
 
     def process_unspecified(self, event):
-        self.gpus[event.gpu] += 1
+        #self.gpus[event.gpu] += 1
+        self.gpus['TOTAL'] += 1
 
             
 class DataAggregator(BaseDataAggregator):

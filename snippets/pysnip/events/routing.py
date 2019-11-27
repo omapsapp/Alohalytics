@@ -123,8 +123,7 @@ mode=vehicle
 """
 
 
-# TODO: Broken when __init__()
-class RouteStart(Event):
+class RouteStart(DictEvent):
     keys = (
         'Routing. Start',
         'Point to point Go',
