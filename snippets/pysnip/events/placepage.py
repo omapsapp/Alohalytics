@@ -82,7 +82,7 @@ class ObjectSelection(DictEvent):
     @property
     def object_types(self):
         try:
-            return self.data.get('types', None).split(' ')
+            return self.data.get('types').split(' ')
         except AttributeError:
             return []
 

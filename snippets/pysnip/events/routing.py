@@ -124,8 +124,8 @@ class RouteStart(DictEvent):
     def __init__(self, *args, **kwargs):
         super(RouteStart, self).__init__(*args, **kwargs)
 
-        self.traffic = self.data.get('traffic', self.data.get('Traffic', None))
-        self.mode = self.data.get('mode', None)
+        self.traffic = self.data.get('traffic', self.data.get('Traffic'))
+        self.mode = self.data.get('mode')
 
 
 # ALOHA: RouteTracking_RouteClosing [
@@ -153,7 +153,7 @@ class RouteEnd(RouteDictEvent):
             self.rebuild_count = None
 
         self.distance_done = self.data.get(
-            'distance', self.data.get('passedDistance', None)
+            'distance', self.data.get('passedDistance')
         )
 
         self.percent = float(self.data.get('percent', 100))
@@ -233,7 +233,7 @@ class MapLayersActivate(DictEvent):
             self.action = self.data.get('state', 'unknown').lower()
             self.name = 'traffic'
         elif self.key == 'Map_Layers_activate':
-            self.name = self.data.get('Name', self.data.get('name', None))
+            self.name = self.data.get('Name', self.data.get('name'))
             self.action = self.data.get('status', 'unknown').lower()
 
             if self.action in self.state_alliases:
@@ -415,7 +415,7 @@ class RoutingTaxiInstall(DictEvent):
         else:
             self.from_location = tuple(float(item) for item in self.from_location.split(','))
 
-        self.to_location = self.data.get('to_location', None)
+        self.to_location = self.data.get('to_location')
         if self.to_location is None:
             self.to_location = (float(self.data.get('to_lat')), float(self.data.get('to_lon')))
         else:

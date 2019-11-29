@@ -211,16 +211,16 @@ class Menu(DictEvent):
         if self.key in self.keys_dict:
             self.button = self.keys_dict[self.key]
         elif self.key == 'Menu':
-            self.button = self.data.get('Button', None)
+            self.button = self.data.get('Button')
         elif self.key == 'Toolbar_click':
             self.button = self.buttons_dict.get(
-                self.data.get('button', None),
-                self.data.get('button', None)
+                self.data.get('button'),
+                self.data.get('button')
             )
         elif self.key == 'Toolbar_Menu_click':
             self.button = self.buttons_dict.get(
-                self.data.get('button', self.data.get('item', None)),
-                self.data.get('button', self.data.get('item', None))
+                self.data.get('button', self.data.get('item')),
+                self.data.get('button', self.data.get('item'))
             )
         else:
             self.button = None

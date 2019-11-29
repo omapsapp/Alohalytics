@@ -43,9 +43,9 @@ class BookmarkAction(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(BookmarkAction, self).__init__(*args, **kwargs)
-        self.action = self.data.get('action', None)
+        self.action = self.data.get('action')
         self.coord = (self.data.get('lat', 0), self.data.get('lon', 0))
-        self.tags = self.data.get('tags', None).split(' ')
+        self.tags = self.data.get('tags').split(' ')
 
     @property
     def object_types(self):

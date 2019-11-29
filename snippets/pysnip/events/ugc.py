@@ -28,8 +28,8 @@ class EditorAdd(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorAdd, self).__init__(*args, **kwargs)
 
-        self.auth = bool(self.data.get('is_authenticated', None))
-        self.online = bool(self.data.get('is_online', None))
+        self.auth = bool(self.data.get('is_authenticated'))
+        self.online = bool(self.data.get('is_online'))
         self.mwm_name = self.data.get('mwm_name')
         self.mwm_version = self.data.get('mwm_version')
 
@@ -62,9 +62,9 @@ class EditorAddClick(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorAddClick, self).__init__(*args, **kwargs)
 
-        self.source = self.data.get('Value', None)
+        self.source = self.data.get('Value')
         if not self.source:
-            self.source = self.data.get('from', None)
+            self.source = self.data.get('from')
         if self.source in self.aliases:
             self.source = self.aliases[self.source]
 
@@ -167,7 +167,7 @@ class UGCAuthError(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(UGCAuthError, self).__init__(*args, **kwargs)
-        self.error = self.data.get('Error', self.data.get('error', None))
+        self.error = self.data.get('Error', self.data.get('error'))
 
 # Event send, when authentication after write review was successful
 #
@@ -190,7 +190,7 @@ class UGCAuthSuccess(DictEvent):
 
     def __init__(self, *args, **kwargs):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
-        self.provider = self.data.get('Provider', self.data.get('provider', None))
+        self.provider = self.data.get('Provider', self.data.get('provider'))
 
 # ALOHA: has no parameters
 

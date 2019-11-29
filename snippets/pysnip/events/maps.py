@@ -40,9 +40,9 @@ class MapActionRequest(DictEvent):
     def __init__(self, *args, **kwargs):
         super(MapActionRequest, self).__init__(*args, **kwargs)
 
-        self.action = self.data.get('action', None).lower()
-        self.scenario = self.data.get('scenario', None)
-        self.init_from = self.data.get('from', None)
+        self.action = self.data.get('action').lower()
+        self.scenario = self.data.get('scenario')
+        self.init_from = self.data.get('from')
         self.is_auto = self.is_auto.get(self.data.get('is_auto', 'unknown'))
 
 
