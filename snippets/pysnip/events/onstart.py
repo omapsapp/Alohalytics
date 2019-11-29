@@ -38,7 +38,6 @@ class TechnicalLaunch(DictEvent):
 
 
 # TechnicalLaunch event in iOS is always associated with a UI launch
-# TODO: why are `keys` missing?
 
 class IOSVisibleLaunch(TechnicalLaunch):
     __slots__ = tuple()
