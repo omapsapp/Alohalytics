@@ -169,10 +169,9 @@ class UGCAuthError(DictEvent):
         'UGC_Auth_error',
     )
 
-    # TODO: has 'error' parameter, but it is not handled here
-
     def __init__(self, *args, **kwargs):
         super(UGCAuthError, self).__init__(*args, **kwargs)
+        self.error = self.data.get('Error', self.data.get('error', None))
 
 # Event send, when authentication after write review was successful
 #
@@ -193,11 +192,9 @@ class UGCAuthSuccess(DictEvent):
         'UGC_Auth_external_request_success',
     )
 
-    # TODO: has 'provider', 'Provider' properties but they are
-    # not handled here
-
     def __init__(self, *args, **kwargs):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
+        self.provider = self.data.get('Provider', self.data.get('provider', None))
 
 # ALOHA:
 
