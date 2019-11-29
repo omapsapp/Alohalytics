@@ -28,7 +28,6 @@ class EditorAdd(DictEvent):
     def __init__(self, *args, **kwargs):
         super(EditorAdd, self).__init__(*args, **kwargs)
 
-        # TODO: rewrite it without try/except
         self.auth = bool(self.data.get('is_authenticated', None))
         self.online = bool(self.data.get('is_online', None))
         self.mwm_name = self.data.get('mwm_name')
@@ -193,7 +192,7 @@ class UGCAuthSuccess(DictEvent):
         super(UGCAuthSuccess, self).__init__(*args, **kwargs)
         self.provider = self.data.get('Provider', self.data.get('provider', None))
 
-# ALOHA:
+# ALOHA: has no parameters
 
 
 class UGCPushShown(DictEvent):
