@@ -145,9 +145,6 @@ class UGCReviewSuccess(DictEvent):
         'UGC_Review_success',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(UGCReviewSuccess, self).__init__(*args, **kwargs)
-
 # Event send, when something went wrong with authentication.
 #
 # ALOHA:
@@ -204,10 +201,6 @@ class UGCPushShown(DictEvent):
         'UGC_ReviewNotification_shown',
     )
 
-# TODO:
-    def __init__(self, *args, **kwargs):
-        super(UGCPushShown, self).__init__(*args, **kwargs)
-
 # ALOHA:
 
 
@@ -215,8 +208,5 @@ class UGCPushClick(DictEvent):
     keys = (
         'UGC_ReviewNotification_clicked',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(UGCPushClick, self).__init__(*args, **kwargs)
 
 # 'UGC_Auth_shown', 'UGC_Auth_declined'
