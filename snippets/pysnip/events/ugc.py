@@ -18,7 +18,6 @@ from pyaloha.event import DictEvent
 # mwm_name=Iran_North
 # mwm_version=170119.0
 # ]
-#
 
 class EditorAdd(DictEvent):
     keys = (

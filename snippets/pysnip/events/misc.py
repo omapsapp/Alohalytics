@@ -183,7 +183,7 @@ class Menu(DictEvent):
         'Toolbar_Menu_click',
         'DiscoveryButton_Open'
     )
-    
+
     keys_dict = {
         'Menu. SettingsAndMore':'Settings',
         'Menu. Point to point': 'Point to point',
@@ -224,7 +224,7 @@ class Menu(DictEvent):
             )
         else:
             self.button = None
-        if self.button is not None:
+        if self.button:
             self.button = self.button.decode('utf-8').replace(u'\u0131', u'i').encode('utf-8')
 
 # ALOHA:
