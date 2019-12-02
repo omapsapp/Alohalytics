@@ -53,7 +53,7 @@ class DataStreamWorker(BaseDataStreamWorker):
                 self.android_visible_launches[dt].add(uid)
             else:
                 # TODO: agg
-                self.data_per_days[dt][uid] = event.user_info.stripped()
+                self.data_per_days[dt][uid] = event.user_info
         elif uid not in self.data_per_days:
             self.lost_data.add(uid)
 
