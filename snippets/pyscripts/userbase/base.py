@@ -19,7 +19,7 @@ from pyaloha.protocol import day_serialize, SerializableSet
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
 import pysnip.events as events
 
-from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats
+from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats, EntriesPerWeekStats
 from .stats.dau import DAUStats, OSDAUStats, NumOfDaysStats
 from .stats.mau import MAUStats
 
@@ -85,3 +85,13 @@ class StatsProcessor(DailyStatsProcessor):
         MAUStats,
         ThreeMonthCoreStats, ThreeWeekCoreStats
     )
+
+    def print_stats(self):
+        # super(StatsProcessor, self).print_stats()
+        for header, stats_generator in self.gen_stats():
+            with open('{}.csv'.format(header.split('\n')[0]), 'w') as csvfile:
+                # TODO: ALERT! Header MUST have first string as descriptive (not a header list!)
+                csvfile.write('{}\n'.format(header.split('\n')[1]))
+                for row in stats_generator:
+                    csvfile.write('\t'.join(map(str, row)))
+                    csvfile.write('\n')
