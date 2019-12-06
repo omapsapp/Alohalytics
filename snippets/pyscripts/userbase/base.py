@@ -83,6 +83,7 @@ class StatsProcessor(DailyStatsProcessor):
     subscribers = (
         DAUStats, OSDAUStats, NumOfDaysStats,
         MAUStats,
+        EntriesPerWeekStats,
         ThreeMonthCoreStats, ThreeWeekCoreStats
     )
 
