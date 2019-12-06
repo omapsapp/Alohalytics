@@ -13,7 +13,8 @@ from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
 def cmd_run(plugin_dir,
             data_dir=DEFAULT_ALOHA_DATA_DIR,
-            worker_num=DEFAULT_WORKER_NUM):
+            worker_num=DEFAULT_WORKER_NUM,
+            results_dir='./stats'):
     """Main command line interface to pyaloha system."""
     # TODO: argparse
     plugin_name = sys.argv[1]
@@ -28,7 +29,8 @@ def cmd_run(plugin_dir,
         start_date, end_date,
         plugin_dir=plugin_dir, events_limit=events_limit,
         data_dir=data_dir,
-        worker_num=worker_num
+        worker_num=worker_num,
+        results_dir=results_dir,
     )
 
 
