@@ -24,8 +24,10 @@ PYSCRIPT_PATH = os.path.join(
 )
 
 ALOHA_DATA = os.environ['ALOHA_DATA_DIR']
-RESULTS_DIR = os.environ.get('RESULTS_DIR') or '/mnt/disk1/mapsme/stats'
+RESULTS_DIR = os.environ.get('RESULTS_DIR', './stats')
+CLEAN_STATS_DIRECTORY = {'True': True, 'False': False}.get(os.environ.get('CLEAN_STATS_DIRECTORY', 'True'))
 
 if __name__ == '__main__':
     pyaloha = __import__('pyaloha.main')
-    pyaloha.main.cmd_run(plugin_dir=PYSCRIPT_PATH, data_dir=ALOHA_DATA, results_dir=RESULTS_DIR)
+    pyaloha.main.cmd_run(plugin_dir=PYSCRIPT_PATH, data_dir=ALOHA_DATA,
+                         results_dir=RESULTS_DIR, clean_stats_directory=CLEAN_STATS_DIRECTORY)
