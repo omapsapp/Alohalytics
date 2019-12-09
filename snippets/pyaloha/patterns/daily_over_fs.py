@@ -151,6 +151,7 @@ class DataAggregator(BaseDataAggregator):
                 fout.write(data)
                 full_data_len += len(data)
         multiprocessing.get_logger().info(
+            # TODO: logger formatter be configured
             "daily_over_fs: wrote %d characters to %s" % (
                 full_data_len, fname
             )
@@ -196,6 +197,9 @@ class StatsProcessor(BaseStatsProcessor):
 
         for dte, data_generator in self.processable_iterator():
             data_tuple = tuple(data_generator)
+            multiprocessing.get_logger().info(
+                'process_stats: handling dte {}'.format(dte)
+            )
             for p in self.procs:
                 p.collect((dte, data_tuple))
 
