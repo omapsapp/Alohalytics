@@ -98,7 +98,7 @@ Look for an example in daily_over_fs usage pattern.
     """
 
     def __init__(self,
-                 results_dir=None, *args, **kwargs):
+                 results_dir=None, clean_stats_directory=True, *args, **kwargs):
         super(DataAggregator, self).__init__(*args, **kwargs)
 
         self.logger = multiprocessing.get_logger()
@@ -106,10 +106,18 @@ Look for an example in daily_over_fs usage pattern.
         self.results_dir = results_dir
         if self.results_dir:
             self.created_dirs = set()
-            shutil.rmtree(self.results_dir, ignore_errors=True)
+            if clean_stats_directory:
+                # Uncomment me if you want result dir to be cleaned
+                self.logger.info(
+                    "Results directory '%s' is being cleaned..." % self.results_dir
+                )
+                shutil.rmtree(self.results_dir, ignore_errors=True)
+                self.logger.info(
+                    "Results directory '%s' is set and cleaned" % self.results_dir
+                )
 
             self.logger.info(
-                "Results directory '%s' is set and cleaned" % self.results_dir
+                "Results directory '%s' is set, NOT cleaned" % self.results_dir
             )
 
         self.setup_shareable_data(*args, **kwargs)
