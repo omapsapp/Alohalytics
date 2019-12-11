@@ -15,6 +15,7 @@ def cmd_run(plugin_dir,
             data_dir=DEFAULT_ALOHA_DATA_DIR,
             worker_num=DEFAULT_WORKER_NUM,
             clean_stats_directory=True,
+            append_stats_directory=True,
             results_dir='./stats'):
     """Main command line interface to pyaloha system."""
     # TODO: argparse
@@ -33,6 +34,7 @@ def cmd_run(plugin_dir,
         worker_num=worker_num,
         results_dir=results_dir,
         clean_stats_directory=clean_stats_directory,
+        append_stats_directory=append_stats_directory,
     )
 
 
@@ -40,6 +42,7 @@ def main_script(plugin_name, start_date, end_date, plugin_dir, data_dir,
                 worker_num,
                 results_dir='./stats',
                 clean_stats_directory=True,
+                append_stats_directory=True,
                 events_limit=0):
     """
     Running pyAloha stats processing pipeline.
@@ -54,6 +57,7 @@ def main_script(plugin_name, start_date, end_date, plugin_dir, data_dir,
         start_date, end_date, events_limit,
         worker_num=worker_num,
         clean_stats_directory=clean_stats_directory,
+        append_stats_directory=append_stats_directory,
     )
 
     stats = load_plugin(
@@ -76,6 +80,7 @@ def aggregate_raw_data(
         start_date=None, end_date=None,
         events_limit=0,
         clean_stats_directory=True,
+        append_stats_directory=True,
         worker_num=DEFAULT_WORKER_NUM):
     """Workers-aggregator subpipeline.
 
@@ -98,10 +103,14 @@ def aggregate_raw_data(
         for fpath in files
     ]
 
+    # AGGREGATOR PART
     aggregator = load_plugin(
         plugin, plugin_dir=plugin_dir
     ).DataAggregator(results_dir, clean_stats_directory=clean_stats_directory)
 
+    # Skip aggregator part if we don't want to append to `stats` directory
+    if not append_stats_directory:
+        return aggregator
     logger.info('Aggregator: start workers')
 
     # Let us create pools before main process will consume more memory
