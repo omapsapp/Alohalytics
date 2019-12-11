@@ -124,6 +124,6 @@ class EntriesPerWeekStats(StatsSubscriber):
         result = list()
         for user_id, dict_with_date_and_entries in self.results.iteritems():
             for year_week_tuple, value in dict_with_date_and_entries.iteritems():
-                to_add = ('{}-{}'.format(*year_week_tuple), user_id, value)
+                to_add = ('-'.join(map(str, year_week_tuple)), user_id, value)
                 result.append(to_add)
         return self.header, result
