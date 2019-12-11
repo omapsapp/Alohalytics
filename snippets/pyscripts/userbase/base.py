@@ -19,7 +19,8 @@ from pyaloha.protocol import day_serialize, SerializableSet
 from pysnip.base import DataStreamWorker as BaseDataStreamWorker
 import pysnip.events as events
 
-from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats, EntriesPerWeekStats
+from .stats.core import ThreeMonthCoreStats, ThreeWeekCoreStats, EntriesPerWeekStats,\
+    TouristsCore
 from .stats.dau import DAUStats, OSDAUStats, NumOfDaysStats
 from .stats.mau import MAUStats
 
@@ -84,6 +85,7 @@ class StatsProcessor(DailyStatsProcessor):
         DAUStats, OSDAUStats, NumOfDaysStats,
         MAUStats,
         EntriesPerWeekStats,
+        TouristsCore,
         ThreeMonthCoreStats, ThreeWeekCoreStats
     )
 
