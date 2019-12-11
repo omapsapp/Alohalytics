@@ -21,7 +21,12 @@ Week\tUsers
 
 USAGES_PER_WEEK_HEADER = """\
 Counting user per week entries
-Week\tUser\tEntries
+Week\tUsers\tEntries
+"""
+
+USAGES_PER_DAY_HEADER = """\
+Counting user per day entries
+Day\tUsers\tEntries
 """
 
 
