@@ -115,10 +115,10 @@ Look for an example in daily_over_fs usage pattern.
                 self.logger.info(
                     "Results directory '%s' is set and cleaned" % self.results_dir
                 )
-
-            self.logger.info(
-                "Results directory '%s' is set, NOT cleaned" % self.results_dir
-            )
+            else:
+                self.logger.info(
+                    "Results directory '%s' is set, NOT cleaned" % self.results_dir
+                )
 
         self.setup_shareable_data(*args, **kwargs)
 
