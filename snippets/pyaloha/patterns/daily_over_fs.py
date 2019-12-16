@@ -151,7 +151,6 @@ class DataAggregator(BaseDataAggregator):
                 fout.write(data)
                 full_data_len += len(data)
         multiprocessing.get_logger().info(
-            # TODO: logger formatter be configured
             "daily_over_fs: wrote %d characters to %s" % (
                 full_data_len, fname
             )

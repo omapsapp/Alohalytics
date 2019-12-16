@@ -107,7 +107,6 @@ Look for an example in daily_over_fs usage pattern.
         if self.results_dir:
             self.created_dirs = set()
             if clean_stats_directory:
-                # Uncomment me if you want result dir to be cleaned
                 self.logger.info(
                     "Results directory '%s' is being cleaned..." % self.results_dir
                 )
