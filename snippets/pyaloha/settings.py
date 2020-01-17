@@ -1,8 +1,9 @@
 import warnings
+import os
 
 from multiprocessing import cpu_count
 
-DEFAULT_WORKER_NUM = cpu_count() - 1
+DEFAULT_WORKER_NUM = int(os.getenv('WORKER_NUM', cpu_count() - 1))
 
 if DEFAULT_WORKER_NUM == 0:
     raise RuntimeError('PyAloha will not work with only one cpu core')
