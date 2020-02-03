@@ -107,9 +107,6 @@ Look for an example in daily_over_fs usage pattern.
         if self.results_dir:
             self.created_dirs = set()
             if clean_stats_directory:
-                self.logger.info(
-                    "Results directory '%s' is being cleaned..." % self.results_dir
-                )
                 shutil.rmtree(self.results_dir, ignore_errors=True)
                 self.logger.info(
                     "Results directory '%s' is set and cleaned" % self.results_dir
