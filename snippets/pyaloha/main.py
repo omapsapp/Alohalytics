@@ -4,29 +4,45 @@ from __future__ import division
 
 import multiprocessing
 import os
-import sys
+import argparse
 
 from pyaloha.protocol import WorkerResults, str2date
 from pyaloha.settings import DEFAULT_WORKER_NUM, DEFAULT_ALOHA_DATA_DIR
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'plugin_name',
+        help='Plugin name, e.g. `userbase`, `gpu_rating`'
+    )
+    parser.add_argument(
+        'start_date', type=str2date,
+        help='Date to start workers from.',
+    )
+    parser.add_argument(
+        'end_date', type=str2date,
+        help='Date to stop workers at.',
+    )
+    parser.add_argument(
+        'events_limit', type=int, nargs='?',
+        help='Read only first N events. If not specified, will read all events',
+        default=0
+    )
+    return parser.parse_args()
+
+
 def cmd_run(plugin_dir,
             data_dir=DEFAULT_ALOHA_DATA_DIR,
             worker_num=DEFAULT_WORKER_NUM):
     """Main command line interface to pyaloha system."""
-    # TODO: argparse
-    plugin_name = sys.argv[1]
-    start_date, end_date = map(str2date, sys.argv[2:4])
-    try:
-        events_limit = int(sys.argv[4])
-    except IndexError:
-        events_limit = 0
+    args = parse_args()
 
     main_script(
-        plugin_name,
-        start_date, end_date,
-        plugin_dir=plugin_dir, events_limit=events_limit,
+        args.plugin_name,
+        args.start_date, args.end_date,
+        plugin_dir=plugin_dir, events_limit=args.events_limit,
         data_dir=data_dir,
         worker_num=worker_num
     )

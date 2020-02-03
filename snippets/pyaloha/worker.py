@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import subprocess
 import sys
+import argparse
 
 from pyaloha.ccode import iterate_events
 
@@ -54,23 +55,41 @@ def invoke_cmd_worker(item):
         logger.exception('Worker launcher failed:\n %s', e)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'plugin_dir',
+        help='Plugin directory. In most cases, `pyscripts`',
+    )
+    parser.add_argument(
+        'plugin',
+        help='Name of plugin to search in `plugin_dir`. Typically, these are just names of .py files. '
+             'Examples: `userbase`, `locale_export`',
+    )
+    parser.add_argument(
+        'events_limit', type=int, nargs='?',
+        help='Read only first N events. If not specified, will read all events',
+        default=0
+    )
+    return parser.parse_args()
+
+
 def worker():
     setup_logs()
     logger = multiprocessing.get_logger()
+    args = parse_args()
 
     try:
-        plugin_dir = sys.argv[1]
-        plugin = sys.argv[2]
-        events_limit = int(sys.argv[3])
         processor = load_plugin(
-            plugin, plugin_dir=plugin_dir
+            args.plugin, plugin_dir=args.plugin_dir
         ).DataStreamWorker()
-        iterate_events(processor, events_limit=events_limit)
+        iterate_events(processor, events_limit=args.events_limit)
         processor.pre_output()
         sys.stdout.write(processor.dumps_results() + '\n')
         sys.stdout.flush()
     except Exception as e:
         logger.exception('Worker process failed:\n %s', e)
+
 
 if __name__ == '__main__':
     worker()
