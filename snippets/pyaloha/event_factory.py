@@ -1,5 +1,6 @@
 import itertools
 import traceback
+import collections
 
 from pyaloha.event import get_event
 
@@ -26,16 +27,7 @@ class EventFactory(object):
 
     @staticmethod
     def get_duplicates(list_to_check):
-        seen = {}
-        dupes = []
-        for x in list_to_check:
-            if x not in seen:
-                seen[x] = 1
-            else:
-                if seen[x] == 1:
-                    dupes.append(x)
-                seen[x] += 1
-        return dupes
+        return [m[0] for m in filter(lambda elem: elem[1] > 1, collections.Counter(list_to_check).items())]
 
     @classmethod
     def check_events(cls, custom_events):
