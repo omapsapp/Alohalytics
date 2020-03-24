@@ -100,7 +100,7 @@ class SerializableDate(datetime.date):
 
     @classmethod
     def __loaddict__(cls, dct):
-        return cls.utcfromtimestamp(
+        return cls.fromtimestamp(
             AutoSerialized.extract_value(dct)
         )
 
