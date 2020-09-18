@@ -2,7 +2,7 @@ import ctypes
 import itertools
 import os
 
-from pyaloha.protocol import SerializableDatetime
+from pyaloha.protocol.base import SerializableDatetime
 
 try:
     from ctypes import set_conversion_mode
@@ -62,7 +62,7 @@ class PythonEventTime(object):
 
     def __dumpdict__(self):
         return {
-            'dtime': self.dtime
+            'dtime': self.dtime.__dumpdict__()
         }
 
 

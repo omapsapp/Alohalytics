@@ -11,13 +11,16 @@ import shutil
 import traceback
 
 from pyaloha.event_factory import EventFactory
-from pyaloha.protocol import WorkerResults, to_unicode, SerializableSet
+from pyaloha.protocol.base import to_unicode, SerializableSet
+from pyaloha.protocol.basic_json import JSONWorkerResults
 
 
 class ShareableData(object):
     """
     Base class for both worker and aggregator
 to optional access of the same routine of instantiating same data properties.
+    Also this by using WorkerResults class property we can setup any protocol
+    of comminication between a worker and an aggregator.
     Can be used like (guaranteed to run in __init__):
 
 
@@ -34,8 +37,10 @@ to optional access of the same routine of instantiating same data properties.
         setup_shareable_data = shared_method
         ...
     """
+
     def setup_shareable_data(self):
         self.lost_data = SerializableSet()
+        self._results_protocol = JSONWorkerResults
 
 
 class DataStreamWorker(ShareableData):
@@ -81,7 +86,7 @@ specific worker.
             logger.error(traceback.format_exc())
 
     def dumps_results(self):
-        return WorkerResults.dumps_object(self, debug=False)
+        return self._results_protocol.dumps_object(self, debug=False)
 
     def pre_output(self):
         pass
@@ -113,6 +118,9 @@ Look for an example in daily_over_fs usage pattern.
             )
 
         self.setup_shareable_data(*args, **kwargs)
+
+    def loads_results(self, results):
+        return self._results_protocol.loads_object(results)
 
     def aggregate(self):
         raise NotImplementedError()
