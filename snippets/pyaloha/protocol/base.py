@@ -1,26 +1,13 @@
 import calendar
 import datetime
 import inspect
-import json
-import multiprocessing
-import sys
-import traceback
-
-
-if sys.version_info[0] == 3:
-    def decode_keys_for_json(dct):
-        return {
-            (k.decode() if isinstance(k, bytes) else k): v
-            for k, v in dct.items()
-        }
-else:
-    def decode_keys_for_json(dct):
-        return dct
 
 
 DAY_FORMAT = '%Y%m%d'
 UNIQ_DAY_FORMAT = 'dt' + DAY_FORMAT
 
+
+# *** BASIC TYPES ONLY SERIALIZATION ***
 
 # assuming all date & datetime objects are UTC
 def utc_to_timestamp(dt):
@@ -55,11 +42,12 @@ def convert_keys_if_possible(dct):
 
 
 class AutoSerialized(dict):
-    def __init__(self, tpe, value):
-        self.update({
+    @classmethod
+    def dumps(self, tpe, value):
+        return {
             '_st_': tpe,  # type of serialized object
             '_sv_': value  # serialized value
-        })
+        }
 
     @classmethod
     def extract_value(cls, dct):
@@ -79,7 +67,7 @@ class SerializableDatetime(datetime.datetime):
     alias = 'dtime'
 
     def __dumpdict__(self):
-        return AutoSerialized(
+        return AutoSerialized.dumps(
             SerializableDatetime.alias, utc_to_timestamp(self)
         )
 
@@ -94,7 +82,7 @@ class SerializableDate(datetime.date):
     alias = 'date'
 
     def __dumpdict__(self):
-        return AutoSerialized(
+        return AutoSerialized.dumps(
             SerializableDate.alias, utc_to_timestamp(self)
         )
 
@@ -109,7 +97,7 @@ class SerializableSet(set):
     alias = 'set'
 
     def __dumpdict__(self):
-        return AutoSerialized(
+        return AutoSerialized.dumps(
             SerializableSet.alias, tuple(self)
         )
 
@@ -124,7 +112,7 @@ class SerializableFrozenset(set):
     alias = 'fset'
 
     def __dumpdict__(self):
-        return AutoSerialized(
+        return AutoSerialized.dumps(
             SerializableFrozenset.alias, tuple(self)
         )
 
@@ -154,39 +142,14 @@ def custom_loads(dct):
     return DESERIALIZERS_BY_ALIAS[AutoSerialized.get_type(dct)](dct)
 
 
-class CustomEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, '__dumpdict__'):
-            obj = obj.__dumpdict__()
-
-        if isinstance(obj, dict):
-            # process json unprocessable dict keys
-            return decode_keys_for_json(obj)
-
-        if not isinstance(obj, str) and isinstance(obj, bytes):
-            # in python 2.7 str is bytes; don't decode it
-            return obj.decode()
-
-        # Let the base class default method raise the TypeError
-        return super(CustomEncoder, self).default(obj)
-
-
 class FileProtocol(object):
     @classmethod
     def dumps(cls, obj, debug=False):
-        return json.dumps(
-            obj, cls=CustomEncoder
-        )
+        raise NotImplementedError('dumps method is not implemented yet')
 
     @classmethod
     def loads(cls, json_text):
-        try:
-            return json.loads(json_text, object_hook=custom_loads)
-        except ValueError as err:
-            logger = multiprocessing.get_logger()
-            logger.error('Corrupted json:\n%s' % json_text)
-            traceback.print_exc(err)
-            return []
+        raise NotImplementedError('loads method is not implemented yet')
 
 
 class WorkerResults(FileProtocol):
@@ -206,9 +169,9 @@ class WorkerResults(FileProtocol):
         )
 
     @classmethod
-    def loads_object(cls, json_text):
+    def loads_object(cls, data):
         instance = WorkerResults()
-        for key, value in cls.loads(json_text):
+        for key, value in cls.loads(data):
             setattr(instance, key, value)
         return instance
 

@@ -6,7 +6,7 @@ import multiprocessing
 import os
 import argparse
 
-from pyaloha.protocol import WorkerResults, str2date
+from pyaloha.protocol.base import str2date
 from pyaloha.settings import DEFAULT_WORKER_NUM, DEFAULT_ALOHA_DATA_DIR
 from pyaloha.worker import invoke_cmd_worker, load_plugin, setup_logs
 
@@ -135,7 +135,7 @@ def aggregate_raw_data(
             )
             for file_name, results in engine(invoke_cmd_worker, batch_tasks):
                 try:
-                    results = WorkerResults.loads_object(results)
+                    results = aggregator.loads_results(results)
                     logger.info(
                         'Aggregator: task %s is being aggregated' % file_name
                     )

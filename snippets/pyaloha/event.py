@@ -38,8 +38,8 @@ class Event(object):
     def __dumpdict__(self):
         return {
             'key': self.key,
-            'user_info': self.user_info,
-            'event_time': self.event_time
+            'user_info': self.user_info.__dumpdict__(),
+            'event_time': self.event_time.__dumpdict__()
         }
 
 
