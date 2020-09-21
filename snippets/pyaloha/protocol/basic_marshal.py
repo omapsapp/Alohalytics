@@ -3,7 +3,6 @@ import multiprocessing
 import traceback
 import sys
 
-
 from pyaloha.protocol.base import WorkerResults, custom_loads
 
 if sys.version_info[0] == 3:
@@ -49,7 +48,7 @@ class MarshalWorkerResults(WorkerResults):
 
     @classmethod
     def dumps(cls, obj, debug=False):
-        return marshal.dumps(cls.to_basic_types(obj))
+        return str(marshal.dumps(cls.to_basic_types(obj)))
 
     @classmethod
     def loads(cls, data):
