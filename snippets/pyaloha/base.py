@@ -1,7 +1,7 @@
 """
-    This module defines base classes for worker, aggregator and stats
-processor.
-    Look at pyaloha.main module for a pipeline sequence understanding.
+This module defines base classes for worker, aggregator and stats processor.
+
+Look at pyaloha.main module for a pipeline sequence understanding.
 """
 
 from __future__ import print_function
@@ -17,8 +17,9 @@ from pyaloha.protocol.basic_json import JSONWorkerResults
 
 class ShareableData(object):
     """
-    Base class for both worker and aggregator
-to optional access of the same routine of instantiating same data properties.
+    Base class for both worker and aggregator.
+
+    Organise an optional scheme for instantiating same data properties.
     Also this by using WorkerResults class property we can setup any protocol
     of comminication between a worker and an aggregator.
     Can be used like (guaranteed to run in __init__):
@@ -45,15 +46,15 @@ to optional access of the same routine of instantiating same data properties.
 
 class DataStreamWorker(ShareableData):
     """
-    This is a base class representing a worker that preprocesses
-given raw events (one by one).
+    This is a base class that preprocesses given raw events (one by one).
+
     This worker is not guaranteed to have all available data, so do not try
-to write a stats processor class. This is a low-level preprocessor/filter/etc.
+    to write a stats processor class. This is a low-level preprocessor/filters.
     @method process_unspecified is a generic method called on every event
-regardless of its actual type. In general this is the most basic method
-to overload while writing worker in your script.
+    regardless of its actual type. In general this is the most basic method
+    to overload while writing worker in your script.
     __events__ field is used in low-level filtering of the events provided to
-specific worker.
+    specific worker.
     """
 
     __events__ = tuple()
@@ -95,11 +96,12 @@ specific worker.
 class DataAggregator(ShareableData):
     """
     This is a 'singleton' class that accumulates results from the workers.
+
     @method aggregate must be overloaded in your script.
-It is called every time a worker is done with its events to accumulate results.
+    It is called for every batch from a worker to accumulate results.
     @method post_aggregate is an optional method.
-It is called after all results are accumulated.
-Look for an example in daily_over_fs usage pattern.
+    It is called after all results are accumulated.
+    Look for an example in daily_over_fs usage pattern.
     """
 
     def __init__(self,
@@ -132,18 +134,21 @@ Look for an example in daily_over_fs usage pattern.
 class StatsProcessor(object):
     """
     This is a fully prepared stats data processor and printer.
-It is instantiated with a pointer to aggregator that has already been done
-with all workers and his own postprocessing.
+
+    It is instantiated with a pointer to aggregator that has already been done
+    with all workers and his own postprocessing.
     Class can be used as a business logic processor
-(it is guaranteed to have all available data) or just as a sequential printer
-(if actual stats processing logic is simple).
+    (it is guaranteed to have all available data)
+    or just as a sequential printer
+    (if actual stats processing logic is simple).
     @method gen_stats must be overloaded in your script.
-It is called at the end of the stats processing pipeline and
-yields one or several stats sections - each with a human-readable text header
-and a sequence of sequence objects interpreted as a table of values.
+    It is called at the end of the stats processing pipeline and
+    yields one or several stats sections - each with a readable text header
+    and a sequence of sequence objects interpreted as a table of values.
     @method process_stats is optional.
-It is called just before calling gen_stats.
+    It is called just before calling gen_stats.
     """
+
     def __init__(self, aggregator):
         self.aggregator = aggregator
 
@@ -152,7 +157,7 @@ It is called just before calling gen_stats.
 
     def gen_stats(self):
         """
-        Look at @method print_stats for a results format to be generated
+        Look at @method print_stats for a results format to be generated.
         """
         raise NotImplementedError()
 
