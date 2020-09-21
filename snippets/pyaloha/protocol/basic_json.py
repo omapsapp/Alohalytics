@@ -48,6 +48,6 @@ class JSONWorkerResults(WorkerResults):
             return json.loads(data, object_hook=custom_loads)
         except ValueError as err:
             logger = multiprocessing.get_logger()
-            logger.error('Corrupted json:\n%s' % data)
+            logger.error('Corrupted json:\n{}'.format(data))
             traceback.print_exc(err)
             return []
