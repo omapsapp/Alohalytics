@@ -29,18 +29,6 @@ def str2date(s):
     return datetime.datetime.strptime(s, DAY_FORMAT).date()
 
 
-def convert_keys_if_possible(dct):
-    for str_key in dct.keys():
-        try:
-            int_key = int(str_key)
-        except ValueError:
-            break
-        else:
-            dct[int_key] = dct[str_key]
-            del dct[str_key]
-    return dct
-
-
 class AutoSerialized(dict):
     @classmethod
     def dumps(self, tpe, value):
@@ -134,7 +122,7 @@ DESERIALIZERS_BY_ALIAS = {
 }
 
 DESERIALIZERS_BY_ALIAS.update({
-    None: convert_keys_if_possible
+    None: lambda d: d
 })
 
 
